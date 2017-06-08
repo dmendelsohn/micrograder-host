@@ -18,6 +18,7 @@ class Condition:
         self.type = cond_type
         self.cause = cause # integer (i.e. time), or function from request -> boolean
         self.subconditions = subconditions
+        self.last_update_request = None
 
     def is_satisfied(self):
         return self.satisfied_at is not None
@@ -25,8 +26,11 @@ class Condition:
     def satisfied_at(self):
         return self.satisfied_at
 
-    # TODO: don't re-run for same request
     def update(self, request): #TODO: finish this
+        if self.last_update_request == requst:
+            return # No need to do anything, already updated for this request
+        self.last_update_request = request
+
         if self.is_satisfied():
             return # No need to do anything, condition already satisfied
 
@@ -79,24 +83,35 @@ class InputSequence:
         else:
             return self.values[index-1][1]
 
+class OutputSequence:
+    #TODO: implement
+    pass
+
 class FrameStatus(Enum):
     NOT_BEGUN = 1
     IN_PROGRESS = 2
     COMPLETE = 3
     AVOIDED = 4
 
-class InputFrame:
+class Frame:
     def __init__(self, start_condition, end_condition, priority=0):
         self.start_condition = start_condition # Should be of type 'Event'
         self.end_condition = end_condition  # Should be of type 'Event'
         self.start_time = None
         self.status = FrameStatus.NOT_BEGUN
-        self.sequences = {} # Build with add_sequence method
+        self.inputs = {} # Build with add_input method
+        self.expected_outputs = {} # Build with add_expected_output method
+        self.observed_outputs = {}
         self.priority = priority
 
-    # input_type is of type InputType (an enum), sequence is of type InputSequence
-    def add_sequence(self, input_type, sequence):
-        self.sequences[input_type] = sequence
+    # input_type is InputType (an enum), sequence is of type InputSequence
+    def add_input(self, input_type, sequence):
+        self.inputs[input_type] = sequence
+
+    # output_type is OutputType (an enum), sequence if of type OutputSequence
+    def add_expected_output(self, output_type, sequence):
+        #TODO: implement
+        pass
 
     # t is an integer (time), input_type is of type InputType (an enum)
     # Returns latest value at a time <= t
@@ -107,7 +122,7 @@ class InputFrame:
         if self.status != FrameStatus.IN_PROGRESS:
             return None  # No value since the frame is not in progress
         relative_t = (t - self.start_time) 
-        return self.sequences[input_type].get_value(relative_t)
+        return self.inputs[input_type].get_value(relative_t)
 
     # TODO: description
     def update(self, request):
@@ -125,4 +140,11 @@ class InputFrame:
             self.status = FrameStatus.AVOIDED # This frame can never be triggered
         elif not is_started and not is_ended:
             self.status = FrameStatus.NOT_BEGUN
+
+        #TODO: if request is a relevant output, log in self.observed_ouputs
+
+    #TODO: evaluate if frame passes test or not
+    def evaluate(self):
+        #TODO: implement
+        pass
         
