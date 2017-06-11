@@ -9,20 +9,6 @@ ADDR = '/dev/cu.usbmodem1880221'
 BAUD = 115200
 ser = None
 
-# Pin request codes
-MG_PIN_MODE = 0x20
-MG_DIGITAL_READ = 0x21
-MG_DIGITAL_WRITE = 0x22
-MG_ANALOG_READ = 0x23
-MG_ANALOG_WRITE = 0x24
-MG_READ_RES = 0x25
-MG_WRITE_RES = 0x26
-
-
-# Response
-MG_ACK = 0x80
-MG_ERR = 0x81
-
 # Communication constants
 CODE_BYTES = 1 # 1 byte unsigned int for message code
 TIMESTAMP_BYTES = 4 # 4 byte unsigned int for timestampe
@@ -35,9 +21,6 @@ FORMAT_CHARS = {
     (4,False): 'I', (4,True): 'i',
     (8,False): 'Q', (8,True): 'q'
 }
-
-Request = namedtuple('Request', ['code', 'timestamp', 'body'])
-Response = namedtuple('Response', ['code', 'body'])
 
 def connect():
     global ser
