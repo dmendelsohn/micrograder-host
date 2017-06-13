@@ -22,39 +22,45 @@ class Request:
     
 
 class AccelerometerRequest(Request):
-    def __init__(self, timestamp, ...):
+    # analog params is named tuple with min_bin, max_bin, min_value, max_value
+    def __init__(self, timestamp, analog_params):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = InputType.Accelerometer
-        #TODO: process args
+        self.analog_params = analog_params
 
 class GyroscopeRequest(Request):
-    def __init__(self, timestamp, ...):
+    # analog params is named tuple with min_bin, max_bin, min_value, max_value
+    def __init__(self, timestamp, analog_params):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = InputType.Gyroscope
-        #TODO: process args
+        self.analog_params = analog_params
 
 class MagnetometerRequest(Request):
-    def __init__(self, timestamp, ...):
+    # analog params is named tuple with min_bin, max_bin, min_value, max_value
+    def __init__(self, timestamp, analog_params):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = InputType.Magnetometer
-        #TODO: process args
+        self.analog_params = analog_params
 
 class DigitalReadRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp, pin):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = InputType.DigitalRead
-        #TODO: process args
+        self.pin = pin
 
 class AnalogReadRequest(Request):
-    def __init__(self, timestamp, ...):
+    # analog params is named tuple with min_bin, max_bin, min_value, max_value
+    def __init__(self, timestamp, analog_params, pin):
         super().__init__(timestamp)
         self.is_input =  True # Override default
-        #TODO: process args
+        self.analog_params = analog_params
+        self.pin = pin
 
+# TODO: fill in this one
 class ScreenRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
@@ -63,18 +69,21 @@ class ScreenRequest(Request):
         #TODO: process args   
 
 class DigitalWriteRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp, pin, value):
         super().__init__(timestamp)
         self.is_output = True # Override default
         self.data_type = OutputType.DigitalWrite
-        #TODO: process args
+        self.pin = pin
+        self.value = value
 
 class AnalogWriteRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp, analog_params, pin, value):
         super().__init__(timestamp)
         self.is_output = True # Override default
         self.data_type = OutputType.AnalogWrite
-        #TODO: process args  
+        self.analog_params = analog_params
+        self.pin = pin
+        self.value = value
 
 class GPSRequest(Request):
     def __init__(self, timestamp):
