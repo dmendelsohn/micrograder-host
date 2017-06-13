@@ -1,4 +1,3 @@
-import struct
 import serial
 from serial import SerialException
 from enum import Enum

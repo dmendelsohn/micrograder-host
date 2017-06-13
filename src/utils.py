@@ -1,3 +1,5 @@
+import struct
+
 class Test:
     # TODO: implement as iterable of Frames along with output log
     pass
