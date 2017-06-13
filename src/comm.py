@@ -3,6 +3,7 @@ import serial
 from serial import SerialException
 from enum import Enum
 from request import *
+from response import *
 
 
 
@@ -46,7 +47,7 @@ class MessageCode(Enum):
 
     # Byte codes for responses
     Ack = 0x80
-    Err = 0x81
+    Error = 0x81
 
 # Input: bytes of length >= 16 and interpret as 4 int32s (additional bytes are ignored)
 # Return named tuple: min_bin, max_bin, min_value, max_value
@@ -140,12 +141,27 @@ def bytes_to_request(msg_code, timestamp, msg_body):
         return InvalidRequest(timestamp)
 
 def response_to_bytes(response):
-    if response.is_error():
-        msg_code = MessageCode.Err
+    if response.is_error:
+        msg_code = MessageCode.Error
     else:
         msg_code = MessageCode.Ack
 
-    #TODO: create msg_body
+    if type(response) is AckResponse: # Ack without data
+        msg_body = bytes()
+    elif type(response) is ErrorResponse: # Error without data
+        msg_body = bytes()
+    elif type(response) is DigitalValuesResponse: # Sequence of digital values (uint8)
+        msg_body = bytes()
+        for value in response.values:
+            msg_body += utils.encode_int(value, width=1, signed=False)
+    elif type(response) is AnalogValuesResponse: # Sequence of analog values (int32)
+        msg_body = bytes()
+        for value in response.values:
+            msg_body += utils.encode_int(value, width=4, signed=True)
+    else: # Unsupported response type
+        msg_code = MessageCode.Error
+        msg_body = bytes()
+
     return msg_code, msg_body
 
 class SerialCommunication:
