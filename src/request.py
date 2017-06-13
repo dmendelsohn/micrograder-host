@@ -1,102 +1,92 @@
+from enum import Enum
+
+class InputType(Enum):
+    Accelerometer = 1
+    Gyroscope = 2
+    Magnetometer = 3
+    DigitalRead = 4
+    AnalogRead = 5
+
+class OutputType(Enum):
+    Screen = 1
+    DigitalWrite = 2
+    AnalogWrite = 3
+
 ### REQUEST CLASSES
 class Request:
     def __init__(self, timestamp):
         self.timestamp = timestamp
-
-    def is_input(self):
-        return False # Default for base class
-
-    def is_output(self):
-        return False # Default for base class
-
-    def is_event(self):
-        return False # Default for base class
+        self.is_input = False # Default for base class
+        self.is_output = False # Default for base class
+        self.is_event = False # Default for base class
     
 
 class AccelerometerRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_input = True # Override default
+        self.data_type = InputType.Accelerometer
         #TODO: process args
-
-    def is_input(self):
-        return True # Override default
 
 class GyroscopeRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_input = True # Override default
+        self.data_type = InputType.Gyroscope
         #TODO: process args
-
-    def is_input(self):
-        return True # Override default
 
 class MagnetometerRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_input = True # Override default
+        self.data_type = InputType.Magnetometer
         #TODO: process args
-
-    def is_input(self):
-        return True # Override default
 
 class DigitalReadRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_input = True # Override default
+        self.data_type = InputType.DigitalRead
         #TODO: process args
-
-    def is_input(self):
-        return True # Override default
 
 class AnalogReadRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_input =  True # Override default
         #TODO: process args
-
-    def is_input(self):
-        return True # Override default
-
-class DigitalWriteRequest(Request):
-    def __init__(self, timestamp, ...):
-        super().__init__(timestamp)
-        #TODO: process args
-
-    def is_output(self):
-        return True # Override default
-
-class AnalogWriteRequest(Request):
-    def __init__(self, timestamp, ...):
-        super().__init__(timestamp)
-        #TODO: process args
-
-    def is_output(self):
-        return True # Override default
 
 class ScreenRequest(Request):
     def __init__(self, timestamp, ...):
         super().__init__(timestamp)
+        self.is_output = True # Override default
+        self.data_type = OutputType.Screen
+        #TODO: process args   
+
+class DigitalWriteRequest(Request):
+    def __init__(self, timestamp, ...):
+        super().__init__(timestamp)
+        self.is_output = True # Override default
+        self.data_type = OutputType.DigitalWrite
         #TODO: process args
 
-    def is_output(self):
-        return True # Override default      
+class AnalogWriteRequest(Request):
+    def __init__(self, timestamp, ...):
+        super().__init__(timestamp)
+        self.is_output = True # Override default
+        self.data_type = OutputType.AnalogWrite
+        #TODO: process args  
 
 class GPSRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp):
         super().__init__(timestamp)
-        #TODO: process args
-
-    def is_event(self):
-        return True # Override default
+        self.is_event = True # Override default
 
 class WifiRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp):
         super().__init__(timestamp)
-        #TODO: process args
-
-    def is_event(self):
-        return True # Override default
+        self.is_event = True # Override default
 
 class SystemRequest(Request):
-    def __init__(self, timestamp, ...):
+    def __init__(self, timestamp):
         super().__init__(timestamp)
-        #TODO: process args
-
-    def is_event(self):
-        return True # Override default
+        self.is_event = True # Override default

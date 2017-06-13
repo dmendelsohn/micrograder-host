@@ -103,13 +103,14 @@ class Frame:
         self.expected_outputs = {} # Build with add_expected_output method
         self.priority = priority
 
-    # input_type is in InputCodes, sequence is of type InputSequence
+    # input_type is an InputType, sequence is of type InputSequence
     def add_input(self, input_type, sequence):
         self.inputs[input_type] = sequence
 
-    # output_type is in OutputCodes, sequence if of type OutputSequence
+    # output_type is an OutputType sequence if of type OutputSequence
     def add_expected_output(self, output_type, sequence):
-        self.expected_outputs[output_type] = 
+        self.expected_outputs[output_type] = sequence
+        
     # t is an integer (time), input_type is in InputCodes
     # Returns latest value at a time <= t
     # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
@@ -137,11 +138,3 @@ class Frame:
             self.status = FrameStatus.AVOIDED # This frame can never be triggered
         elif not is_started and not is_ended:
             self.status = FrameStatus.NOT_BEGUN
-
-        #TODO: if request is a relevant output, log in self.observed_ouputs
-
-    #TODO: evaluate if frame passes test or not
-    def evaluate(self):
-        #TODO: implement
-        pass
-        
