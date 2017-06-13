@@ -8,9 +8,10 @@ class InputType(Enum):
     AnalogRead = 5
 
 class OutputType(Enum):
-    Screen = 1
-    DigitalWrite = 2
-    AnalogWrite = 3
+    DigitalWrite = 1
+    AnalogWrite = 2
+    ScreenFull = 3
+    ScreenTile = 4  # Not yet supported, this is for the future
 
 ### REQUEST CLASSES
 class Request:
@@ -60,14 +61,6 @@ class AnalogReadRequest(Request):
         self.analog_params = analog_params
         self.pin = pin
 
-# TODO: fill in this one
-class ScreenRequest(Request):
-    def __init__(self, timestamp, ...):
-        super().__init__(timestamp)
-        self.is_output = True # Override default
-        self.data_type = OutputType.Screen
-        #TODO: process args   
-
 class DigitalWriteRequest(Request):
     def __init__(self, timestamp, pin, value):
         super().__init__(timestamp)
@@ -84,6 +77,13 @@ class AnalogWriteRequest(Request):
         self.analog_params = analog_params
         self.pin = pin
         self.value = value
+
+class ScreenRequest(Request):
+    def __init__(self, timestamp, screen):
+        super().__init__(timestamp)
+        self.is_output = True # Override default
+        self.data_type = OuputType.ScreenFull
+        self.screen = screen
 
 class GPSRequest(Request):
     def __init__(self, timestamp):
