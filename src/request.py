@@ -13,6 +13,8 @@ class OutputType(Enum):
     ScreenFull = 3
     ScreenTile = 4  # Not yet supported, this is for the future
 
+AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
+
 ### REQUEST CLASSES
 class Request:
     def __init__(self, timestamp):
@@ -22,6 +24,7 @@ class Request:
         self.is_event = False # Default for base class
     
 
+# Inputs
 class AccelerometerRequest(Request):
     # analog params is named tuple with min_bin, max_bin, min_value, max_value
     def __init__(self, timestamp, analog_params):
@@ -61,6 +64,7 @@ class AnalogReadRequest(Request):
         self.analog_params = analog_params
         self.pin = pin
 
+# Outputs 
 class DigitalWriteRequest(Request):
     def __init__(self, timestamp, pin, value):
         super().__init__(timestamp)
@@ -85,7 +89,28 @@ class ScreenRequest(Request):
         self.data_type = OuputType.ScreenFull
         self.screen = screen
 
-class GPSRequest(Request):
+# Events
+class ScreenInitRequest(Request):
+    # Width and height are screen dimensions in 8x8 "tiles"
+    # E.g. 128x64 screen has width=16 and height=8
+    def __init__(self, timestamp, width, height):
+        super().__init__(timestamp)
+        self.is_event = True # Override default
+        self.width = width
+        self.height = height
+
+class InitRequest(Request):
+    def __init__(self, timestamp):
+        super().__init__(timestamp)
+        self.is_event = True # Override default
+
+class PrintRequest(Request):
+    def __init__(self, timestamp, string):
+        super().__init__(timestamp)
+        self.is_event = True # Override default
+        self.string = string
+
+class GpsRequest(Request):
     def __init__(self, timestamp):
         super().__init__(timestamp)
         self.is_event = True # Override default
@@ -95,7 +120,6 @@ class WifiRequest(Request):
         super().__init__(timestamp)
         self.is_event = True # Override default
 
-class SystemRequest(Request):
-    def __init__(self, timestamp):
+class InvalidRequest(Request):
+    def __init__self(self, timestamp):
         super().__init__(timestamp)
-        self.is_event = True # Override default
