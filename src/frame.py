@@ -101,18 +101,15 @@ class Frame:
         self.status = FrameStatus.NOT_BEGUN
         self.inputs = {} # Build with add_input method
         self.expected_outputs = {} # Build with add_expected_output method
-        self.observed_outputs = {}
         self.priority = priority
 
-    # input_type is in OutputCodes, sequence is of type InputSequence
+    # input_type is in InputCodes, sequence is of type InputSequence
     def add_input(self, input_type, sequence):
         self.inputs[input_type] = sequence
 
-    # output_type is in InputCodes, sequence if of type OutputSequence
+    # output_type is in OutputCodes, sequence if of type OutputSequence
     def add_expected_output(self, output_type, sequence):
-        #TODO: implement
-        pass
-
+        self.expected_outputs[output_type] = 
     # t is an integer (time), input_type is in InputCodes
     # Returns latest value at a time <= t
     # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
