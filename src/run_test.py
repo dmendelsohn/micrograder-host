@@ -1,38 +1,29 @@
-import comm
-import utils
-from utils import MessageCode
-from utils import Request
-from utils import Response
+from comm import SerialCommunication
+from response import ErrorResponse
+from test import TestLog
 
 
 # Assume connection is made
 # TODO: more descriptive error handling
 def run_test(test):
-    prev_frame_id = None
+    sc = SerialCommunication()
+    tl = TestLog()
+    while not sc.connect():
+        # Do nothing, wait for connection
+        pass
+
     while True:
-        is_error = False
-        new_frame_id = None
-        req = comm.read_message()
-        test.update(req)
-        if req.is_input():
-            resp_body, new_frame_id = test.get_response(req)
-        elif req.is_output() or req.is_event():
-            resp_body = bytes()
+        sc.get_request()
+        if request.is_valid:
+            response, frame_id = test.update(request)
         else:
-            is_error = True
-            resp_body = bytes('Bad code'.encode('ascii'))
+            response, frame_id = ErrorResponse(), -1
 
-        if resp_body is None:
-            is_error = True
-            resp_body = bytes('No response possible'.encode('ascii'))
- 
-
-        resp_code = MessageCode.ACK
-        if is_error:
-            resp_code = MessageCode.ERR
-        resp = Response(resp_code, resp_body)
-        comm.send_message(resp)
+        tl.log(request, response, frame_id)
+        sc.send_response(response)
+        if response.test_complete:
+            break
 
         #DEBUG
-        print("Received request: {}".format(req))
-        print("Sent response {}".format(resp))
+        #print("Received request: {}".format(req))
+        #print("Sent response {}".format(resp))

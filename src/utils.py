@@ -1,9 +1,5 @@
 import struct
 
-class Test:
-    # TODO: implement as iterable of Frames along with output log
-    pass
-
 # Code for byte encoding/decoding for integers
 FORMAT_CHARS = {
     (1,False): 'B', (1,True): 'b',

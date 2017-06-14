@@ -13,6 +13,7 @@ class Screen:
             self.buffer = np.zeros((height, width), dtype=np.uint8)
 
     # paint rect (2D numpy array) onto buffer with top-left corner at x, y
+    # Later: make this handle out-of-bounds issues
     def paint(self, rect, x, y):
         self.buffer[y:y+rect.shape[0],x:x+x.shape[1]] = rect
 

@@ -22,6 +22,7 @@ class Request:
         self.is_input = False # Default for base class
         self.is_output = False # Default for base class
         self.is_event = False # Default for base class
+        self.is_valid = True  # Default for base class
     
 
 # Inputs
@@ -123,3 +124,4 @@ class WifiRequest(Request):
 class InvalidRequest(Request):
     def __init__self(self, timestamp):
         super().__init__(timestamp)
+        self.is_valid = False # Override default

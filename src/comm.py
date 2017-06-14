@@ -53,9 +53,9 @@ class SerialCommunication:
         self.ser = None
         self.last_screen = None # Tracks last screen, to allow for incremental messages
 
-    def connect(self):
+    def connect(self, addr=ADDR, baud=BAUD):
         try:
-            self.ser = serial.Serial(ADDR, BAUD)
+            self.ser = serial.Serial(addr, baud)
             return True
         except SerialException:
             self.ser = None
@@ -72,7 +72,7 @@ class SerialCommunication:
             msg_body = bytes()
         return bytes_to_request(msg_code, msg_body)
 
-    def send_response(response):
+    def send_response(self, response):
         msg_code, msg_body = response_to_bytes(response)
         to_send = utils.encode_int(msg_code, CODE_BYTES, signed=False)
         to_send += utils.encode_int(len(msg_body), MSG_SIZE_BYTES, signed=False)
@@ -81,7 +81,7 @@ class SerialCommunication:
 
     # Input: bytes of length 16 and interpret as 4 int32s
     # Return: named tuple: min_bin, max_bin, min_value, max_value
-    def decode_analog_params(raw):
+    def decode_analog_params(self, raw):
         min_bin = utils.decode_int(raw[0:4], signed=True)
         max_bin = utils.decode_int(raw[4:8], signed=True)
         min_value = utils.decode_int(raw[8:12], signed=True)
@@ -91,12 +91,12 @@ class SerialCommunication:
     # Input: bytes of length 8
     # Return: 8x8 numpy array of uint8 (1 represents lit pixel)
     # Each byte of input corresponds to column of output, with MSB at top of column
-    def decode_screen_tile(data):
+    def decode_screen_tile(self, data):
         data = np.array([[elt] for elt in data], dtype=np.uint8)
         tile = np.unpackbits(data, axis=1)
         return tile.transpose()
 
-    def bytes_to_request(msg_code, timestamp, msg_body):
+    def bytes_to_request(self, msg_code, timestamp, msg_body):
         if msg_code == MessageCode.Init:  # Body: <> (empty)
             return InitRequest(timestamp)
 
@@ -204,7 +204,7 @@ class SerialCommunication:
         else:  # Invalid message code
             return InvalidRequest(timestamp)
 
-    def response_to_bytes(response):
+    def response_to_bytes(self, response):
         if response.is_error:
             msg_code = MessageCode.Error
         else:
