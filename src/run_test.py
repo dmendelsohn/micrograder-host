@@ -1,13 +1,10 @@
 from comm import SerialCommunication
 from response import ErrorResponse
-from test import TestLog
+from test import LogEntry
 
-
-# Assume connection is made
-# TODO: more descriptive error handling
 def run_test(test):
     sc = SerialCommunication()
-    tl = TestLog()
+    test_log = [] # List, elements of type LogEntry
     while not sc.connect():
         # Do nothing, wait for connection
         pass
@@ -19,11 +16,9 @@ def run_test(test):
         else:
             response, frame_id = ErrorResponse(), -1
 
-        tl.log(request, response, frame_id)
+        test_log.append(LogEntry(request=request, response=response, frame_id=frame_id))
         sc.send_response(response)
-        if response.test_complete:
+        if response.is_error or response.test_complete:
             break
 
-        #DEBUG
-        #print("Received request: {}".format(req))
-        #print("Sent response {}".format(resp))
+    return test_log

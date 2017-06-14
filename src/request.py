@@ -23,6 +23,8 @@ class Request:
         self.is_output = False # Default for base class
         self.is_event = False # Default for base class
         self.is_valid = True  # Default for base class
+        self.pin = None # Default for base class
+        self.analog_params = None # Default for base class
     
 
 # Inputs

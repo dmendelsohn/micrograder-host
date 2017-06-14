@@ -46,7 +46,9 @@ class MessageCode(Enum):
 
     # Byte codes for responses
     Ack = 0x80
-    Error = 0x81
+    AckComplete = 0x81
+    Error = 0x82
+    ErrorComplete = 0x83
 
 class SerialCommunication:
     def __init__(self):
@@ -206,9 +208,15 @@ class SerialCommunication:
 
     def response_to_bytes(self, response):
         if response.is_error:
-            msg_code = MessageCode.Error
+            if response.test_complete:
+                msg_code = MessageCode.ErrorComplete
+            else:
+                msg_code = MessageCode.Error
         else:
-            msg_code = MessageCode.Ack
+            if response.test_complete:
+                msg_code = MessageCode.AckComplete
+            else:
+                msg_code = MessageCode.Ack
 
         if type(response) is AckResponse: # Ack without data
             msg_body = bytes()

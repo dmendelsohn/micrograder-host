@@ -44,11 +44,11 @@ class Condition:
             if start_time is not None:
                 if isinstance(self.cause, int): # satisfy a certain number of millis after start
                     satisfied_time = start_time + self.cause
-                    if satisfied_time <= request.get_time():
+                    if satisfied_time <= request.timestamp:
                         self.satisfied_at = satisfied_time
                 else: # cause is a function from request -> boolean
                     if self.cause(request):
-                        self.satisfied_at = request.get_time()
+                        self.satisfied_at = request.timestamp
 
         elif self.type == ConditionType.OR:
             sub_times = []
@@ -104,23 +104,25 @@ class Frame:
         self.priority = priority
 
     # input_type is an InputType, sequence is of type InputSequence
-    def add_input(self, input_type, sequence):
-        self.inputs[input_type] = sequence
+    def add_input(self, sequence, input_type, channel=None):
+        self.inputs[(input_type, channel)] = sequence
 
     # output_type is an OutputType sequence if of type OutputSequence
     def add_expected_output(self, output_type, sequence):
         self.expected_outputs[output_type] = sequence
-        
-    # t is an integer (time), input_type is in InputCodes
-    # Returns latest value at a time <= t
+
+    # t is an integer (time), input_type an InputType
+    # Returns latest value, for this input type, at a time <= t
     # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
-    def get_value(t, input_type):
-        if input_type not in self.sequences:
-            return None  # No value for that input_type
+    def get_value(self, t, input_type, channel=None):
         if self.status != FrameStatus.IN_PROGRESS:
             return None  # No value since the frame is not in progress
+
+        key = (input_type, channel)
+        if key not in self.sequences:
+            return None  # No value for that input_type, channel combo
         relative_t = (t - self.start_time) 
-        return self.inputs[input_type].get_value(relative_t)
+        return self.inputs[key].get_value(relative_t)
 
     # TODO: description
     def update(self, request):
