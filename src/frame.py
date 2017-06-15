@@ -88,17 +88,17 @@ class OutputSequence:
     pass
 
 class FrameStatus(Enum):
-    NOT_BEGUN = 1
-    IN_PROGRESS = 2
-    COMPLETE = 3
-    AVOIDED = 4
+    NotBegun = 1
+    InProgress = 2
+    Complete = 3
+    Avoided = 4
 
 class Frame:
     def __init__(self, start_condition, end_condition, priority=0):
         self.start_condition = start_condition # Should be of type 'Event'
         self.end_condition = end_condition  # Should be of type 'Event'
         self.start_time = None
-        self.status = FrameStatus.NOT_BEGUN
+        self.status = FrameStatus.NotBegun
         self.inputs = {} # Build with add_input method
         self.expected_outputs = {} # Build with add_expected_output method
         self.priority = priority
@@ -108,16 +108,15 @@ class Frame:
         self.inputs[(input_type, channel)] = sequence
 
     # output_type is an OutputType sequence if of type OutputSequence
-    def add_expected_output(self, output_type, sequence):
-        self.expected_outputs[output_type] = sequence
+    def add_expected_output(self, sequence, output_type, channel=None):
+        self.expected_outputs[(output_type, channel)] = sequence
 
     # t is an integer (time), input_type an InputType
     # Returns latest value, for this input type, at a time <= t
     # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
     def get_value(self, t, input_type, channel=None):
-        if self.status != FrameStatus.IN_PROGRESS:
+        if self.status != FrameStatus.InProgress:
             return None  # No value since the frame is not in progress
-
         key = (input_type, channel)
         if key not in self.sequences:
             return None  # No value for that input_type, channel combo
@@ -133,10 +132,13 @@ class Frame:
         is_started = self.start_condition.is_satisfied()
         is_ended = self.end_condition.is_satisfied()
         if is_started and is_ended:
-            self.status = FrameStatus.COMPLETE
+            self.status = FrameStatus.Complete
         elif is_started and not is_ended:
-            self.status = FrameStatus.IN_PROGRESS
+            self.status = FrameStatus.InProgress
         elif not is_started and is_ended:
-            self.status = FrameStatus.AVOIDED # This frame can never be triggered
+            self.status = FrameStatus.Avoided # This frame can never be triggered
         elif not is_started and not is_ended:
-            self.status = FrameStatus.NOT_BEGUN
+            self.status = FrameStatus.NotBegun
+
+    def is_active(self):
+        return self.status == FrameStatus.InProgress

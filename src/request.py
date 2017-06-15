@@ -1,4 +1,7 @@
 from enum import Enum
+from collections import namedtuple
+
+THREE_AXIS = ['x', 'y', 'z']  # Standard channels for three axis quantities
 
 class InputType(Enum):
     Accelerometer = 1
@@ -10,10 +13,14 @@ class InputType(Enum):
 class OutputType(Enum):
     DigitalWrite = 1
     AnalogWrite = 2
-    ScreenFull = 3
-    ScreenTile = 4  # Not yet supported, this is for the future
+    Screen = 3
 
-AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
+class EventType(Enum):
+    Init = 1
+    ScreenInit = 2
+    Print = 3
+    Wifi = 4
+    Gps = 5
 
 ### REQUEST CLASSES
 class Request:
@@ -23,107 +30,41 @@ class Request:
         self.is_output = False # Default for base class
         self.is_event = False # Default for base class
         self.is_valid = True  # Default for base class
-        self.pin = None # Default for base class
-        self.analog_params = None # Default for base class
-    
 
-# Inputs
-class AccelerometerRequest(Request):
-    # analog params is named tuple with min_bin, max_bin, min_value, max_value
-    def __init__(self, timestamp, analog_params):
+
+# Subclass for requests that require data in response
+class InputRequest(Request):
+    def __init__(self, timestamp, data_type, channels=[None], analog_params=None):
         super().__init__(timestamp)
         self.is_input = True # Override default
-        self.data_type = InputType.Accelerometer
+        self.data_type = data_type # Should be InputType
+        self.channels = channels # List of hashable elements (e.g. ['x', 'y', 'z'])
         self.analog_params = analog_params
 
-class GyroscopeRequest(Request):
-    # analog params is named tuple with min_bin, max_bin, min_value, max_value
-    def __init__(self, timestamp, analog_params):
-        super().__init__(timestamp)
-        self.is_input = True # Override default
-        self.data_type = InputType.Gyroscope
-        self.analog_params = analog_params
 
-class MagnetometerRequest(Request):
-    # analog params is named tuple with min_bin, max_bin, min_value, max_value
-    def __init__(self, timestamp, analog_params):
-        super().__init__(timestamp)
-        self.is_input = True # Override default
-        self.data_type = InputType.Magnetometer
-        self.analog_params = analog_params
-
-class DigitalReadRequest(Request):
-    def __init__(self, timestamp, pin):
-        super().__init__(timestamp)
-        self.is_input = True # Override default
-        self.data_type = InputType.DigitalRead
-        self.pin = pin
-
-class AnalogReadRequest(Request):
-    # analog params is named tuple with min_bin, max_bin, min_value, max_value
-    def __init__(self, timestamp, analog_params, pin):
-        super().__init__(timestamp)
-        self.is_input =  True # Override default
-        self.analog_params = analog_params
-        self.pin = pin
-
-# Outputs 
-class DigitalWriteRequest(Request):
-    def __init__(self, timestamp, pin, value):
+# Subclass for requests that are reporting system outputs
+class OutputRequest(Request):
+    def __init__(self, timestamp, data_type, values, channels=[None], analog_params=None):
         super().__init__(timestamp)
         self.is_output = True # Override default
-        self.data_type = OutputType.DigitalWrite
-        self.pin = pin
-        self.value = value
-
-class AnalogWriteRequest(Request):
-    def __init__(self, timestamp, analog_params, pin, value):
-        super().__init__(timestamp)
-        self.is_output = True # Override default
-        self.data_type = OutputType.AnalogWrite
+        self.data_type = data_type # Should be OutputType
+        self.values = values # Should be list of values
+        self.channels = channels # Should be list of channel (corresponds with values)
         self.analog_params = analog_params
-        self.pin = pin
-        self.value = value
 
-class ScreenRequest(Request):
-    def __init__(self, timestamp, screen):
-        super().__init__(timestamp)
-        self.is_output = True # Override default
-        self.data_type = OuputType.ScreenFull
-        self.screen = screen
 
-# Events
-class ScreenInitRequest(Request):
-    # Width and height are screen dimensions in 8x8 "tiles"
-    # E.g. 128x64 screen has width=16 and height=8
-    def __init__(self, timestamp, width, height):
+# Subclass for requests that are reporting internal system events
+class EventRequest(Request):
+    def __init__(self, timestamp, data_type, arg=None):
         super().__init__(timestamp)
         self.is_event = True # Override default
-        self.width = width
-        self.height = height
+        self.data_type = data_type # Should be EventType
+        self.arg = arg # Any additional data
 
-class InitRequest(Request):
-    def __init__(self, timestamp):
-        super().__init__(timestamp)
-        self.is_event = True # Override default
 
-class PrintRequest(Request):
-    def __init__(self, timestamp, string):
-        super().__init__(timestamp)
-        self.is_event = True # Override default
-        self.string = string
-
-class GpsRequest(Request):
-    def __init__(self, timestamp):
-        super().__init__(timestamp)
-        self.is_event = True # Override default
-
-class WifiRequest(Request):
-    def __init__(self, timestamp):
-        super().__init__(timestamp)
-        self.is_event = True # Override default
-
+# Subclass for invalid requests
 class InvalidRequest(Request):
-    def __init__self(self, timestamp):
+    def __init__(self, timestamp, arg=None):
         super().__init__(timestamp)
         self.is_valid = False # Override default
+        self.arg = arg # Additional data

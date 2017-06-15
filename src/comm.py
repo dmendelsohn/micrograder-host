@@ -3,6 +3,7 @@ from serial import SerialException
 from enum import Enum
 from request import *
 from response import *
+from screen import *
 import numpy as np
 
 
@@ -100,75 +101,85 @@ class SerialCommunication:
 
     def bytes_to_request(self, msg_code, timestamp, msg_body):
         if msg_code == MessageCode.Init:  # Body: <> (empty)
-            return InitRequest(timestamp)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Init)
 
         elif msg_code == MessageCode.Print: # <uint8 * chars>
-            string = str(msg_body, encoding='utf-8')
-            return PrintRequest(timestamp, string)
+            text = str(msg_body, encoding='utf-8')
+            return EventRequest(timestamp=timestamp, data_type=EventType.Print, arg=text)
 
         elif msg_code == MessageCode.DigitalRead: # Body format: <uint8 pin>
             if len(msg_body) < 1:
-                return InvalidRequest(timestamp)  # Not enough data
+                return InvalidRequest(timestamp=timestamp)  # Not enough data
             pin = msg_body[0]
-            return DigitalReadRequest(pin)
+            return InputRequest(timestamp=timestamp, data_type=InputType.DigitalRead, channels=[pin])
 
         elif msg_code == MessageCode.DigitalWrite: # <uint8 pin, uint8 val>
             if len(msg_body) < 2:
-                return InvalidRequest(timestamp): # Not enough data
+                return InvalidRequest(timestamp=timestamp): # Not enough data
             pin = msg_body[0]
             value = msg_body[1]
-            return DigitalWriteRequest(pin, value)
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.DigitalWrite,
+                                 values=[value], channels=[pin])
 
         elif msg_code == MessageCode.AnalogRead: #<uint8 pin, int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < (1+ANALOG_PARAMS_SIZE):
-                return InvalidRequest(timestamp) # Not enough data
+                return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
             analog_params = decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
-            return AnalogReadRequest(timestamp, analog_params, pin)
+            return InputRequest(timestamp=timestamp, data_type=InputType.AnalogRead,
+                                channels=[pin], analog_params=analog_params)
 
         elif msg_code == MessageCode.AnalogWrite: #<uint8 pin, int32 min_bin, max_bin, min_val, max_val, val>
             if len(msg_body) < (1+4+ANALOG_PARAMS_SIZE):
-                return InvalidRequest(timestamp) # Not enough data
+                return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
             analog_params = decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
             values_bytes = msg_body[(1+ANALOG_PARAMS_SIZE):(1+4+ANALOG_PARAMS_SIZE)]
             value = utils.decode_int(value_bytes, signed=True)
-            return AnalogWriteRequest(timestamp, analog_params, pin, value)
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.AnalogWrite,
+                                 values=[value], channels=[pin], analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuAcc: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
             analog_params = decode_analog_params(msg_body)
-            return AccelerometerRequest(timestamp, analog_params)
+            return InputRequest(timestamp=timestamp, data_type=InputType.Accelerometer,
+                                channels=THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuGyro: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
             analog_params = decode_analog_params(msg_body)
-            return GyroscopeRequest(timestamp, analog_params)
+            return InputRequest(timestamp=timestamp, data_type=InputType.Gyroscope,
+                                channels=THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuMag: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
             analog_params = decode_analog_params(msg_body)
-            return MagnetometerRequest(timestamp, analog_params)
+            return InputRequest(timestamp=timestamp, data_type=InputType.Magnetometer,
+                                channels=THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ScreenInit: # <uint8 tile_width, tile_height>
             if len(msg_body) < 2:
-                return InvalidRequest(timestamp) # Not enough data
+                return InvalidRequest(timestamp=timestamp) # Not enough data
+            if self.last_screen is not None:
+                return InvalidRequest(timestamp=timestamp) # Redundant screen initialization
             tile_width = msg_body[0]
             tile_height = msg_body[1]
             self.last_screen = Screen(width=8*tile_width, height=8*tile_height)
+            return EventRequest(timestamp=timestamp, data_type=EventType.ScreenInit,
+                                arg=ScreenShape(width=8*tile_width, height=8*tile_height))
 
         elif msg_code == MessageCode.ScreenFull: # <uint8 tile_width, tile_height, uint8 * buffer>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
             if self.last_screen is None:
-                return InvalidRequest(timestamp) # No screen initialization
+                return InvalidRequest(timestamp=timestamp) # No screen initialization
             tile_width = (self.last_screen.shape[1]+7)//8
             tile_height = (self.last_screen.shape[0]+7)//8
 
             if len(msg_body) < (8*tile_width*tile_height):
-                return InvalidRequest(timestamp) # Not enough data
+                return InvalidRequest(timestamp=timestamp) # Not enough data
 
             # Now we construct the screen
             screen = Screen(width=8*tile_width, height=8*tile_height) # Create empty buffer
@@ -178,8 +189,8 @@ class SerialCommunication:
                     tile = decode_screen_tile(msg_body[start_index:start_index+8])
                     screen.paint(rect=tile, x=8*x, y=8*y)
 
-            self.last_screen = screen
-            return ScreenRequest(timestamp, screen)
+            self.last_screen = screen.copy()
+            return ScreenRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
 
         elif msg_code == MessageCode.ScreenTile: # <uint8 x, uint8 y, uint8 tile[8]>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
@@ -193,18 +204,20 @@ class SerialCommunication:
             y = msg_body[1] # Measured in tiles, not pixels
             tile = decode_screen_tile(msg_body[2:10])
             self.last_screen.paint(rect=tile, x=8*x, y=8*y)
+            screen = self.last_screen.copy()
+            return ScreenRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
 
         elif msg_code == MessageCode.GpsFix: # Later: expand protocol
-            return GpsRequest(timestamp)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Gps)
 
         elif msg_code == MessageCode.WifiReq: # Later: expand protocol
-            return WifiRequest(timestamp)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi)
 
         elif msg_code == MessageCode.WifiResp: # Later: expand protocol
-            return WifiRequest(timestamp)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi)
 
         else:  # Invalid message code
-            return InvalidRequest(timestamp)
+            return InvalidRequest(timestamp=timestamp)
 
     def response_to_bytes(self, response):
         if response.is_error:
@@ -220,16 +233,19 @@ class SerialCommunication:
 
         if type(response) is AckResponse: # Ack without data
             msg_body = bytes()
+
         elif type(response) is ErrorResponse: # Error without data
             msg_body = bytes()
-        elif type(response) is DigitalValuesResponse: # Sequence of digital values (uint8)
+
+        elif type(response) is ValuesResponse: # Sequence of digital values (uint8)
             msg_body = bytes()
+            if response.analog:
             for value in response.values:
-                msg_body += utils.encode_int(value, width=1, signed=False)
-        elif type(response) is AnalogValuesResponse: # Sequence of analog values (int32)
-            msg_body = bytes()
-            for value in response.values:
-                msg_body += utils.encode_int(value, width=4, signed=True)
+                if response.analog:
+                    msg_body += utils.encode_int(value, width=4, signed=True)
+                else:
+                    msg_body += utils.encode_int(value, width=1, signed=False)
+
         else: # Unsupported response type
             msg_code = MessageCode.Error
             msg_body = bytes()

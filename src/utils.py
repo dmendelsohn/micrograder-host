@@ -1,5 +1,16 @@
 import struct
 
+AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
+
+# value: a numeric
+# params: of type AnalogParams
+# Returns "bin" for value according to the params (with bounding)
+def adc(value, params):
+    frac = (value - params.min_value) / (params.max_value - params.min_value)
+    raw_bin = frac * (params.max_bin + params.min_bin) + params.min_bin
+    bounded_bin = min(params.max_bin, max(params.min_bin, raw_bin))
+    return int(bounded_bin)
+
 # Code for byte encoding/decoding for integers
 FORMAT_CHARS = {
     (1,False): 'B', (1,True): 'b',

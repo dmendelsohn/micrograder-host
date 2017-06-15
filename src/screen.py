@@ -1,5 +1,7 @@
 import numpy as np
 
+ScreenShape = namedtuple('ScreenShape', ['width', 'height'])  # In pixels
+
 # Note: 0, 0 is considered top-left corner
 # Note: typically we'll talk in (x,y) coordinates, not (row, col)
 class Screen:
@@ -8,7 +10,7 @@ class Screen:
     # width and height are measured in pixels
     def __init__(self, buff=None, width=None, height=None):
         if buff is not None:
-            self.buffer = buff
+            self.buffer = np.copy(buff)
         else: # Assume width and height are provided
             self.buffer = np.zeros((height, width), dtype=np.uint8)
 
@@ -25,5 +27,8 @@ class Screen:
 
     def __eq__(self, other):
         return np.array_equal(self.buffer, other.buffer)
+
+    def copy(self):
+        return Screen(buff=self.buffer)
 
     # Later: lots of utility functions identifying features of buffer
