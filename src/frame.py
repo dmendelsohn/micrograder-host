@@ -1,5 +1,6 @@
 import bisect
 from enum import enum
+from collections import namedtuple
 
 class ConditionType(Enum):
     AFTER = 1
@@ -68,24 +69,44 @@ class Condition:
              if None not in sub_times: # If all elts in sub_times are not None, we're satisfied
                 self.satisfied_at = max(sub_times)
 
-class InputSequence:
-    # values must be sorted list of tuples of form (time, value)
-    # All times must be unique non-negative integers
-    # All values must be numeric
-    def __init__(self, values):  # Later: build more useful constructors / factory functions
-        self.values = values
+TimedValue = namedtuple('TimedValue', ['time', 'value']) # times must be non-negative integers
+class ValueSequence:
+    # values must be list of TimedValue with unique times
+    def __init__(self, values=None):
+        if values:
+            self.values = sorted(values, key=lambda timed_val: timed_val.time)
+        else:
+            self.values = []
 
-    # Returns latest value at a time <= t, or None if no value exists at a time <= t
-    def get_value(t):
-        index = bisect.bisect(self.values, (t+0.5, 0)) # +0.5 to break ties
-        if index == 0:
+    def append(self, time, value):
+        self.values.append(TimedValue(time=time, value=value))
+
+    # Returns latest value with .time <= time, or None if no value exists with .time <= time
+    def get_value(time):
+        index = bisect.bisect(self.values, (time+0.5, 0)) # +0.5 to break ties
+        index -= 1
+        if index < 0:
             return None # No inputs before time t
         else:
-            return self.values[index-1][1]
+            return self.values[index].value
 
-class OutputSequence:
-    #TODO: implement
-    pass
+    # Returns list of values in time range [start, end), or [] if no such values exist
+    def get_values(start, end):
+        index = bisect.bisect(self.values, (time+0.5, 0)) # +0.5 to break ties
+        index -= 1
+        if index < 0:
+            return []
+        else:
+            results = []
+            while index < len(self.valeus) and self.values[index].time < end:
+                results.append(self.values[index].value)
+            return results
+
+    def __getitem__(self, key):  # To allow for list-style access
+        return self.values[key]
+
+    def __len__(self):
+        return len(self.values)
 
 class FrameStatus(Enum):
     NotBegun = 1
@@ -94,22 +115,20 @@ class FrameStatus(Enum):
     Avoided = 4
 
 class Frame:
+    # TODO: frame should contain check_aggregate() function for expected_outputs
+
     def __init__(self, start_condition, end_condition, priority=0):
-        self.start_condition = start_condition # Should be of type 'Event'
-        self.end_condition = end_condition  # Should be of type 'Event'
+        self.start_condition = start_condition # Should be of type Condition
+        self.end_condition = end_condition  # Should be of type Condition
         self.start_time = None
         self.status = FrameStatus.NotBegun
         self.inputs = {} # Build with add_input method
-        self.expected_outputs = {} # Build with add_expected_output method
         self.priority = priority
 
     # input_type is an InputType, sequence is of type InputSequence
     def add_input(self, sequence, input_type, channel=None):
         self.inputs[(input_type, channel)] = sequence
 
-    # output_type is an OutputType sequence if of type OutputSequence
-    def add_expected_output(self, sequence, output_type, channel=None):
-        self.expected_outputs[(output_type, channel)] = sequence
 
     # t is an integer (time), input_type an InputType
     # Returns latest value, for this input type, at a time <= t
