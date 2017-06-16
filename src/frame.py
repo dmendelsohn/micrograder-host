@@ -14,7 +14,6 @@ class Condition:
     #       ... or t=0 if subconditions not given
     # if cond_type is OR or AND, subconditions must be non-empty list of conditions
     def __init__(self, cond_type, cause=None, subconditions=None):
-        #TODO: implement
         self.satisfied_at = None  # Initially, condition is automatically unsatisfied (i.e. t=None)
         self.type = cond_type
         self.cause = cause # integer (i.e. time), or function from request -> boolean
@@ -27,7 +26,7 @@ class Condition:
     def satisfied_at(self):
         return self.satisfied_at
 
-    def update(self, request): #TODO: finish this
+    def update(self, request):
         if self.last_update_request == requst:
             return # No need to do anything, already updated for this request
         self.last_update_request = request
@@ -115,8 +114,6 @@ class FrameStatus(Enum):
     Avoided = 4
 
 class Frame:
-    # TODO: frame should contain check_aggregate() function for expected_outputs
-
     def __init__(self, start_condition, end_condition, priority=0):
         self.start_condition = start_condition # Should be of type Condition
         self.end_condition = end_condition  # Should be of type Condition
@@ -125,7 +122,7 @@ class Frame:
         self.inputs = {} # Build with add_input method
         self.priority = priority
 
-    # input_type is an InputType, sequence is of type InputSequence
+    # input_type is an InputType, sequence is of type ValueSequence
     def add_input(self, sequence, input_type, channel=None):
         self.inputs[(input_type, channel)] = sequence
 

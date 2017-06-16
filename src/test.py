@@ -26,6 +26,7 @@ class Test:
         self.frames = frames # List of frames
         self.test_points = test_points # List of expected output dicts for each frame
         self.aggregators = aggregators # Dict mapping (OutputType,channel)-> func(list(bool)->bool)
+        self.output_log = OutputLog()
 
     # Return Response, frame_id
     def update(self, request): # request is a well-formed Request
@@ -51,6 +52,13 @@ class Test:
                 response = ValuesResponse(values=values, analog=analog)
 
         else: # Regular ACK for non-inputs
+            if request.is_output: # Log it
+                output_type = request.data_type
+                for (channel, value) in zip(request.channels, request.values):
+                    if request.analog_params is not None:  # Need to convert digital to analog
+                        value = utils.dac(value, request.analog_params)
+                    output_log.record_output(output_type, channel, request.timestamp, value)
+
             response = AckResponse()
 
         # Determine if end condition is satisfied

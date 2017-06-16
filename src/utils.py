@@ -7,9 +7,18 @@ AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'm
 # Returns "bin" for value according to the params (with bounding)
 def adc(value, params):
     frac = (value - params.min_value) / (params.max_value - params.min_value)
-    raw_bin = frac * (params.max_bin + params.min_bin) + params.min_bin
+    raw_bin = frac * (params.max_bin - params.min_bin) + params.min_bin
     bounded_bin = min(params.max_bin, max(params.min_bin, raw_bin))
     return int(bounded_bin)
+
+# value: an int representing "bin"
+# params: of type AnanlogParams
+# Returns analog value according to params (with bounding)
+def dac(value, params):
+    frac = (value - params.min_bin) / (params.max_bin - params.min_bin)
+    raw_value = frac * (params.max_value - params.min_value) + params.min_value
+    bounded_value = min(params.max_value, max(params.min_value, raw_value))
+    return bounded_value
 
 # Code for byte encoding/decoding for integers
 FORMAT_CHARS = {
