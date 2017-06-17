@@ -115,7 +115,7 @@ class SerialCommunication:
 
         elif msg_code == MessageCode.DigitalWrite: # <uint8 pin, uint8 val>
             if len(msg_body) < 2:
-                return InvalidRequest(timestamp=timestamp): # Not enough data
+                return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
             value = msg_body[1]
             return OutputRequest(timestamp=timestamp, data_type=OutputType.DigitalWrite,
@@ -239,7 +239,6 @@ class SerialCommunication:
 
         elif type(response) is ValuesResponse: # Sequence of digital values (uint8)
             msg_body = bytes()
-            if response.analog:
             for value in response.values:
                 if response.analog:
                     msg_body += utils.encode_int(value, width=4, signed=True)

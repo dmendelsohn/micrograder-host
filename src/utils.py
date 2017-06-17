@@ -1,24 +1,29 @@
 import struct
+from collections import namedtuple
 
 AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
 
 # value: a numeric
 # params: of type AnalogParams
 # Returns "bin" for value according to the params (with bounding)
-def adc(value, params):
+def analog_to_digital(value, params):
     frac = (value - params.min_value) / (params.max_value - params.min_value)
-    raw_bin = frac * (params.max_bin - params.min_bin) + params.min_bin
+    raw_bin = round(frac * (params.max_bin - params.min_bin) + params.min_bin)
     bounded_bin = min(params.max_bin, max(params.min_bin, raw_bin))
-    return int(bounded_bin)
+    return bounded_bin
+
+adc = analog_to_digital # alias
 
 # value: an int representing "bin"
 # params: of type AnanlogParams
 # Returns analog value according to params (with bounding)
-def dac(value, params):
+def digital_to_analog(value, params):
     frac = (value - params.min_bin) / (params.max_bin - params.min_bin)
     raw_value = frac * (params.max_value - params.min_value) + params.min_value
     bounded_value = min(params.max_value, max(params.min_value, raw_value))
     return bounded_value
+
+dac = digital_to_analog # alias
 
 # Code for byte encoding/decoding for integers
 FORMAT_CHARS = {
@@ -51,5 +56,5 @@ def encode_int(num, width=4, signed=False):
         except struct.error as e:
             raise e
     else:
-        raise ValueError('Invalid encode width={} bytes with signed = {}'.format(width, signed))
+        raise ValueError('Invalid encode width={} bytes with signed={}'.format(width, signed))
 

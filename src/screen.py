@@ -1,4 +1,5 @@
 import numpy as np
+from collections import namedtuple
 
 ScreenShape = namedtuple('ScreenShape', ['width', 'height'])  # In pixels
 

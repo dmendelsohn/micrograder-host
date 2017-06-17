@@ -1,11 +1,9 @@
 from comm import SerialCommunication
 from response import ErrorResponse
-from test import LogEntry
 
 def run_test(test):
     sc = SerialCommunication()
     output_log = OutputLog()
-    #test_log = [] # List, elements of type LogEntry
 
     while not sc.connect():
         # Do nothing, wait for connection

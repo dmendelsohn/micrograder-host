@@ -1,5 +1,5 @@
 import bisect
-from enum import enum
+from enum import Enum
 from collections import namedtuple
 
 class ConditionType(Enum):
@@ -65,7 +65,7 @@ class Condition:
                 subcondition.update(request)
                 sub_times.append(subcondition.satisfied_at)
             
-             if None not in sub_times: # If all elts in sub_times are not None, we're satisfied
+            if None not in sub_times: # If all elts in sub_times are not None, we're satisfied
                 self.satisfied_at = max(sub_times)
 
 TimedValue = namedtuple('TimedValue', ['time', 'value']) # times must be non-negative integers

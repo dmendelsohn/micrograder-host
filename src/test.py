@@ -79,7 +79,7 @@ class Test:
         highest_priority = max(actives, key=lambda x: x[1])
         priority_actives = list(filter(lambda x: x[1]==highest_priority, actives))
         priority_actives.sort(key=lambda x: x[2]) # Sort by start_time
-        if self.preempt
+        if self.preempt:
             return priority_actives[-1][0] # Return id of frame with latest start_time
         else:
             return priority_actives[0][0] # Return id of frame with earlest start_time
