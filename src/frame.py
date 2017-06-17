@@ -10,7 +10,7 @@ class Condition:
     #   subconditions[1:] are ignored
     #   cause is evaluated after subcondition[0].satisfied_at
     #       ... or t=0 if subconditions not given
-    # if cond_type is OR or AND, subconditions must be non-empty list of conditions
+    # if cond_type is OR or AND, subconditions must be non-empty list of conditions, cause is ignored
     def __init__(self, cond_type, cause=None, subconditions=None):
         self.satisfied_at = None  # Initially, condition is automatically unsatisfied (i.e. t=None)
         self.type = cond_type
@@ -25,19 +25,19 @@ class Condition:
         return self.satisfied_at
 
     def update(self, request):
-        if self.last_update_request == requst:
+        if self.last_update_request == request:
             return # No need to do anything, already updated for this request
         self.last_update_request = request
 
         if self.is_satisfied():
             return # No need to do anything, condition already satisfied
 
-        elif self.type == Condition.AFTER:
-            if len(self.subconditions) > 0:
-                self.subconditions[0].update()
+        elif self.type == ConditionType.AFTER:
+            if self.subconditions: # Ensure it's a non-empty list
+                self.subconditions[0].update(request)
                 start_time = self.subconditions[0].satisfied_at
             else:
-                start_time = 0 # No subconditions, so starts at t=0
+                start_time = 0 # No subconditions, so subcondition satisfied at t=0
 
             if start_time is not None:
                 if isinstance(self.cause, int): # satisfy a certain number of millis after start
@@ -50,7 +50,7 @@ class Condition:
 
         elif self.type == ConditionType.OR:
             sub_times = []
-            for subcondition in subconditions:
+            for subcondition in self.subconditions:
                 subcondition.update(request)
                 sub_times.append(subcondition.satisfied_at)
             
@@ -59,7 +59,7 @@ class Condition:
 
         elif self.type == ConditionType.AND:
             sub_times = []
-            for subcondition in subconditions:
+            for subcondition in self.subconditions:
                 subcondition.update(request)
                 sub_times.append(subcondition.satisfied_at)
             
@@ -73,17 +73,13 @@ class FrameStatus(Enum):
     Avoided = 4
 
 class Frame:
-    def __init__(self, start_condition, end_condition, priority=0):
+    def __init__(self, start_condition, end_condition, inputs, priority=0):
         self.start_condition = start_condition # Should be of type Condition
         self.end_condition = end_condition  # Should be of type Condition
         self.start_time = None
         self.status = FrameStatus.NotBegun
-        self.inputs = {} # Build with add_input method
-        self.priority = priority
-
-    # input_type is an InputType, sequence is of type ValueSequence
-    def add_input(self, sequence, input_type, channel=None):
-        self.inputs[(input_type, channel)] = sequence
+        self.inputs = inputs # Should be dict mapping (InputType,channel)->ValueSequence
+        self.priority = priority # Should be an integer
 
 
     # timestamp is an integer (time), input_type an InputType
