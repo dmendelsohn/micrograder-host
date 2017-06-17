@@ -1,8 +1,6 @@
-from request import *
-from response import *
-from collections import namedtuple
-
-LogEntry = namedtuple('LogEntry', ['request', 'response', 'frame_id']) # Deprecate this perhaps?
+from response import AckResponse
+from response import ErrorResponse
+from response import ValuesResponse
 
 class OutputLog:
     def __init__(self):
