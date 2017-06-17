@@ -19,7 +19,7 @@ class OutputLog:
     def record_frame_start(self, frame_id, start_time):
         self.frame_start_times[frame_id] = start_time
 
-class Test:
+class TestCase:
     def __init__(self, end_condition, frames, test_points, aggregators, preempt=True):
         self.end_condition = end_condition # Condition for overall test completion
         self.preempt = preempt # If True, later frame wins in when priority is tied

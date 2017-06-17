@@ -1,10 +1,8 @@
-from comm import SerialCommunication
+from communication import SerialCommunication
 from response import ErrorResponse
 
-def run_test(test):
+def run_test(test_case):
     sc = SerialCommunication()
-    output_log = OutputLog()
-
     while not sc.connect():
         # Do nothing, wait for connection
         pass
@@ -13,7 +11,7 @@ def run_test(test):
     while True:
         sc.get_request()
         if request.is_valid:
-            response, frame_id = test.update(request)
+            response, frame_id = test_case.update(request)
         else:
             response, frame_id = ErrorResponse(), -1
 
@@ -22,4 +20,4 @@ def run_test(test):
             break
 
     print("Test finished, evaluating")
-    return test.assess()
+    return test_case.assess()
