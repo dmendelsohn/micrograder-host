@@ -1,6 +1,4 @@
-import bisect
 from enum import Enum
-from collections import namedtuple
 
 class ConditionType(Enum):
     AFTER = 1
