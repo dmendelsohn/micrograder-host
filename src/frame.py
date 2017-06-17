@@ -33,7 +33,7 @@ class Condition:
             return # No need to do anything, condition already satisfied
 
         elif self.type == Condition.AFTER:
-            if self.subconditions:
+            if len(self.subconditions) > 0:
                 self.subconditions[0].update()
                 start_time = self.subconditions[0].satisfied_at
             else:
@@ -86,17 +86,17 @@ class Frame:
         self.inputs[(input_type, channel)] = sequence
 
 
-    # t is an integer (time), input_type an InputType
+    # timestamp is an integer (time), input_type an InputType
     # Returns latest value, for this input type, at a time <= t
     # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
-    def get_value(self, t, input_type, channel=None):
+    def get_value(self, timestamp, input_type, channel=None):
         if self.status != FrameStatus.InProgress:
             return None  # No value since the frame is not in progress
         key = (input_type, channel)
         if key not in self.sequences:
             return None  # No value for that input_type, channel combo
-        relative_t = (t - self.start_time) 
-        return self.inputs[key].get_value(relative_t)
+        relative_time = (timestamp - self.start_time) 
+        return self.inputs[key].get_value(relative_time)
 
     # TODO: description
     def update(self, request):

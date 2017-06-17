@@ -3,7 +3,8 @@ from serial import SerialException
 from enum import Enum
 from request import *
 from response import *
-from screen import *
+from screen import Screen
+from screen import ScreenShape
 import numpy as np
 
 

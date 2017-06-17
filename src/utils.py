@@ -12,8 +12,6 @@ def analog_to_digital(value, params):
     bounded_bin = min(params.max_bin, max(params.min_bin, raw_bin))
     return bounded_bin
 
-adc = analog_to_digital # alias
-
 # value: an int representing "bin"
 # params: of type AnanlogParams
 # Returns analog value according to params (with bounding)
@@ -22,8 +20,6 @@ def digital_to_analog(value, params):
     raw_value = frac * (params.max_value - params.min_value) + params.min_value
     bounded_value = min(params.max_value, max(params.min_value, raw_value))
     return bounded_value
-
-dac = digital_to_analog # alias
 
 # Code for byte encoding/decoding for integers
 FORMAT_CHARS = {

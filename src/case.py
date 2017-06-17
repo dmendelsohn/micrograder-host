@@ -47,7 +47,8 @@ class TestCase:
 
                 analog = (request.analog_params is not None)
                 if analog:
-                    values = [utils.adc(value, request.analog_params) for value in values]
+                    values = [utils.analog_to_digital(value, request.analog_params) 
+                                for value in values]
 
                 response = ValuesResponse(values=values, analog=analog)
 
@@ -56,7 +57,7 @@ class TestCase:
                 output_type = request.data_type
                 for (channel, value) in zip(request.channels, request.values):
                     if request.analog_params is not None:  # Need to convert digital to analog
-                        value = utils.dac(value, request.analog_params)
+                        value = utils.digital_to_analog(value, request.analog_params)
                     output_log.record_output(output_type, channel, request.timestamp, value)
 
             response = AckResponse()
