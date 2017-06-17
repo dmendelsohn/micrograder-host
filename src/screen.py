@@ -18,7 +18,7 @@ class Screen:
     # paint rect (2D numpy array) onto buffer with top-left corner at x, y
     # Later: make this handle out-of-bounds issues
     def paint(self, rect, x, y):
-        self.buffer[y:y+rect.shape[0],x:x+x.shape[1]] = rect
+        self.buffer[y:y+rect.shape[0],x:x+rect.shape[1]] = rect
 
     def height(self):
         return self.buffer.shape[0]

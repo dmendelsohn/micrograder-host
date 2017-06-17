@@ -6,7 +6,7 @@ LogEntry = namedtuple('LogEntry', ['request', 'response', 'frame_id']) # Depreca
 
 class OutputLog:
     def __init__(self):
-        self.outputs = {} # Maps (OutputType,channel)->list(TimedValue)
+        self.outputs = {} # Maps (OutputType,channel)-> ValueSequence
         self.frame_start_times = {} # Maps frame ID -> start_time
 
     # Successive calls must have increasing timestamps
