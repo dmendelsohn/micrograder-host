@@ -21,10 +21,17 @@ class TestSequence(unittest.TestCase):
 
 
     def test_get_value(self):
-        #TODO
-        pass
+        self.assertIsNone(self.seq.get_value(-1))
+        self.assertEqual(self.seq.get_value(0),10)
+        self.assertEqual(self.seq.get_value(5),10)
+        self.assertEqual(self.seq.get_value(100), [])
+
 
     def test_get_values(self):
-        #TODO
-        pass
+        self.assertEqual(self.seq.get_values(-1, 0), [None])
+        self.assertEqual(self.seq.get_values(-1, 1), [None, 10])
+        self.assertEqual(self.seq.get_values(-1, 100), [None, 10, 8.5, "foo", []])
+
+        self.assertEqual(self.seq.get_values(9, 20), [10, 8.5])
+        self.assertEqual(self.seq.get_values(10,20), [8.5])
 

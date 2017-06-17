@@ -1,3 +1,5 @@
+import bisect
+
 class ValueSequence:
     # times must be list of unique increasing integers
     # values is times associated with those times
@@ -15,7 +17,7 @@ class ValueSequence:
         self.values.append(value)
 
     # Returns latest value with .time <= time, or None if no value exists with .time <= time
-    def get_value(time):
+    def get_value(self, time):
         index = bisect.bisect(self.times, time+0.1) # +0.1 to break ties
         index -= 1
         if index < 0:
@@ -24,16 +26,18 @@ class ValueSequence:
             return self.values[index]
 
     # Returns list of values in time range [start, end), or [] if no such values exist
-    def get_values(start_time, end_time):
+    def get_values(self, start_time, end_time):
         index = bisect.bisect(self.times, start_time+0.1) # +0.1 to break ties
         index -= 1
+        results = []
         if index < 0:
-            return []
-        else:
-            results = []
-            while index < len(self.times) and self.times[index] < end_time:
-                results.append(self.values[index])
-            return results
+            results.append(None) # Initial value is undefiend
+            index = 0
+
+        while index < len(self.times) and self.times[index] < end_time:
+            results.append(self.values[index])
+            index += 1
+        return results
 
     def __getitem__(self, key):  # To allow for list-style access
         return (self.times[key], self.values[key])
