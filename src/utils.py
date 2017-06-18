@@ -1,7 +1,6 @@
-import struct
 from collections import namedtuple
-
-AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
+import numpy as np
+import struct
 
 # value: a numeric
 # params: of type AnalogParams
@@ -54,3 +53,22 @@ def encode_int(num, width=4, signed=False):
     else:
         raise ValueError('Invalid encode width={} bytes with signed={}'.format(width, signed))
 
+
+AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
+
+# Input: bytes of length 16 and interpret as 4 int32s
+# Return: named tuple: min_bin, max_bin, min_value, max_value
+def decode_analog_params(raw):
+    min_bin = decode_int(raw[0:4], signed=True)
+    max_bin = decode_int(raw[4:8], signed=True)
+    min_value = decode_int(raw[8:12], signed=True)
+    max_value = decode_int(raw[12:16], signed=True)
+    return AnalogParams(min_bin, max_bin, min_value, max_value)
+
+# Input: bytes of length 8
+# Return: 8x8 numpy array of uint8 (1 represents lit pixel)
+# Each byte of input corresponds to column of output, with MSB at top of column
+def decode_screen_tile(data):
+    data = np.array([[elt] for elt in data], dtype=np.uint8)
+    tile = np.unpackbits(data, axis=1)
+    return tile.transpose()

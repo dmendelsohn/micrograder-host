@@ -1,7 +1,9 @@
 import serial
 from serial import SerialException
 from enum import Enum
-import numpy as np
+
+from . import utils
+from .utils import AnalogParams
 
 # COM port parameters
 ADDR = '/dev/cu.usbmodem1880221'
@@ -77,23 +79,6 @@ class SerialCommunication:
         to_send += utils.encode_int(len(msg_body), MSG_SIZE_BYTES, signed=False)
         to_send += msg_body
         self.ser.write(to_send)  # Must send it all at once, so it's in the same USB packet
-
-    # Input: bytes of length 16 and interpret as 4 int32s
-    # Return: named tuple: min_bin, max_bin, min_value, max_value
-    def decode_analog_params(self, raw):
-        min_bin = utils.decode_int(raw[0:4], signed=True)
-        max_bin = utils.decode_int(raw[4:8], signed=True)
-        min_value = utils.decode_int(raw[8:12], signed=True)
-        max_value = utils.decode_int(raw[12:16], signed=True)
-        return AnalogParams(min_bin, max_bin, min_value, max_value)
-
-    # Input: bytes of length 8
-    # Return: 8x8 numpy array of uint8 (1 represents lit pixel)
-    # Each byte of input corresponds to column of output, with MSB at top of column
-    def decode_screen_tile(self, data):
-        data = np.array([[elt] for elt in data], dtype=np.uint8)
-        tile = np.unpackbits(data, axis=1)
-        return tile.transpose()
 
     def bytes_to_request(self, msg_code, timestamp, msg_body):
         if msg_code == MessageCode.Init:  # Body: <> (empty)

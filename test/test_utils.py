@@ -1,4 +1,6 @@
 import unittest
+import numpy as np
+
 from src.utils import *
 
 class TestUtils(unittest.TestCase):
@@ -58,3 +60,18 @@ class TestUtils(unittest.TestCase):
         # Bounding
         self.assertEqual(digital_to_analog(-150, params), 0.0)
         self.assertEqual(digital_to_analog(150, params), 5.0)
+
+    def test_decode_analog_params(self):
+        b = bytes([254, 255, 255, 255,
+                   255, 255, 255, 255,
+                   0, 0, 0, 0,
+                   1, 0, 0, 0])
+        expected = AnalogParams(min_bin=-2, max_bin=-1, min_value=0, max_value=1)
+        self.assertEqual(decode_analog_params(b), expected)
+
+    def test_decode_screen_tile(self):
+        b = bytes([255, 1, 1, 1, 1, 1, 1, 1]) # Just left and bottom edges of tile
+        expected = np.zeros((8,8))
+        expected[:,0] = 1 # Left edge
+        expected[7,:] = 1 # Bottom edge
+        self.assertTrue(np.array_equal(decode_screen_tile(b), expected))
