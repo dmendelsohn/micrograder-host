@@ -44,6 +44,10 @@ class InputRequest(Request):
         self.channels = channels # List of hashable elements (e.g. ['x', 'y', 'z'])
         self.analog_params = analog_params
 
+    def __str__(self):
+        string = "InputRequest: timestamp={}, data_type={}, channels={}, analog_params={}"
+        return string.format(self.timestamp, self.data_type, self.channels, self.analog_params)
+
 
 # Subclass for requests that are reporting system outputs
 class OutputRequest(Request):
@@ -55,6 +59,10 @@ class OutputRequest(Request):
         self.channels = channels # Should be list of channel (corresponds with values)
         self.analog_params = analog_params
 
+    def __str__(self):
+        string = "OutputRequest: timestamp={}, data_type={}, channels={}, values={}, analog_params={}"
+        return string.format(self.timestamp, self.data_type, self.channels, self.values,
+                             self.analog_params)
 
 # Subclass for requests that are reporting internal system events
 class EventRequest(Request):
@@ -64,6 +72,10 @@ class EventRequest(Request):
         self.data_type = data_type # Should be EventType
         self.arg = arg # Any additional data
 
+    def __str__(self):
+        string = "EventRequest: timestamp={}, data_type={}, arg={}"
+        return string.format(self.timestamp, self.data_type, self.arg)
+
 
 # Subclass for invalid requests
 class InvalidRequest(Request):
@@ -71,3 +83,6 @@ class InvalidRequest(Request):
         super().__init__(timestamp)
         self.is_valid = False # Override default
         self.arg = arg # Additional data
+
+    def __str__(self):
+        return "InvalidRequest: timestamp={}, arg={}".format(self.timestamp, self.arg)

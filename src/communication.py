@@ -77,17 +77,17 @@ class SerialCommunication:
 
     def get_request(self):
         header = self.ser.read(CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES) # Read header
-        msg_code = decode_int(header[:CODE_BYTES], signed=False)
-        timestamp = decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
-        msg_size = decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
+        msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
+        timestamp = utils.decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
+        msg_size = utils.decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
         if msg_size > 0:
             msg_body = self.ser.read(msg_size)
         else:
             msg_body = bytes()
-        return bytes_to_request(msg_code, msg_body)
+        return self.bytes_to_request(msg_code, timestamp, msg_body)
 
     def send_response(self, response):
-        msg_code, msg_body = response_to_bytes(response)
+        msg_code, msg_body = self.response_to_bytes(response)
         to_send = utils.encode_int(msg_code, CODE_BYTES, signed=False)
         to_send += utils.encode_int(len(msg_body), MSG_SIZE_BYTES, signed=False)
         to_send += msg_body

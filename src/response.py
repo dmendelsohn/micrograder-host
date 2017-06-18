@@ -7,7 +7,7 @@ class AckResponse:  # Superclass for all non-error responses
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def __str__(self, other):
+    def __str__(self):
         return "AckResponse: test_complete={}".format(self.test_complete)
 
 class ErrorResponse:
