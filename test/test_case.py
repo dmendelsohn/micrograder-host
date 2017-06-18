@@ -1,7 +1,10 @@
 from src.case import *
+import operator
 import unittest
 
+from src import utils
 from src.request import OutputType
+from src.sequence import Sequence
 from src.screen import Screen
 
 class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the TestCase class
@@ -22,8 +25,45 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         pass
 
     def test_assess_test_point(self):
-        #TODO: impelement
-        pass
+        tp = TestPoint(frame_id=0,
+                       output_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100),
+                       check_function=operator.eq,
+                       aggregator=utils.AND)
+
+        output_log = OutputLog()
+
+        seq = Sequence([900, 1000, 1050, 1100], [0, 1, 1, 0])
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertFalse(assess_test_point(tp, output_log)) # No frame
+
+        output_log.record_frame_start(frame_id=0,  start_time=1000)
+        self.assertTrue(assess_test_point(tp, output_log))
+
+        seq = Sequence([900, 1001, 1050, 1100], [0, 1, 1, 0])
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertFalse(assess_test_point(tp, output_log))
+
+        seq = Sequence([900, 1000, 1050, 1099], [0, 1, 1, 0])
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertFalse(assess_test_point(tp, output_log))
+
+        seq = Sequence([900, 1000, 1050], [0, 1, 1])
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertTrue(assess_test_point(tp, output_log))
+
+        seq = Sequence([1050], [1])
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertFalse(assess_test_point(tp, output_log)) # Starts undefined
+
+        seq = Sequence()
+        output_log.outputs[(OutputType.DigitalWrite, 13)] = seq
+        self.assertFalse(assess_test_point(tp, output_log)) # Always undefined
+
+        del output_log.outputs[(OutputType.DigitalWrite, 13)]
+        self.assertFalse(assess_test_point(tp, output_log)) # No key in dict
 
 class TestOutputLog(unittest.TestCase):
     

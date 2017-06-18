@@ -38,7 +38,7 @@ class TestCase:
         self.end_condition = end_condition # Condition for overall test completion
         self.preempt = preempt # If True, later frame wins in when priority is tied
         self.frames = frames # List of frames
-        self.test_points = test_points # List of expected output dicts for each frame
+        self.test_points = test_points # List of test points
         self.aggregators = aggregators # Dict mapping (OutputType,channel)-> func(list(bool)->bool)
         self.output_log = OutputLog()
 
@@ -112,6 +112,7 @@ def assess_test_point(test_point, output_log):
     # Calculate start and end times
     if test_point.frame_id not in output_log.frame_start_times:
         return False # Frame never started, so this assessment could not be performed
+
     zero_point = output_log.frame_start_times[test_point.frame_id]
     (start, end) = test_point.check_interval
     start += zero_point
@@ -125,4 +126,4 @@ def assess_test_point(test_point, output_log):
     def check(actual_output):
         return test_point.check_function(test_point.expected_value, actual_output)
 
-    return test_point.check_aggregator(map(check, actual_outputs))
+    return test_point.aggregator(map(check, actual_outputs))
