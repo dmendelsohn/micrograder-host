@@ -31,6 +31,9 @@ class Request:
         self.is_event = False # Default for base class
         self.is_valid = True  # Default for base class
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 
 # Subclass for requests that require data in response
 class InputRequest(Request):

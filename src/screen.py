@@ -14,6 +14,7 @@ class Screen:
             self.buffer = np.copy(buff)
         else: # Assume width and height are provided
             self.buffer = np.zeros((height, width), dtype=np.uint8)
+        self.shape = ScreenShape(width=width, height=height)
 
     # paint rect (2D numpy array) onto buffer with top-left corner at x, y
     # Later: make this handle out-of-bounds issues

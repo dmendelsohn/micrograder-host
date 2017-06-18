@@ -2,10 +2,20 @@ import serial
 from serial import SerialException
 from enum import Enum
 
+from . import request
 from . import utils
+from .request import EventRequest
+from .request import EventType
+from .request import InputRequest
+from .request import InputType
+from .request import InvalidRequest
+from .request import OutputRequest
+from .request import OutputType
 from .response import AckResponse
 from .response import ErrorResponse
 from .response import ValuesResponse
+from .screen import Screen
+from .screen import ScreenShape
 from .utils import AnalogParams
 
 # COM port parameters
@@ -116,7 +126,7 @@ class SerialCommunication:
             if len(msg_body) < (1+ANALOG_PARAMS_SIZE):
                 return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
-            analog_params = decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
+            analog_params = utils.decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
             return InputRequest(timestamp=timestamp, data_type=InputType.AnalogRead,
                                 channels=[pin], analog_params=analog_params)
 
@@ -124,8 +134,8 @@ class SerialCommunication:
             if len(msg_body) < (1+4+ANALOG_PARAMS_SIZE):
                 return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
-            analog_params = decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
-            values_bytes = msg_body[(1+ANALOG_PARAMS_SIZE):(1+4+ANALOG_PARAMS_SIZE)]
+            analog_params = utils.decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
+            value_bytes = msg_body[(1+ANALOG_PARAMS_SIZE):(1+4+ANALOG_PARAMS_SIZE)]
             value = utils.decode_int(value_bytes, signed=True)
             return OutputRequest(timestamp=timestamp, data_type=OutputType.AnalogWrite,
                                  values=[value], channels=[pin], analog_params=analog_params)
@@ -133,23 +143,23 @@ class SerialCommunication:
         elif msg_code == MessageCode.ImuAcc: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
-            analog_params = decode_analog_params(msg_body)
+            analog_params = utils.decode_analog_params(msg_body)
             return InputRequest(timestamp=timestamp, data_type=InputType.Accelerometer,
-                                channels=THREE_AXIS, analog_params=analog_params)
+                                channels=request.THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuGyro: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
-            analog_params = decode_analog_params(msg_body)
+            analog_params = utils.decode_analog_params(msg_body)
             return InputRequest(timestamp=timestamp, data_type=InputType.Gyroscope,
-                                channels=THREE_AXIS, analog_params=analog_params)
+                                channels=request.THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuMag: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
                 return InvalidRequest(timestamp) # Not enough data
-            analog_params = decode_analog_params(msg_body)
+            analog_params = utils.decode_analog_params(msg_body)
             return InputRequest(timestamp=timestamp, data_type=InputType.Magnetometer,
-                                channels=THREE_AXIS, analog_params=analog_params)
+                                channels=request.THREE_AXIS, analog_params=analog_params)
 
         elif msg_code == MessageCode.ScreenInit: # <uint8 tile_width, tile_height>
             if len(msg_body) < 2:
@@ -166,22 +176,22 @@ class SerialCommunication:
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
             if self.last_screen is None:
                 return InvalidRequest(timestamp=timestamp) # No screen initialization
-            tile_width = (self.last_screen.shape[1]+7)//8
-            tile_height = (self.last_screen.shape[0]+7)//8
+            tile_width = (self.last_screen.shape[0]+7)//8
+            tile_height = (self.last_screen.shape[1]+7)//8
 
             if len(msg_body) < (8*tile_width*tile_height):
                 return InvalidRequest(timestamp=timestamp) # Not enough data
 
             # Now we construct the screen
             screen = Screen(width=8*tile_width, height=8*tile_height) # Create empty buffer
-            for x in range(tile_height): # x is in tiles, not pixels
-                for y in range(tile_width): # y is in tiles, not pixels
+            for x in range(tile_width): # x is in tiles, not pixels
+                for y in range(tile_height): # y is in tiles, not pixels
                     start_index = 8*(y*tile_width + x)
-                    tile = decode_screen_tile(msg_body[start_index:start_index+8])
+                    tile = utils.decode_screen_tile(msg_body[start_index:start_index+8])
                     screen.paint(rect=tile, x=8*x, y=8*y)
 
             self.last_screen = screen.copy()
-            return ScreenRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
 
         elif msg_code == MessageCode.ScreenTile: # <uint8 x, uint8 y, uint8 tile[8]>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
@@ -193,10 +203,10 @@ class SerialCommunication:
 
             x = msg_body[0] # Measured in tiles, not pixels
             y = msg_body[1] # Measured in tiles, not pixels
-            tile = decode_screen_tile(msg_body[2:10])
+            tile = utils.decode_screen_tile(msg_body[2:10])
             self.last_screen.paint(rect=tile, x=8*x, y=8*y)
             screen = self.last_screen.copy()
-            return ScreenRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
 
         elif msg_code == MessageCode.GpsFix: # Later: expand protocol
             return EventRequest(timestamp=timestamp, data_type=EventType.Gps)
