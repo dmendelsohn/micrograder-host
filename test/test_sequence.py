@@ -5,7 +5,7 @@ class TestSequence(unittest.TestCase):
     def setUp(self):
         times = [0, 10, 20, 30]
         values = [10, 8.5, "foo", []] # Values can be pretty much anything
-        self.seq = ValueSequence(times, values)
+        self.seq = Sequence(times, values)
 
     def test_basic_functions(self):
         self.assertEqual(self.seq[0], (0,10))

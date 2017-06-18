@@ -4,14 +4,14 @@ from response import ValuesResponse
 
 class OutputLog:
     def __init__(self):
-        self.outputs = {} # Maps (OutputType,channel)-> ValueSequence
+        self.outputs = {} # Maps (OutputType,channel)-> Sequence
         self.frame_start_times = {} # Maps frame ID -> start_time
 
     # Successive calls must have increasing timestamps
     def record_output(self, output_type, channel, timestamp, value):
         key = (output_type, channel)
         if key not in self.outputs:
-            self.outputs[key] = ValueSequence() # Initialize
+            self.outputs[key] = Sequence() # Initialize
         self.outputs[key].append(time=timestamp, value=value)
 
     def record_frame_start(self, frame_id, start_time):
@@ -114,11 +114,11 @@ def assess_test_point(test_point, output_log):
 
     # Get relevant actual ouputs
     key = (test_point.output_type, test_point.channel)
-    seq = output_log.outputs.get(key, ValueSequence())
+    seq = output_log.outputs.get(key, Sequence())
     actual_outputs = seq.get_values(start, end)
 
     def check(actual_output):
         return test_point.check_function(test_point.expected_value, actual_output)
 
     return test_point.check_aggregator(map(check, actual_outputs))
-    
+

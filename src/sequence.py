@@ -1,6 +1,6 @@
 import bisect
 
-class ValueSequence:
+class Sequence:
     # times must be list of unique increasing integers
     # values is times associated with those times
     def __init__(self, times=None, values=None):

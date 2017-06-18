@@ -1,7 +1,7 @@
 from enum import Enum
 
 class ConditionType(Enum):
-    AFTER = 1
+    AFTER = 1   # after(t=0) or after(condition)
     OR = 2      # or(subconditions)
     AND = 3     # and(subconditions)
 
