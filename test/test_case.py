@@ -5,14 +5,35 @@ import unittest
 from src import utils
 from src.frame import Condition
 from src.frame import ConditionType
+from src.frame import Frame
+from src.request import InputRequest
+from src.request import InputType
+from src.request import OutputRequest
 from src.request import OutputType
 from src.sequence import Sequence
 from src.screen import Screen
+from src.utils import AnalogParams
 
 class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the TestCase class
     def setUp(self):
         end_condition = Condition(ConditionType.After, cause=2000)
-        frames = [] # TODO: do this
+
+        frame0 = Frame(
+            start_condition=Condition(ConditionType.After, cause=100),
+            end_condition=Condition(ConditionType.After, cause=1200),
+            inputs={(InputType.AnalogRead, 0): Sequence([0.0],[0])},
+            priority=0)
+        frame1 = Frame(
+            start_condition=Condition(ConditionType.After, cause=200),
+            end_condition=Condition(ConditionType.After, cause=1100),
+            inputs={(InputType.AnalogRead, 0): Sequence([1.0],[0])},
+            priority=0)
+        frame2 = Frame(
+            start_condition=Condition(ConditionType.After, cause=300),
+            end_condition=Condition(ConditionType.After, cause=1000),
+            inputs={(InputType.AnalogRead, 0): Sequence([2.0],[0])},
+            priority=1)
+        frames = [frame0, frame1, frame2]
 
         tp0 = TestPoint(frame_id=0,
                        output_type=OutputType.DigitalWrite,
@@ -21,7 +42,6 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
                        check_interval=(0,100),
                        check_function=operator.eq,
                        aggregator=lambda x: False) # always False
-
         tp1 = TestPoint(frame_id=0,
                        output_type=OutputType.DigitalWrite,
                        channel=13,
@@ -29,7 +49,6 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
                        check_interval=(0,100),
                        check_function=operator.eq,
                        aggregator=lambda x: True) # always True
-
         tp2 = TestPoint(frame_id=0,
                        output_type=OutputType.DigitalWrite,
                        channel=14,
@@ -44,14 +63,37 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         }
 
         self.case = TestCase(end_condition, frames, test_points, aggregators, True)
+        self.params = AnalogParams(-128, 127, 0.0, 5.0)
 
     def test_update(self):
-        #TODO: implement
+        #TODO
         pass
 
     def test_get_current_frame_id(self):
-        #TODO: implement
-        pass
+        request = InputRequest(150, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertEqual(self.case.get_current_frame_id(), 0)
+
+        request = InputRequest(250, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertEqual(self.case.get_current_frame_id(), 1)
+
+        self.case.preempt = False     
+        request = InputRequest(250, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertEqual(self.case.get_current_frame_id(), 0)
+
+        request = InputRequest(350, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertEqual(self.case.get_current_frame_id(), 2)
+
+        request = InputRequest(1050, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertEqual(self.case.get_current_frame_id(), 0)
+
+        request = InputRequest(1250, InputType.AnalogRead, [0], self.params)
+        self.case.update(request)
+        self.assertIsNone(self.case.get_current_frame_id())
 
     def test_assess(self):
         self.case.output_log.record_frame_start(0, 1000)

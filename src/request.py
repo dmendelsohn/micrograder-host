@@ -32,7 +32,7 @@ class Request:
         self.is_valid = True  # Default for base class
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return type(self) is type(other) and self.__dict__ == other.__dict__
 
 
 # Subclass for requests that require data in response

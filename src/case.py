@@ -77,12 +77,12 @@ class TestCase:
     # Returns the id of the frame that is currently prioritized to serve an input request
     def get_current_frame_id(self):
         actives = [(i, self.frames[i].priority, self.frames[i].start_time) 
-                        for i in range(len(self.frames))if self.frames[i].is_active()]
+                        for i in range(len(self.frames)) if self.frames[i].is_active()]
         if len(actives) == 0:
             return None # No active frames
-        highest_priority = max(actives, key=lambda x: x[1])
-        priority_actives = list(filter(lambda x: x[1]==highest_priority, actives))
-        priority_actives.sort(key=lambda x: x[2]) # Sort by start_time
+        highest_priority = max(a[1] for a in actives)
+        priority_actives = list(filter(lambda a: a[1]==highest_priority, actives))
+        priority_actives.sort(key=lambda a: a[2]) # Sort by start_time
         if self.preempt:
             return priority_actives[-1][0] # Return id of frame with latest start_time
         else:
