@@ -1,7 +1,8 @@
 from enum import Enum
+
+from . import utils
 from .response import ErrorResponse
 from .response import ValuesResponse
-from . import utils
 
 class ConditionType(Enum):
     After = 1   # after(t=0) or after(condition)
@@ -27,6 +28,9 @@ class Condition:
     def satisfied_at(self):
         return self.satisfied_at
 
+    # request: of type Request
+    # returns None
+    # updates satisfied_at given the incoming request, and updates child conditions if necessary
     def update(self, request):
         if self.last_update_request == request:
             return # No need to do anything, already updated for this request
@@ -110,7 +114,9 @@ class Frame:
             values = [utils.analog_to_digital(v, request.analog_params) for v in values]
             return ValuesResponse(values=values, analog=True)
 
-    # TODO: description
+    # request: of type request
+    # returns None
+    # given incoming requests, updates start_condition, end_condition, start_time, and status
     def update(self, request):
         self.start_condition.update(request)
         self.start_time = self.start_condition.satisfied_at
