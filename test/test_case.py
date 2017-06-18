@@ -10,6 +10,9 @@ from src.request import InputRequest
 from src.request import InputType
 from src.request import OutputRequest
 from src.request import OutputType
+from src.response import AckResponse
+from src.response import ErrorResponse
+from src.response import ValuesResponse
 from src.sequence import Sequence
 from src.screen import Screen
 from src.utils import AnalogParams
@@ -66,8 +69,29 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         self.params = AnalogParams(-128, 127, 0.0, 5.0)
 
     def test_update(self):
-        #TODO
-        pass
+        request = OutputRequest(0, OutputType.DigitalWrite, [1], [13])
+        expected = AckResponse(test_complete=False)
+        self.assertEqual(self.case.update(request), expected)
+
+        request = InputRequest(50, InputType.AnalogRead, [0], self.params)
+        expected = ErrorResponse(test_complete=False) # No frame active yet
+        self.assertEqual(self.case.update(request), expected)
+
+        request = InputRequest(150, InputType.AnalogRead, [0], self.params)
+        expected = ValuesResponse(values=[-128], analog=True, test_complete=False)
+        self.assertEqual(self.case.update(request), expected)
+
+        request = InputRequest(150, InputType.AnalogRead, [1], self.params)
+        expected = ErrorResponse(test_complete=False) # No data for that channel
+        self.assertEqual(self.case.update(request), expected)
+
+        request = InputRequest(2150, InputType.AnalogRead, [0], self.params)
+        expected = ErrorResponse(test_complete=True)
+        self.assertEqual(self.case.update(request), expected)
+
+        expected_output_log = OutputLog()
+        expected_output_log.record_output(OutputType.DigitalWrite, 13, 0, 1)
+        self.assertEqual(self.case.output_log, expected_output_log)
 
     def test_get_current_frame_id(self):
         request = InputRequest(150, InputType.AnalogRead, [0], self.params)

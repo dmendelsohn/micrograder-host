@@ -61,7 +61,7 @@ class TestCase:
                 for (channel, value) in zip(request.channels, request.values):
                     if request.analog_params is not None:  # Need to convert digital to analog
                         value = utils.digital_to_analog(value, request.analog_params)
-                    output_log.record_output(output_type, channel, request.timestamp, value)
+                    self.output_log.record_output(output_type, channel, request.timestamp, value)
 
             response = AckResponse()
 
