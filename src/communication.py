@@ -3,7 +3,6 @@ from serial import SerialException
 from enum import Enum
 import numpy as np
 
-
 # COM port parameters
 ADDR = '/dev/cu.usbmodem1880221'
 BAUD = 115200

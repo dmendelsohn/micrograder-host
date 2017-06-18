@@ -1,3 +1,5 @@
+from .communication import SerialCommunication
+from .response import ErrorResponse
 
 def run_test(test_case):
     sc = SerialCommunication()
