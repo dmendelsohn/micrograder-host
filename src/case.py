@@ -18,6 +18,10 @@ class OutputLog:
     def record_frame_start(self, frame_id, start_time):
         self.frame_start_times[frame_id] = start_time
 
+    def __eq__(self, other):
+        return (self.outputs == other.outputs and 
+                self.frame_start_times == other.frame_start_times)
+
 class TestCase:
     def __init__(self, end_condition, frames, test_points, aggregators, preempt=True):
         self.end_condition = end_condition # Condition for overall test completion

@@ -44,3 +44,6 @@ class Sequence:
 
     def __len__(self):
         return len(self.times)  # Should be same as len(self.values)
+
+    def __eq__(self, other):
+        return self.times == other.times and self.values == other.values
