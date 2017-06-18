@@ -201,6 +201,7 @@ class SerialCommunication:
             return InvalidRequest(timestamp=timestamp)
 
     def response_to_bytes(self, response):
+        # First determine message code
         if response.is_error:
             if response.test_complete:
                 msg_code = MessageCode.ErrorComplete
@@ -212,6 +213,7 @@ class SerialCommunication:
             else:
                 msg_code = MessageCode.Ack
 
+        # Then determine message body
         if type(response) is AckResponse: # Ack without data
             msg_body = bytes()
 
@@ -227,7 +229,6 @@ class SerialCommunication:
                     msg_body += utils.encode_int(value, width=1, signed=False)
 
         else: # Unsupported response type
-            msg_code = MessageCode.Error
             msg_body = bytes()
 
         return msg_code, msg_body
