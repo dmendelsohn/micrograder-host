@@ -1,7 +1,9 @@
+from collections import namedtuple
+
+from . import utils
 from .response import AckResponse
 from .response import ErrorResponse
 from .sequence import Sequence
-from . import utils
 
 class OutputLog:
     def __init__(self):
@@ -21,6 +23,15 @@ class OutputLog:
     def __eq__(self, other):
         return (self.outputs == other.outputs and 
                 self.frame_start_times == other.frame_start_times)
+
+
+TestPoint = namedtuple('TestPoint', ['frame_id',
+                                     'output_type',
+                                     'channel',
+                                     'expected_value',
+                                     'check_interval',
+                                     'check_function',
+                                     'aggregator'])
 
 class TestCase:
     def __init__(self, end_condition, frames, test_points, aggregators, preempt=True):
@@ -96,12 +107,12 @@ class TestCase:
                 results[key] = False
         return results
 
-
+# Assesses if a single test point passes
 def assess_test_point(test_point, output_log):
     # Calculate start and end times
     if test_point.frame_id not in output_log.frame_start_times:
         return False # Frame never started, so this assessment could not be performed
-    zero_point = output_log[test_point.frame_id]
+    zero_point = output_log.frame_start_times[test_point.frame_id]
     (start, end) = test_point.check_interval
     start += zero_point
     end += zero_point
