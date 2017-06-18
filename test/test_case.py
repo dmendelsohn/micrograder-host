@@ -69,7 +69,7 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         self.params = AnalogParams(-128, 127, 0.0, 5.0)
 
     def test_update(self):
-        request = OutputRequest(0, OutputType.DigitalWrite, [1], [13])
+        request = OutputRequest(0, OutputType.DigitalWrite, [13], [1])
         expected = AckResponse(test_complete=False)
         self.assertEqual(self.case.update(request), expected)
 

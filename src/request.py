@@ -37,7 +37,7 @@ class Request:
 
 # Subclass for requests that require data in response
 class InputRequest(Request):
-    def __init__(self, timestamp, data_type, channels=[None], analog_params=None):
+    def __init__(self, timestamp, data_type, channels, analog_params=None):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = data_type # Should be InputType
@@ -47,7 +47,7 @@ class InputRequest(Request):
 
 # Subclass for requests that are reporting system outputs
 class OutputRequest(Request):
-    def __init__(self, timestamp, data_type, values, channels=[None], analog_params=None):
+    def __init__(self, timestamp, data_type, channels, values, analog_params=None):
         super().__init__(timestamp)
         self.is_output = True # Override default
         self.data_type = data_type # Should be OutputType

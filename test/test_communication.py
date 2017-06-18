@@ -30,7 +30,7 @@ class TestSerialCommunication(unittest.TestCase):
 
         code = 0x21  # Digital write
         body = bytes([255, 1]) # pin 255, value 1
-        expected = OutputRequest(t, OutputType.DigitalWrite, [1], [255])
+        expected = OutputRequest(t, OutputType.DigitalWrite, [255], [1])
         self.assertEqual(self.sc.bytes_to_request(code, t, body), expected)
 
     def test_bytes_to_request_analog(self):  # Except for screen output requests
@@ -48,7 +48,7 @@ class TestSerialCommunication(unittest.TestCase):
 
         code = 0x23 # Analog Write
         body = bytes([255]) + b + bytes([255, 255, 255, 255])
-        expected = OutputRequest(t, OutputType.AnalogWrite, [-1], [255], params)
+        expected = OutputRequest(t, OutputType.AnalogWrite, [255], [-1], params)
         self.assertEqual(self.sc.bytes_to_request(code, t, body), expected)
 
         code = 0x30 # Acc
@@ -115,13 +115,13 @@ class TestSerialCommunication(unittest.TestCase):
         buff[7,:] = 1 # Bottom
         buff[:,0] = 1 # Left
         buff[:,15] = 1 # Right
-        expected = OutputRequest(t, OutputType.Screen, [Screen(buff=buff)])
+        expected = OutputRequest(t, OutputType.Screen, [None], [Screen(buff=buff)])
         self.assertEqual(self.sc.bytes_to_request(code, t, body), expected)
 
         code = 0x42 # ScreenTile
         body = bytes([0,0] + [255]*8) # Light up entire left tile
         buff[:,0:8] = 1
-        expected = OutputRequest(t, OutputType.Screen, [Screen(buff=buff)])
+        expected = OutputRequest(t, OutputType.Screen, [None], [Screen(buff=buff)])
         self.assertEqual(self.sc.bytes_to_request(code, t, body), expected)
 
 

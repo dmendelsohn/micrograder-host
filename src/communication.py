@@ -120,7 +120,7 @@ class SerialCommunication:
             pin = msg_body[0]
             value = msg_body[1]
             return OutputRequest(timestamp=timestamp, data_type=OutputType.DigitalWrite,
-                                 values=[value], channels=[pin])
+                                 channels=[pin], values=[value], )
 
         elif msg_code == MessageCode.AnalogRead: #<uint8 pin, int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < (1+ANALOG_PARAMS_SIZE):
@@ -138,7 +138,7 @@ class SerialCommunication:
             value_bytes = msg_body[(1+ANALOG_PARAMS_SIZE):(1+4+ANALOG_PARAMS_SIZE)]
             value = utils.decode_int(value_bytes, signed=True)
             return OutputRequest(timestamp=timestamp, data_type=OutputType.AnalogWrite,
-                                 values=[value], channels=[pin], analog_params=analog_params)
+                                 channels=[pin], values=[value], analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuAcc: #<int32 min_bin, max_bin, min_val, max_val>
             if len(msg_body) < ANALOG_PARAMS_SIZE:
@@ -191,7 +191,7 @@ class SerialCommunication:
                     screen.paint(rect=tile, x=8*x, y=8*y)
 
             self.last_screen = screen.copy()
-            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, channels=[None], values=[screen])
 
         elif msg_code == MessageCode.ScreenTile: # <uint8 x, uint8 y, uint8 tile[8]>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
@@ -206,7 +206,7 @@ class SerialCommunication:
             tile = utils.decode_screen_tile(msg_body[2:10])
             self.last_screen.paint(rect=tile, x=8*x, y=8*y)
             screen = self.last_screen.copy()
-            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, channels=[None], values=[screen])
 
         elif msg_code == MessageCode.GpsFix: # Later: expand protocol
             return EventRequest(timestamp=timestamp, data_type=EventType.Gps)
