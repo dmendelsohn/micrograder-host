@@ -1,16 +1,19 @@
 from enum import Enum
+from .response import ErrorResponse
+from .response import ValuesResponse
+from . import utils
 
 class ConditionType(Enum):
-    AFTER = 1   # after(t=0) or after(condition)
-    OR = 2      # or(subconditions)
-    AND = 3     # and(subconditions)
+    After = 1   # after(t=0) or after(condition)
+    Or = 2      # or(subconditions)
+    And = 3     # and(subconditions)
 
 class Condition:
     # if cond_type is AFTER, cause is required
     #   subconditions[1:] are ignored
     #   cause is evaluated after subcondition[0].satisfied_at
     #       ... or t=0 if subconditions not given
-    # if cond_type is OR or AND, subconditions must be non-empty list of conditions, cause is ignored
+    # if cond_type is Or or And, subconditions must be non-empty list of conditions, cause is ignored
     def __init__(self, cond_type, cause=None, subconditions=None):
         self.satisfied_at = None  # Initially, condition is automatically unsatisfied (i.e. t=None)
         self.type = cond_type
@@ -32,7 +35,7 @@ class Condition:
         if self.is_satisfied():
             return # No need to do anything, condition already satisfied
 
-        elif self.type == ConditionType.AFTER:
+        elif self.type == ConditionType.After:
             if self.subconditions: # Ensure it's a non-empty list
                 self.subconditions[0].update(request)
                 start_time = self.subconditions[0].satisfied_at
@@ -48,7 +51,7 @@ class Condition:
                     if self.cause(request):
                         self.satisfied_at = request.timestamp
 
-        elif self.type == ConditionType.OR:
+        elif self.type == ConditionType.Or:
             sub_times = []
             for subcondition in self.subconditions:
                 subcondition.update(request)
@@ -57,7 +60,7 @@ class Condition:
             if any(t is not None for t in sub_times): # If any t != None, we're satisfied
                 self.satisfied_at = min(t for t in sub_times if t is not None) # min of non-Nones
 
-        elif self.type == ConditionType.AND:
+        elif self.type == ConditionType.And:
             sub_times = []
             for subcondition in self.subconditions:
                 subcondition.update(request)
@@ -82,22 +85,35 @@ class Frame:
         self.priority = priority # Should be an integer
 
 
-    # timestamp is an integer (time), input_type an InputType
-    # Returns latest value, for this input type, at a time <= t
-    # Returns None if no value exists at a time <= t for input_type, or if Frame isn't in progress
-    def get_value(self, timestamp, input_type, channel=None):
+    # request is an InputRequest
+    # returns ValueResponse for these (input type,channel) with latests values 
+    # returns ErrorResponse if no value exists at <= t for any channel, or frame not InProgress
+    def get_response(self, request):
         if self.status != FrameStatus.InProgress:
-            return None  # No value since the frame is not in progress
-        key = (input_type, channel)
-        if key not in self.sequences:
-            return None  # No value for that input_type, channel combo
-        relative_time = (timestamp - self.start_time) 
-        return self.inputs[key].get_value(relative_time)
+            return ErrorResponse()  # No value since the frame is not in progress
+
+        relative_time = (request.timestamp - self.start_time)
+        values = []
+        for channel in request.channels:
+            key = (request.data_type, channel)
+            if key not in self.inputs:
+                value = None  # No value for that input_type, channel combo
+            else:
+                value = self.inputs[key].get_value(relative_time)
+            values.append(value)
+        
+        if None in values:  # There was an error
+            return ErrorResponse()
+        elif request.analog_params is None: # digital
+            return ValuesResponse(values=values, analog=False)
+        else: # analog
+            values = [utils.analog_to_digital(v, request.analog_params) for v in values]
+            return ValuesResponse(values=values, analog=True)
 
     # TODO: description
     def update(self, request):
         self.start_condition.update(request)
-        self.start_time = self.start_condition.satisfied_at()
+        self.start_time = self.start_condition.satisfied_at
         self.end_condition.update(request)
 
         is_started = self.start_condition.is_satisfied()

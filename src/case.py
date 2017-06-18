@@ -1,6 +1,3 @@
-from response import AckResponse
-from response import ErrorResponse
-from response import ValuesResponse
 
 class OutputLog:
     def __init__(self):
@@ -37,18 +34,7 @@ class TestCase:
                 response = ErrorResponse() # Cannot respond to request
             else:
                 frame = self.frames[frame_id]
-                values = [frame.get_value(timestamp=request.timestamp,
-                                        input_type=request.data_type,
-                                        channel=channel,
-                                        analog_params=request.analog_params)
-                            for channel in request.channels]
-
-                analog = (request.analog_params is not None)
-                if analog:
-                    values = [utils.analog_to_digital(value, request.analog_params) 
-                                for value in values]
-
-                response = ValuesResponse(values=values, analog=analog)
+                response = frame.get_response(request)
 
         else: # Regular ACK for non-inputs
             if request.is_output: # Log it

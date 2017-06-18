@@ -1,21 +1,27 @@
 from src.frame import *
 from src.request import EventRequest
 from src.request import EventType
+from src.request import InputRequest
+from src.request import InputType
+from src.response import ErrorResponse
+from src.response import ValuesResponse
+from src.sequence import Sequence
+from src.utils import AnalogParams
 import unittest
+
+def request_is_init(request):
+    return request.is_event and request.data_type == EventType.Init
+
+def request_is_print(request):
+    return request.is_event and request.data_type == EventType.Print
 
 class TestCondition(unittest.TestCase):
     def setUp(self):
-        def request_is_init(request):
-            return request.is_event and request.data_type == EventType.Init
-
-        def request_is_print(request):
-            return request.is_event and request.data_type == EventType.Print
-
-        cond0 = Condition(ConditionType.AFTER, cause=100)
-        cond1 = Condition(ConditionType.AFTER, cause=request_is_init)
-        cond2 = Condition(ConditionType.AFTER, cause=request_is_print, subconditions=[cond1])
-        cond3 = Condition(ConditionType.OR, subconditions=[cond0, cond1, cond2])
-        cond4 = Condition(ConditionType.AND, subconditions=[cond0, cond1, cond2, cond3])
+        cond0 = Condition(ConditionType.After, cause=100)
+        cond1 = Condition(ConditionType.After, cause=request_is_init)
+        cond2 = Condition(ConditionType.After, cause=request_is_print, subconditions=[cond1])
+        cond3 = Condition(ConditionType.Or, subconditions=[cond0, cond1, cond2])
+        cond4 = Condition(ConditionType.And, subconditions=[cond0, cond1, cond2, cond3])
         self.conditions = [cond0, cond1, cond2, cond3, cond4]
 
         req0 = EventRequest(50, EventType.Print) # Satisfied: {none}
@@ -46,18 +52,43 @@ class TestCondition(unittest.TestCase):
 
 class TestFrame(unittest.TestCase):
     def setUp(self):
-        #self.frame = ?? # TODO
-        pass
+        start = Condition(ConditionType.After, cause=request_is_init)
+        end = Condition(ConditionType.After, cause=request_is_print)
+        seq0 = Sequence(times=[100], values=[1.0])
+        seq1 = Sequence(times=[110], values=[2.0])
+        inputs = {(InputType.AnalogRead, 0): seq0, (InputType.AnalogRead, 1): seq1}
+        self.frame = Frame(start, end, inputs)
 
     def test_status(self):
-        # TODO: start and end the frame, testing status along the way
-        pass
+        self.assertEqual(self.frame.status, FrameStatus.NotBegun)
+        self.frame.update(EventRequest(50, EventType.Init))
+        self.assertEqual(self.frame.status, FrameStatus.InProgress)
+        self.frame.update(EventRequest(1050, EventType.Print))
+        self.assertEqual(self.frame.status, FrameStatus.Complete)
 
     def test_avoided(self):
-        # TODO: end the frame, testing status along the way
-        pass
+        self.assertEqual(self.frame.status, FrameStatus.NotBegun)
+        self.frame.update(EventRequest(1050, EventType.Print))
+        self.assertEqual(self.frame.status, FrameStatus.Avoided)
 
     def test_values(self):
-        # TODO: test some values, including before, during, after satisfaction
-        # TDOO: also include test where frame is satisfied, but value is undefined
-        pass
+        params = AnalogParams(-128, 127, 0.0, 5.0)
+        input_type = InputType.AnalogRead
+
+        self.assertEqual(self.frame.get_response(InputRequest(25, input_type, [0,1], params)),
+                         ErrorResponse()) # Error, frame hasn't started
+
+        self.frame.update(EventRequest(50, EventType.Init)) # Starts the frame
+
+        self.assertEqual(self.frame.get_response(InputRequest(159, input_type, [0,1], params)),
+                         ErrorResponse()) # Error, one channel doesn't have data yet
+
+        self.assertEqual(self.frame.get_response(InputRequest(160, input_type, [0,2], params)),
+                         ErrorResponse()) # Error, one channel is invalid
+
+        self.assertEqual(self.frame.get_response(InputRequest(160, input_type, [0,1], params)),
+                         ValuesResponse(values=[-77, -26], analog=True))  # Success
+
+        self.frame.update(EventRequest(1000, EventType.Print)) # Ends the frame
+        self.assertEqual(self.frame.get_response(InputRequest(1000, input_type, [0,1], params)),
+                         ErrorResponse())  # Frame has completed
