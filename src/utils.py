@@ -2,13 +2,6 @@ from collections import namedtuple
 import numpy as np
 import struct
 
-def AND(bools):
-    result = True
-    for b in bools:
-        if not b:
-            result = False
-    return result
-
 # value: a numeric
 # params: of type AnalogParams
 # Returns "bin" for value according to the params (with bounding)

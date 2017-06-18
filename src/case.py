@@ -89,10 +89,10 @@ class TestCase:
             return priority_actives[0][0] # Return id of frame with earlest start_time
 
     # Returns a dict mapping (OutputType,channel)->bool representing overall test for that key
-    def assess(self, output_log):
+    def assess(self):
         results = {} # Map from (OutputType,channel) to list(bool) representing relevant results
         for test_point in self.test_points:
-            result = assess_test_point(test_point, output_log)
+            result = assess_test_point(test_point, self.output_log)
             key = (test_point.output_type, test_point.channel)
             if key not in results:
                 results[key] = [] # Initialize

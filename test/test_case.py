@@ -3,14 +3,47 @@ import operator
 import unittest
 
 from src import utils
+from src.frame import Condition
+from src.frame import ConditionType
 from src.request import OutputType
 from src.sequence import Sequence
 from src.screen import Screen
 
 class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the TestCase class
     def setUp(self):
-        #TODO: implement
-        pass
+        end_condition = Condition(ConditionType.After, cause=2000)
+        frames = [] # TODO: do this
+
+        tp0 = TestPoint(frame_id=0,
+                       output_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100),
+                       check_function=operator.eq,
+                       aggregator=lambda x: False) # always False
+
+        tp1 = TestPoint(frame_id=0,
+                       output_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100),
+                       check_function=operator.eq,
+                       aggregator=lambda x: True) # always True
+
+        tp2 = TestPoint(frame_id=0,
+                       output_type=OutputType.DigitalWrite,
+                       channel=14,
+                       expected_value=1,
+                       check_interval=(0,100),
+                       check_function=operator.eq,
+                       aggregator=lambda x: True) # always True
+        test_points = [tp0, tp1, tp2]
+
+        aggregators = {
+            (OutputType.DigitalWrite, 13): all
+        }
+
+        self.case = TestCase(end_condition, frames, test_points, aggregators, True)
 
     def test_update(self):
         #TODO: implement
@@ -21,8 +54,18 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         pass
 
     def test_assess(self):
-        #TODO: implement
-        pass
+        self.case.output_log.record_frame_start(0, 1000)
+
+        expected = {
+            (OutputType.DigitalWrite, 13): False,
+            (OutputType.DigitalWrite, 14): False
+        }
+        self.assertEqual(self.case.assess(), expected)
+
+        self.case.aggregators[(OutputType.DigitalWrite, 13)] = any
+        expected[(OutputType.DigitalWrite, 13)] = True
+        self.assertEqual(self.case.assess(), expected)
+
 
     def test_assess_test_point(self):
         tp = TestPoint(frame_id=0,
@@ -31,7 +74,7 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
                        expected_value=1,
                        check_interval=(0,100),
                        check_function=operator.eq,
-                       aggregator=utils.AND)
+                       aggregator=all)
 
         output_log = OutputLog()
 
