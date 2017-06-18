@@ -74,7 +74,7 @@ class TestCase:
 
         return response
 
-    # TODO: description
+    # Returns the id of the frame that is currently prioritized to serve an input request
     def get_current_frame_id(self):
         actives = [(i, self.frames[i].priority, self.frames[i].start_time) 
                         for i in range(len(self.frames))if self.frames[i].is_active()]
