@@ -3,6 +3,9 @@ from serial import SerialException
 from enum import Enum
 
 from . import utils
+from .response import AckResponse
+from .response import ErrorResponse
+from .response import ValuesResponse
 from .utils import AnalogParams
 
 # COM port parameters
@@ -80,7 +83,14 @@ class SerialCommunication:
         to_send += msg_body
         self.ser.write(to_send)  # Must send it all at once, so it's in the same USB packet
 
+    # Inputs: int msg_code, int timestamp, bytes msg_body
+    # Returns Request object
     def bytes_to_request(self, msg_code, timestamp, msg_body):
+        try:
+            msg_code = MessageCode(msg_code) # Cast int to enum
+        except ValueError:
+            return InvalidRequest(timestamp=timestamp)
+
         if msg_code == MessageCode.Init:  # Body: <> (empty)
             return EventRequest(timestamp=timestamp, data_type=EventType.Init)
 
@@ -197,9 +207,11 @@ class SerialCommunication:
         elif msg_code == MessageCode.WifiResp: # Later: expand protocol
             return EventRequest(timestamp=timestamp, data_type=EventType.Wifi)
 
-        else:  # Invalid message code
+        else:  # Unsupported message code
             return InvalidRequest(timestamp=timestamp)
 
+    # Input: Response object
+    # Returns (int msg_code, bytes msg_body)
     def response_to_bytes(self, response):
         # First determine message code
         if response.is_error:
@@ -220,15 +232,15 @@ class SerialCommunication:
         elif type(response) is ErrorResponse: # Error without data
             msg_body = bytes()
 
-        elif type(response) is ValuesResponse: # Sequence of digital values (uint8)
+        elif type(response) is ValuesResponse: # Sequence of values
             msg_body = bytes()
             for value in response.values:
-                if response.analog:
+                if response.analog:  # int32 encoding
                     msg_body += utils.encode_int(value, width=4, signed=True)
-                else:
+                else:                # uint8 encoding
                     msg_body += utils.encode_int(value, width=1, signed=False)
 
         else: # Unsupported response type
             msg_body = bytes()
 
-        return msg_code, msg_body
+        return msg_code.value, msg_body
