@@ -19,7 +19,8 @@ from .screen import ScreenShape
 from .utils import AnalogParams
 
 # COM port parameters
-ADDR = '/dev/cu.usbmodem1880221'
+#ADDR = '/dev/cu.usbmodem1880221'
+ADDR = '/dev/cu.usbmodem2495941'
 BAUD = 115200
 
 # Communication constants
@@ -188,10 +189,11 @@ class SerialCommunication:
                 for y in range(tile_height): # y is in tiles, not pixels
                     start_index = 8*(y*tile_width + x)
                     tile = utils.decode_screen_tile(msg_body[start_index:start_index+8])
-                    screen.paint(rect=tile, x=8*x, y=8*y)
+                    screen.paint(rect=tile, x=8*x, y=8*(tile_height-y-1)) # tile rows are bottom-to-top
 
             self.last_screen = screen.copy()
-            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, channels=[None], values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen,
+                                 channels=[None], values=[screen])
 
         elif msg_code == MessageCode.ScreenTile: # <uint8 x, uint8 y, uint8 tile[8]>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
@@ -206,7 +208,8 @@ class SerialCommunication:
             tile = utils.decode_screen_tile(msg_body[2:10])
             self.last_screen.paint(rect=tile, x=8*x, y=8*y)
             screen = self.last_screen.copy()
-            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen, channels=[None], values=[screen])
+            return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen,
+                                 channels=[None], values=[screen])
 
         elif msg_code == MessageCode.GpsFix: # Later: expand protocol
             return EventRequest(timestamp=timestamp, data_type=EventType.Gps)

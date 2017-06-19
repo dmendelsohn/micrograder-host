@@ -12,9 +12,10 @@ class Screen:
     def __init__(self, buff=None, width=None, height=None):
         if buff is not None:
             self.buffer = np.copy(buff)
+            self.shape = ScreenShape(width=buff.shape[1], height=buff.shape[0])
         else: # Assume width and height are provided
             self.buffer = np.zeros((height, width), dtype=np.uint8)
-        self.shape = ScreenShape(width=width, height=height)
+            self.shape = ScreenShape(width=width, height=height)
 
     # paint rect (2D numpy array) onto buffer with top-left corner at x, y
     # Later: make this handle out-of-bounds issues
@@ -32,5 +33,8 @@ class Screen:
 
     def copy(self):
         return Screen(buff=self.buffer)
+
+    def __repr__(self):
+        return repr(self.buffer)
 
     # Later: lots of utility functions identifying features of buffer

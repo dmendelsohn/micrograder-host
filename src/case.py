@@ -24,6 +24,10 @@ class OutputLog:
         return (self.outputs == other.outputs and 
                 self.frame_start_times == other.frame_start_times)
 
+    def __str__(self):
+        string = "OutputLog: outputs={}, frame_start_times={}"
+        return string.format(self.outputs, self.frame_start_times)
+
 
 TestPoint = namedtuple('TestPoint', ['frame_id',
                                      'output_type',
@@ -90,9 +94,17 @@ class TestCase:
 
     # Returns a dict mapping (OutputType,channel)->bool representing overall test for that key
     def assess(self):
+        for i in range(len(self.frames)):
+            t = self.frames[i].start_time
+            if t is not None:
+                self.output_log.record_frame_start(frame_id=i, start_time=t)
+
+        print(self.output_log)
         results = {} # Map from (OutputType,channel) to list(bool) representing relevant results
         for test_point in self.test_points:
+            print(test_point)
             result = assess_test_point(test_point, self.output_log)
+            print(result)
             key = (test_point.output_type, test_point.channel)
             if key not in results:
                 results[key] = [] # Initialize

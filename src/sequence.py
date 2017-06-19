@@ -47,3 +47,6 @@ class Sequence:
 
     def __eq__(self, other):
         return self.times == other.times and self.values == other.values
+
+    def __repr__(self):
+        return "Sequence: times={}, values={}".format(self.times, self.values)

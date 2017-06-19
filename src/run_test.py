@@ -12,6 +12,7 @@ from .sequence import Sequence
 from .screen import Screen
 
 import numpy as np
+import operator
 
 def run_test(test_case):
     sc = SerialCommunication()
@@ -23,18 +24,19 @@ def run_test(test_case):
     print("Starting Test")
     while True:
         request = sc.get_request()
+        print(request)
         if request.is_valid:
             response = test_case.update(request)
         else:
             response = ErrorResponse()
 
+        print(response)
         sc.send_response(response)
         total_log.append((request, response))
-        print(request)
-        print(response)
         if response.is_error or response.test_complete:
             break
 
+    print("Assessing")
     return test_case.assess()
 
 def constant_test_case():
@@ -60,23 +62,17 @@ def constant_test_case():
 
 def blinky_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
-                               cause=lambda req: req.data_type == EventType.Init)
+                               cause=lambda req: req.arg == 'Loop')
     end_condition = Condition(ConditionType.After,
                               cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition, inputs={})
 
     points = []
     for i in range(1, 5):
-        if with_oled:
-            output_type, channel = OutputType.Screen, None
-            expected_value = Screen(width=128, height=64) # Blank
-            if i%2==1:
-                expected_value.paint(...)
-        else:
-            output_type, channel = OutputType.DigitalWrite, 13
-            expected_value = 0
-            if i%2==1:
-                expected_value = 1
+        output_type, channel = OutputType.DigitalWrite, 13
+        expected_value = 0
+        if i%2==1:
+            expected_value = 1
 
         points.append(TestPoint(
             frame_id=0,
@@ -87,12 +83,31 @@ def blinky_test_case(with_oled=False):
             check_function=operator.eq,
             aggregator=all))
 
-    aggs = {(OutputType.DigitalWrite, 13): all}
+        if not with_oled:
+            continue
+
+        output_type, channel = OutputType.Screen, None
+        expected_value = Screen(width=128, height=64) # Blank
+        if i%2==1:
+            rect = np.ones((1,126))
+            expected_value.paint(rect, x=1, y=0)
+
+        points.append(TestPoint(
+            frame_id=0,
+            output_type=output_type,
+            channel=channel,
+            expected_value=expected_value,
+            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_function=operator.eq,
+            aggregator=all))
+
+
+    aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
     return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
 
 def button_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
-                               cause=lambda req: req.data_type == EventType.Init)
+                               cause=lambda req: req.arg == 'Loop')
     end_condition = Condition(ConditionType.After,
                               cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,
@@ -130,5 +145,9 @@ def button_test_case(with_oled=False):
 
 
 def main():
-    case = constant_test_case()
+    #np.set_printoptions(threshold=np.nan)
+    #case = constant_test_case()
+    case = blinky_test_case(with_oled=True)
     result = run_test(case)
+    print("Result:")
+    print(result)
