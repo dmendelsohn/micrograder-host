@@ -74,7 +74,7 @@ class EventRequest(Request):
 
     def __str__(self):
         string = "EventRequest: timestamp={}, data_type={}, arg={}"
-        return string.format(self.timestamp, self.data_type, self.arg)
+        return string.format(self.timestamp, self.data_type, repr(self.arg))
 
 
 # Subclass for invalid requests
@@ -85,4 +85,4 @@ class InvalidRequest(Request):
         self.arg = arg # Additional data
 
     def __str__(self):
-        return "InvalidRequest: timestamp={}, arg={}".format(self.timestamp, self.arg)
+        return "InvalidRequest: timestamp={}, arg={}".format(self.timestamp, repr(self.arg))
