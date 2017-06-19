@@ -70,7 +70,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(decode_analog_params(b), expected)
 
     def test_decode_screen_tile(self):
-        b = bytes([255, 1, 1, 1, 1, 1, 1, 1]) # Just left and bottom edges of tile
+        b = bytes([1, 1, 1, 1, 1, 1, 1, 255]) # Just left and bottom edges of tile
         expected = np.zeros((8,8))
         expected[:,0] = 1 # Left edge
         expected[7,:] = 1 # Bottom edge
