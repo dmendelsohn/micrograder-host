@@ -114,22 +114,15 @@ def button_test_case(with_oled=False):
                     inputs={
                         (InputType.DigitalRead, 6): Sequence(
                                                         [0,1000,2000,3000,4000,5000],
-                                                        [0,1,0,1,0,1])
+                                                        [1,0,1,0,1,0])
                     })
 
     points = []
     for i in range(1, 5):
-        if with_oled:
-            output_type, channel = OutputType.Screen, None
-            expected_value = Screen(width=128, height=64) # Blank
-            if i%2==1:
-                rect = np.ones((10,20))
-                expected_value.paint(rect, x=20, y=10)
-        else:
-            output_type, channel = OutputType.DigitalWrite, 13
-            expected_value = 0
-            if i%2==1:
-                expected_value = 1
+        output_type, channel = OutputType.DigitalWrite, 13
+        expected_value = 0
+        if i%2==1:
+            expected_value = 1
 
         points.append(TestPoint(
             frame_id=0,
@@ -140,14 +133,33 @@ def button_test_case(with_oled=False):
             check_function=operator.eq,
             aggregator=all))
 
-    aggs = {(OutputType.DigitalWrite, 13): all}
+        if not with_oled:
+            continue
+
+        output_type, channel = OutputType.Screen, None
+        expected_value = Screen(width=128, height=64) # Blank
+        if i%2==1:
+            rect = np.ones((10,20))
+            expected_value.paint(rect, x=20, y=10)
+
+        points.append(TestPoint(
+            frame_id=0,
+            output_type=output_type,
+            channel=channel,
+            expected_value=expected_value,
+            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_function=operator.eq,
+            aggregator=all))
+
+    aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
     return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
 
 
 def main():
     #np.set_printoptions(threshold=np.nan)
     #case = constant_test_case()
-    case = blinky_test_case(with_oled=True)
+    #case = blinky_test_case(with_oled=True)
+    case = button_test_case(with_oled=True)
     result = run_test(case)
     print("Result:")
     print(result)
