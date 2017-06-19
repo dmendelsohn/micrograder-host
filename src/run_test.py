@@ -89,8 +89,8 @@ def blinky_test_case(with_oled=False):
         output_type, channel = OutputType.Screen, None
         expected_value = Screen(width=128, height=64) # Blank
         if i%2==1:
-            rect = np.ones((1,126))
-            expected_value.paint(rect, x=1, y=0)
+            rect = np.ones((10,20))
+            expected_value.paint(rect, x=20, y=10)
 
         points.append(TestPoint(
             frame_id=0,
@@ -123,8 +123,8 @@ def button_test_case(with_oled=False):
             output_type, channel = OutputType.Screen, None
             expected_value = Screen(width=128, height=64) # Blank
             if i%2==1:
-                rect = np.ones((10,10))
-                expected_value.paint(rect, x=10, y=10)
+                rect = np.ones((10,20))
+                expected_value.paint(rect, x=20, y=10)
         else:
             output_type, channel = OutputType.DigitalWrite, 13
             expected_value = 0

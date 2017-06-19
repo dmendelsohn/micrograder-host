@@ -69,6 +69,6 @@ def decode_analog_params(raw):
 # Return: 8x8 numpy array of uint8 (1 represents lit pixel)
 # Each byte of input corresponds to column of output, with MSB at top of column
 def decode_screen_tile(data):
-    data = np.array([[elt] for elt in data], dtype=np.uint8)
+    data = np.array([[elt] for elt in data[::-1]], dtype=np.uint8)
     tile = np.unpackbits(data, axis=1)
     return tile.transpose()

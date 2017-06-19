@@ -189,7 +189,7 @@ class SerialCommunication:
                 for y in range(tile_height): # y is in tiles, not pixels
                     start_index = 8*(y*tile_width + x)
                     tile = utils.decode_screen_tile(msg_body[start_index:start_index+8])
-                    screen.paint(rect=tile, x=8*x, y=8*(tile_height-y-1)) # tile rows are bottom-to-top
+                    screen.paint(rect=tile, x=8*(tile_width-x-1), y=8*(tile_height-y-1)) # tile rows are bottom-to-top
 
             self.last_screen = screen.copy()
             return OutputRequest(timestamp=timestamp, data_type=OutputType.Screen,
