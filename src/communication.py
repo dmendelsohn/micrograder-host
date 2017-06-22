@@ -78,6 +78,10 @@ class SerialCommunication:
             self.ser = None
             return False
 
+    def wait_for_connection(self, addr=ADDR, baud=BAUD):
+        while not self.connect(addr, baud):
+            pass # Do nothing, wait
+
     def get_request(self):
         header = self.ser.read(CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES) # Read header
         msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)

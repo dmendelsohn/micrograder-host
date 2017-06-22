@@ -1,4 +1,5 @@
 from collections import namedtuple
+import dill as pickle
 import numpy as np
 import struct
 
@@ -81,3 +82,16 @@ def decode_screen_tile(data):
     data = np.array([[elt] for elt in data[::-1]], dtype=np.uint8)
     tile = np.unpackbits(data, axis=1)
     return tile.transpose()
+
+# Saves an objec to a file
+def save(obj, filename):
+    f = open(filename, 'wb')
+    pickle.dump(obj,f)
+    f.close()
+
+# Loads an object from a file
+def load(filename):
+    f = open(filename, 'rb')
+    obj = pickle.load(f)
+    f.close()
+    return obj
