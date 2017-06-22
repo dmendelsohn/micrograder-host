@@ -128,8 +128,9 @@ def button_test_case(with_oled=False):
     aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
     return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
 
-def main():
-    print("Constructing test cases and saving to files")
+def main(verbose=False):
+    if verbose:
+        print("Constructing test cases and saving to files")
 
     case = constant_test_case()
     filepath = "resources/constant.tc"
