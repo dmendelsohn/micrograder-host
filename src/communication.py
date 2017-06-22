@@ -201,15 +201,18 @@ class SerialCommunication:
                                  channels=[pin], values=[value], analog_params=analog_params)
 
         elif msg_code == MessageCode.ImuAcc: # < analog_generic_input >
-            return self.build_input_request(data_type=InputType.Accelerometer, channels=[pin],
+            return self.build_input_request(data_type=InputType.Accelerometer, 
+                                            channels=request.THREE_AXIS,
                                             analog=True, timestamp=timestamp, msg_body=msg_body)
 
         elif msg_code == MessageCode.ImuGyro: # < analog_generic_input >
-            return self.build_input_request(data_type=InputType.Gyroscope, channels=[pin],
+            return self.build_input_request(data_type=InputType.Gyroscope,
+                                            channels=request.THREE_AXIS,
                                             analog=True, timestamp=timestamp, msg_body=msg_body)
 
         elif msg_code == MessageCode.ImuMag: # < analog_generic_input >
-            return self.build_input_request(data_type=InputType.Magnetometer, channels=[pin],
+            return self.build_input_request(data_type=InputType.Magnetometer,
+                                            channels=request.THREE_AXIS,
                                             analog=True, timestamp=timestamp, msg_body=msg_body)
 
         elif msg_code == MessageCode.ScreenInit: # <uint8 tile_width, tile_height>

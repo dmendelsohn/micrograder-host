@@ -69,6 +69,10 @@ class TestUtils(unittest.TestCase):
         expected = AnalogParams(min_bin=-2, max_bin=-1, min_value=0, max_value=1)
         self.assertEqual(decode_analog_params(b), expected)
 
+    def test_decode_batch_params(self):
+        #TODO:
+        assertTrue(False)
+
     def test_decode_screen_tile(self):
         b = bytes([1, 1, 1, 1, 1, 1, 1, 255]) # Just left and bottom edges of tile
         expected = np.zeros((8,8))
