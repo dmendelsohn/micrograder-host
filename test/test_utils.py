@@ -70,8 +70,9 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(decode_analog_params(b), expected)
 
     def test_decode_batch_params(self):
-        #TODO:
-        assertTrue(False)
+        b = bytes([2, 1, 1, 1, 0, 0])
+        expected = BatchParams(num=258, period=257)
+        self.assertEqual(decode_batch_params(b), expected)
 
     def test_decode_screen_tile(self):
         b = bytes([1, 1, 1, 1, 1, 1, 1, 255]) # Just left and bottom edges of tile
