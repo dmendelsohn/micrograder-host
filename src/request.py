@@ -1,6 +1,8 @@
 from enum import Enum
 from collections import namedtuple
 
+from .utils import BatchParams
+
 THREE_AXIS = ['x', 'y', 'z']  # Standard channels for three axis quantities
 
 class InputType(Enum):
@@ -29,6 +31,7 @@ class Request:
         self.is_input = False # Default for base class
         self.is_output = False # Default for base class
         self.is_event = False # Default for base class
+        self.is_measure = False # Default for base class
         self.is_valid = True  # Default for base class
 
     def __eq__(self, other):
@@ -37,16 +40,21 @@ class Request:
 
 # Subclass for requests that require data in response
 class InputRequest(Request):
-    def __init__(self, timestamp, data_type, channels, analog_params=None):
+    # For recordings, len(values) must equal len(channels)*batch_params.num
+    # For non-recordingds, values must be None
+    def __init__(self, timestamp, data_type, channels, 
+                 values=None, analog_params=None, batch_params=BatchParams(num=1, period=0):
         super().__init__(timestamp)
         self.is_input = True # Override default
         self.data_type = data_type # Should be InputType
         self.channels = channels # List of hashable elements (e.g. ['x', 'y', 'z'])
+        self.values = values
         self.analog_params = analog_params
+        self.batch_params = batch_params
 
     def __str__(self):
-        string = "InputRequest: timestamp={}, data_type={}, channels={}, analog_params={}"
-        return string.format(self.timestamp, self.data_type, self.channels, self.analog_params)
+        s = "InputRequest: timestamp={}, data_type={}, channels={}, analog_params={}"
+        return s.format(self.timestamp, self.data_type, self.channels, self.analog_params)
 
 
 # Subclass for requests that are reporting system outputs
@@ -60,9 +68,9 @@ class OutputRequest(Request):
         self.analog_params = analog_params
 
     def __str__(self):
-        string = "OutputRequest: timestamp={}, data_type={}, channels={}, values={}, analog_params={}"
-        return string.format(self.timestamp, self.data_type, self.channels, self.values,
-                             self.analog_params)
+        s = "OutputRequest: timestamp={}, data_type={}, channels={}, values={}, analog_params={}"
+        return s.format(self.timestamp, self.data_type, self.channels, self.values,
+                        self.analog_params)
 
 # Subclass for requests that are reporting internal system events
 class EventRequest(Request):
@@ -73,8 +81,8 @@ class EventRequest(Request):
         self.arg = arg # Any additional data
 
     def __str__(self):
-        string = "EventRequest: timestamp={}, data_type={}, arg={}"
-        return string.format(self.timestamp, self.data_type, repr(self.arg))
+        s = "EventRequest: timestamp={}, data_type={}, arg={}"
+        return s.format(self.timestamp, self.data_type, repr(self.arg))
 
 
 # Subclass for invalid requests

@@ -43,7 +43,7 @@ def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)
     end_condition = Condition(ConditionType.After,
-                              cause=1000, subconditions=[init_condition])
+                              cause=3000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,
                     inputs={
                         (InputType.DigitalRead, 13): Sequence([0],[1]),

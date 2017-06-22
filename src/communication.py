@@ -17,6 +17,7 @@ from .response import ValuesResponse
 from .screen import Screen
 from .screen import ScreenShape
 from .utils import AnalogParams
+from .utils import BatchParams
 
 # COM port parameters
 #ADDR = '/dev/cu.usbmodem1880221'
@@ -28,6 +29,7 @@ CODE_BYTES = 1 # 1 byte unsigned int for message code
 TIMESTAMP_BYTES = 4 # 4 byte unsigned int for timestampe
 MSG_SIZE_BYTES = 2 #2 byte unsigned int message size
 ANALOG_PARAMS_SIZE = 4*4
+BATCH_PARAMS_SIZE = 2+4
 
 class MessageCode(Enum):
     # Byte codes for system-level stuff
@@ -94,6 +96,63 @@ class SerialCommunication:
         to_send += msg_body
         self.ser.write(to_send)  # Must send it all at once, so it's in the same USB packet
 
+
+    # Builds an input request, since the logic is very similar for each kind of input request
+    # In the case of digital read, digital write, msg_body should be truncated so that the
+    # <uint8 pin> field at the beginning is cut off
+    # Returns an InputRequest or InvalidRequest
+    def build_input_request(self, data_type, channels, analog, timestamp, msg_body):
+        # Process flags
+        if len(msg_body) < 1:
+            return InvalidRequest(timestamp=timestamp)
+        flags, msg_body = msg_body[0], msg_body[1:]
+        is_recording = flags%2 # LSB
+        flags >>= 1
+        is_batch = flags%2 # 2nd LSB
+
+
+        if analog:  # Prcoess analog params, if appropriate
+            if len(msg_body) < ANALOG_PARAMS_SIZE:
+                return InvalidRequest(timestamp=timestamp)
+            analog_params = utils.decode_analog_params(msg_body[:ANALOG_PARAMS_SIZE])
+            msg_body = msg_body[ANALOG_PARAMS_SIZE:]
+        else:
+            analog_params = None
+
+        if is_batch: # Process batch params, if appropriate
+            if len(msg_body) < BATCH_PARAMS_SIZE:
+                return InvalidRequest(timestamp=timestamp)
+            batch_params = utils.decode_batch_params(msg_body[:BATCH_PARAMS_SIZE])
+            msg_body = msg_body[BATCH_PARAMS_SIZE:]
+        else:
+            batch_params = utils.BatchParams(num=1, period=0) # Single value
+
+        if is_recording: # Process recorded values, if appropriate
+            num_values = len(channels) * batch_params.num
+            if analog:
+                num_bytes = num_values * 4
+            else:
+                num_bytes = num_values
+
+            if len(msg_body) < num_bytes:
+                return InvalidRequest(timestamp=timestamp)
+
+            if analog:
+                values = [utils.decode_int(msg_body[4*i:4*(i+1)], signed=True) 
+                            for i in range(num_values)]
+            else:
+                values = [utils.decode_int(msg_body[i:i+1], signed=False)
+                            for i in range(num_values)]
+            msg_body = msg_body[num_bytes:]
+        else:
+            values = None
+
+        if len(msg_body) > 0: # Error due to unprocessed message body leftover
+            return InvalidRequest(timestamp=timestamp)
+
+        return InputRequest(timestamp=timestamp, data_type=data_type, channels=channels,
+                            values=values, analog_params=analog_params, batch_params=batch_params)
+
     # Inputs: int msg_code, int timestamp, bytes msg_body
     # Returns Request object
     def bytes_to_request(self, msg_code, timestamp, msg_body):
@@ -109,13 +168,14 @@ class SerialCommunication:
             text = str(msg_body, encoding='utf-8')
             return EventRequest(timestamp=timestamp, data_type=EventType.Print, arg=text)
 
-        elif msg_code == MessageCode.DigitalRead: # Body format: <uint8 pin>
+        elif msg_code == MessageCode.DigitalRead: # Body format: <uint8 pin, digital_generic_input>
             if len(msg_body) < 1:
                 return InvalidRequest(timestamp=timestamp)  # Not enough data
-            pin = msg_body[0]
-            return InputRequest(timestamp=timestamp, data_type=InputType.DigitalRead, channels=[pin])
+            pin, msg_body = msg_body[0], msg_body[1:]
+            return self.build_input_request(data_type=InputType.DigitalRead, channels=[pin],
+                                            analog=False, timestamp=timestamp, msg_body=msg_body)
 
-        elif msg_code == MessageCode.DigitalWrite: # <uint8 pin, uint8 val>
+        elif msg_code == MessageCode.DigitalWrite: # <uint8 pin, uint8 value>
             if len(msg_body) < 2:
                 return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
@@ -123,15 +183,14 @@ class SerialCommunication:
             return OutputRequest(timestamp=timestamp, data_type=OutputType.DigitalWrite,
                                  channels=[pin], values=[value], )
 
-        elif msg_code == MessageCode.AnalogRead: #<uint8 pin, int32 min_bin, max_bin, min_val, max_val>
-            if len(msg_body) < (1+ANALOG_PARAMS_SIZE):
-                return InvalidRequest(timestamp=timestamp) # Not enough data
-            pin = msg_body[0]
-            analog_params = utils.decode_analog_params(msg_body[1:1+ANALOG_PARAMS_SIZE])
-            return InputRequest(timestamp=timestamp, data_type=InputType.AnalogRead,
-                                channels=[pin], analog_params=analog_params)
+        elif msg_code == MessageCode.AnalogRead: # <uint8 pin, analog_generic_input>
+            if len(msg_body) < 1:
+                return InvalidRequest(timestamp=timestamp)  # Not enough data
+            pin, msg_body = msg_body[0], msg_body[1:]
+            return self.build_input_request(data_type=InputType.AnalogRead, channels=[pin],
+                                            analog=True, timestamp=timestamp, msg_body=msg_body)
 
-        elif msg_code == MessageCode.AnalogWrite: #<uint8 pin, int32 min_bin, max_bin, min_val, max_val, val>
+        elif msg_code == MessageCode.AnalogWrite: # <uint8 pin, int32 min_bin, max_bin, min_val, max_val, val>
             if len(msg_body) < (1+4+ANALOG_PARAMS_SIZE):
                 return InvalidRequest(timestamp=timestamp) # Not enough data
             pin = msg_body[0]
@@ -141,26 +200,17 @@ class SerialCommunication:
             return OutputRequest(timestamp=timestamp, data_type=OutputType.AnalogWrite,
                                  channels=[pin], values=[value], analog_params=analog_params)
 
-        elif msg_code == MessageCode.ImuAcc: #<int32 min_bin, max_bin, min_val, max_val>
-            if len(msg_body) < ANALOG_PARAMS_SIZE:
-                return InvalidRequest(timestamp) # Not enough data
-            analog_params = utils.decode_analog_params(msg_body)
-            return InputRequest(timestamp=timestamp, data_type=InputType.Accelerometer,
-                                channels=request.THREE_AXIS, analog_params=analog_params)
+        elif msg_code == MessageCode.ImuAcc: # < analog_generic_input >
+            return self.build_input_request(data_type=InputType.Accelerometer, channels=[pin],
+                                            analog=True, timestamp=timestamp, msg_body=msg_body)
 
-        elif msg_code == MessageCode.ImuGyro: #<int32 min_bin, max_bin, min_val, max_val>
-            if len(msg_body) < ANALOG_PARAMS_SIZE:
-                return InvalidRequest(timestamp) # Not enough data
-            analog_params = utils.decode_analog_params(msg_body)
-            return InputRequest(timestamp=timestamp, data_type=InputType.Gyroscope,
-                                channels=request.THREE_AXIS, analog_params=analog_params)
+        elif msg_code == MessageCode.ImuGyro: # < analog_generic_input >
+            return self.build_input_request(data_type=InputType.Gyroscope, channels=[pin],
+                                            analog=True, timestamp=timestamp, msg_body=msg_body)
 
-        elif msg_code == MessageCode.ImuMag: #<int32 min_bin, max_bin, min_val, max_val>
-            if len(msg_body) < ANALOG_PARAMS_SIZE:
-                return InvalidRequest(timestamp) # Not enough data
-            analog_params = utils.decode_analog_params(msg_body)
-            return InputRequest(timestamp=timestamp, data_type=InputType.Magnetometer,
-                                channels=request.THREE_AXIS, analog_params=analog_params)
+        elif msg_code == MessageCode.ImuMag: # < analog_generic_input >
+            return self.build_input_request(data_type=InputType.Magnetometer, channels=[pin],
+                                            analog=True, timestamp=timestamp, msg_body=msg_body)
 
         elif msg_code == MessageCode.ScreenInit: # <uint8 tile_width, tile_height>
             if len(msg_body) < 2:

@@ -57,13 +57,22 @@ def encode_int(num, width=4, signed=False):
 AnalogParams = namedtuple('AnalogParams', ['min_bin', 'max_bin', 'min_value', 'max_value'])
 
 # Input: bytes of length 16 and interpret as 4 int32s
-# Return: named tuple: min_bin, max_bin, min_value, max_value
+# Return: AnalogParams
 def decode_analog_params(raw):
     min_bin = decode_int(raw[0:4], signed=True)
     max_bin = decode_int(raw[4:8], signed=True)
     min_value = decode_int(raw[8:12], signed=True)
     max_value = decode_int(raw[12:16], signed=True)
     return AnalogParams(min_bin, max_bin, min_value, max_value)
+
+BatchParams = namedtuple('BatchParams', ['num', 'period']) # Period is in microseconds
+
+# Input: bytes of length 6 (representing: uint16 num, uint32 period)
+# Return: BatchParams
+def decode_batch_params(raw):
+    num = decode_int(raw[0:2], signed=False)
+    period = decode_int(raw[2:6], signed=False)
+    return BatchParams(num, period)
 
 # Input: bytes of length 8
 # Return: 8x8 numpy array of uint8 (1 represents lit pixel)
