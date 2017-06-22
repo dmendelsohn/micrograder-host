@@ -42,13 +42,16 @@ def run_test(test_case):
 
 # Saves a test case to a file
 def save_test(test_case, filename):
-    #TODO: implement protocol
-    pass
+    f = open(filename, 'wb')
+    pickle.dump(test_case,f)
+    f.close()
 
 # Loads a test case from a file
 def load_test(filename):
-    #TODO: implement protocol
-    pass
+    f = open(filename, 'rb')
+    test = pickle.load(f)
+    f.close()
+    return test
 
 def constant_test_case():
     init_condition = Condition(ConditionType.After, 
@@ -117,10 +120,10 @@ def blinky_test_case(with_oled=False):
     return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
 
 def button_test_case(with_oled=False):
-    init_condition = Condition(ConditionType.After, 
+    init_condition = Condition(ConditionType.After,
                                cause=lambda req: req.arg == 'Loop')
     end_condition = Condition(ConditionType.After,
-                              cause=5000, subconditions=[init_condition])
+                               cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,
                     inputs={
                         (InputType.DigitalRead, 6): Sequence(
@@ -171,7 +174,10 @@ def main():
     #case = constant_test_case()
     #case = blinky_test_case(with_oled=True)
     case = button_test_case(with_oled=True)
-    save_test(case, "resources/button_test")
-    #result = run_test(case)
+
+    #save_test(case, "resources/button_test")
+    #case = load_test("resources/button_test")
+
+    result = run_test(case)
     #print("Result:")
     #print(result)
