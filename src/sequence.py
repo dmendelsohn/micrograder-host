@@ -17,13 +17,28 @@ class Sequence:
         self.values.append(value)
 
     # Returns latest value with .time <= time, or None if no value exists with .time <= time
-    def get_value(self, time):
+    def get_sample(self, time):
         index = bisect.bisect(self.times, time+0.1) # +0.1 to break ties
         index -= 1
         if index < 0:
             return None # No inputs before time t
         else:
             return self.values[index]
+
+    def get_samples(self, start_time, num_samples, period): #TODO: make this legit
+        index = bisect.bisect(self.times, start_time+0.1) # +0.1 to break ties
+        index -= 1
+        if index < 0:
+            return None # No inputs before start_time
+        
+        samples = []
+        t = start_time
+        for i in range(num_samples):
+            samples.append(self.values[index])
+            t += period
+            while (index+1) < len(self.times) and self.times[index+1] <= t:
+                index += 1  # Increment index as far as needed
+        return samples
 
     # Returns list of values in time range [start, end), or [] if no such values exist
     def get_values(self, start_time, end_time):

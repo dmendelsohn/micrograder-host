@@ -73,19 +73,23 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         expected = AckResponse(test_complete=False)
         self.assertEqual(self.case.update(request), expected)
 
-        request = InputRequest(50, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(50, InputType.AnalogRead, [0], analog_params=self.params)
         expected = ErrorResponse(test_complete=False) # No frame active yet
         self.assertEqual(self.case.update(request), expected)
 
-        request = InputRequest(150, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(150, InputType.AnalogRead, [0], analog_params=self.params)
         expected = ValuesResponse(values=[-128], analog=True, test_complete=False)
         self.assertEqual(self.case.update(request), expected)
 
-        request = InputRequest(150, InputType.AnalogRead, [1], self.params)
+        request = InputRequest(150, InputType.AnalogRead, [1], analog_params=self.params)
         expected = ErrorResponse(test_complete=False) # No data for that channel
         self.assertEqual(self.case.update(request), expected)
 
-        request = InputRequest(2150, InputType.AnalogRead, [0], self.params)
+        req = InputRequest(150, InputType.AnalogRead, [1], values=[0], analog_params=self.params)
+        expected = ErrorResponse(test_complete=False) # No "input recordings" during live test
+        self.assertEqual(self.case.update(req), expected)        
+
+        request = InputRequest(2150, InputType.AnalogRead, [0], analog_params=self.params)
         expected = ErrorResponse(test_complete=True)
         self.assertEqual(self.case.update(request), expected)
 
@@ -94,28 +98,28 @@ class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the T
         self.assertEqual(self.case.output_log, expected_output_log)
 
     def test_get_current_frame_id(self):
-        request = InputRequest(150, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(150, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertEqual(self.case.get_current_frame_id(), 0)
 
-        request = InputRequest(250, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(250, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertEqual(self.case.get_current_frame_id(), 1)
 
         self.case.preempt = False     
-        request = InputRequest(250, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(250, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertEqual(self.case.get_current_frame_id(), 0)
 
-        request = InputRequest(350, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(350, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertEqual(self.case.get_current_frame_id(), 2)
 
-        request = InputRequest(1050, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(1050, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertEqual(self.case.get_current_frame_id(), 0)
 
-        request = InputRequest(1250, InputType.AnalogRead, [0], self.params)
+        request = InputRequest(1250, InputType.AnalogRead, [0], analog_params=self.params)
         self.case.update(request)
         self.assertIsNone(self.case.get_current_frame_id())
 

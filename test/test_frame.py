@@ -7,6 +7,7 @@ from src.response import ErrorResponse
 from src.response import ValuesResponse
 from src.sequence import Sequence
 from src.utils import AnalogParams
+from src.utils import BatchParams
 import unittest
 
 def request_is_init(request):
@@ -75,20 +76,29 @@ class TestFrame(unittest.TestCase):
         params = AnalogParams(-128, 127, 0.0, 5.0)
         input_type = InputType.AnalogRead
 
-        self.assertEqual(self.frame.get_response(InputRequest(25, input_type, [0,1], params)),
-                         ErrorResponse()) # Error, frame hasn't started
+        request = InputRequest(25, input_type, [0,1], analog_params=params)
+        actual = self.frame.get_response(request)
+        self.assertEqual(actual, ErrorResponse()) # Error, frame hasn't started
 
         self.frame.update(EventRequest(50, EventType.Init)) # Starts the frame
 
-        self.assertEqual(self.frame.get_response(InputRequest(159, input_type, [0,1], params)),
-                         ErrorResponse()) # Error, one channel doesn't have data yet
+        request = InputRequest(159, input_type, [0,1], analog_params=params)
+        actual = self.frame.get_response(request)
+        self.assertEqual(actual, ErrorResponse()) # Error, one channel doesn't have data yet
 
-        self.assertEqual(self.frame.get_response(InputRequest(160, input_type, [0,2], params)),
-                         ErrorResponse()) # Error, one channel is invalid
+        request = InputRequest(160, input_type, [0,2], analog_params=params)
+        actual = self.frame.get_response(request)
+        self.assertEqual(actual, ErrorResponse()) # Error, one channel is invalid
 
-        self.assertEqual(self.frame.get_response(InputRequest(160, input_type, [0,1], params)),
-                         ValuesResponse(values=[-77, -26], analog=True))  # Success
+        request = InputRequest(160, input_type, [0,1], analog_params=params)
+        actual = self.frame.get_response(request)
+        self.assertEqual(actual, ValuesResponse(values=[-77, -26], analog=True))  # Success
+
+        b_params = BatchParams(num=2, period=10)
+        request = InputRequest(160, input_type, [0,1], analog_params=params, batch_params=b_params)
+        actual = self.frame.get_response(request)
+        self.assertEqual(actual, ValuesResponse(values=[-77, -26, -77, -26], analog=True))
 
         self.frame.update(EventRequest(1000, EventType.Print)) # Ends the frame
-        self.assertEqual(self.frame.get_response(InputRequest(1000, input_type, [0,1], params)),
-                         ErrorResponse())  # Frame has completed
+        actual = self.frame.get_response(InputRequest(1000, input_type, [0,1], analog_params=params))
+        self.assertEqual(actual, ErrorResponse())  # Frame has completed

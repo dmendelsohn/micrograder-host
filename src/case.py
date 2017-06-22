@@ -55,6 +55,8 @@ class TestCase:
         if request.is_input: # pass along request to specific frame
             if frame_id is None: # No frame is currently in progress
                 response = ErrorResponse() # Cannot respond to request
+            elif request.values is not None: # This was a recording, not a real request
+                response = ErrorResponse() # We shouldn't get this type of request in a live test
             else:
                 frame = self.frames[frame_id]
                 response = frame.get_response(request)
@@ -99,12 +101,12 @@ class TestCase:
             if t is not None:
                 self.output_log.record_frame_start(frame_id=i, start_time=t)
 
-        print(self.output_log)
+        #print(self.output_log)
         results = {} # Map from (OutputType,channel) to list(bool) representing relevant results
         for test_point in self.test_points:
-            print(test_point)
+            #print(test_point)
             result = assess_test_point(test_point, self.output_log)
-            print(result)
+            #print(result)
             key = (test_point.output_type, test_point.channel)
             if key not in results:
                 results[key] = [] # Initialize

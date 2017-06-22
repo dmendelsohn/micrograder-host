@@ -97,18 +97,24 @@ class Frame:
             return ErrorResponse()  # No value since the frame is not in progress
 
         relative_time = (request.timestamp - self.start_time)
-        values = []
+        num_samples, period = request.batch_params.num, request.batch_params.period
+        values = [] # List of results for each channel, each result is a list of samples
         for channel in request.channels:
             key = (request.data_type, channel)
             if key not in self.inputs:
-                value = None  # No value for that input_type, channel combo
+                samples = None  # No value for that input_type, channel combo
             else:
-                value = self.inputs[key].get_value(relative_time)
-            values.append(value)
+                samples = self.inputs[key].get_samples(relative_time, num_samples, period)
+            values.append(samples)
         
         if None in values:  # There was an error
             return ErrorResponse()
-        elif request.analog_params is None: # digital
+        else:
+            values = [[values[i][n] for i in range(len(request.channels))] 
+                                        for n in range(num_samples)] # Transpose 2D array
+            values = sum(values, []) # Then flatten into a 1D array of values
+
+        if request.analog_params is None: # digital
             return ValuesResponse(values=values, analog=False)
         else: # analog
             values = [utils.analog_to_digital(v, request.analog_params) for v in values]
