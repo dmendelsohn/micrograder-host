@@ -39,6 +39,14 @@ def run_test(test_case):
     print("Assessing")
     return test_case.assess()
 
+def save_test(test_case, filename):
+    #TODO: implement
+    pass
+
+def load_test(filename):
+    #TODO: implement
+    pass
+
 def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)

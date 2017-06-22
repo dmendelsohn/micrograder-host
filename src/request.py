@@ -42,7 +42,7 @@ class Request:
 class InputRequest(Request):
     # For recordings, len(values) must equal len(channels)*batch_params.num
     # For non-recordingds, values must be None
-    def __init__(self, timestamp, data_type, channels, 
+    def __init__(self, timestamp, data_type, channels, *,
                  values=None, analog_params=None, batch_params=BatchParams(num=1, period=0)):
         super().__init__(timestamp)
         self.is_input = True # Override default
