@@ -13,6 +13,7 @@ from .screen import Screen
 
 import numpy as np
 import operator
+import pickle
 
 def run_test(test_case):
     sc = SerialCommunication()
@@ -39,12 +40,14 @@ def run_test(test_case):
     print("Assessing")
     return test_case.assess()
 
+# Saves a test case to a file
 def save_test(test_case, filename):
-    #TODO: implement
+    #TODO: implement protocol
     pass
 
+# Loads a test case from a file
 def load_test(filename):
-    #TODO: implement
+    #TODO: implement protocol
     pass
 
 def constant_test_case():
@@ -168,6 +171,7 @@ def main():
     #case = constant_test_case()
     #case = blinky_test_case(with_oled=True)
     case = button_test_case(with_oled=True)
-    result = run_test(case)
-    print("Result:")
-    print(result)
+    save_test(case, "resources/button_test")
+    #result = run_test(case)
+    #print("Result:")
+    #print(result)
