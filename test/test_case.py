@@ -3,8 +3,8 @@ import operator
 import unittest
 
 from src import utils
-from src.frame import Condition
-from src.frame import ConditionType
+from src.condition import Condition
+from src.condition import ConditionType
 from src.frame import Frame
 from src.request import InputRequest
 from src.request import InputType
