@@ -4,7 +4,7 @@ from .response import ErrorResponse
 
 import numpy as np
 
-def run_test(test_case):
+def run_test(test_case, verbose=False):
     sc = SerialCommunication()
     sc.wait_for_connection()
 

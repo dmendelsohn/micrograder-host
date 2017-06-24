@@ -149,5 +149,5 @@ def main(verbose=False):
     utils.save(case, filepath)
 
     case = button_test_case(with_oled=True)
-    filepath = "resources/button_led.tc"
+    filepath = "resources/button_oled.tc"
     utils.save(case, filepath)

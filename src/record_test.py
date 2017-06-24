@@ -18,7 +18,7 @@ def record(verbose=False):
 
         if not request.is_valid:
             response = ErrorResponse()
-        else if request.is_input and request.values is None: # Not a recording
+        elif request.is_input and request.values is None: # Not a recording
             response = ErrorResponse() # We shouldn't see these while recording
         else:
             response = AckResponse()
