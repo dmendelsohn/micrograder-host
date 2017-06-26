@@ -82,6 +82,7 @@ class SerialCommunication:
         while not self.connect(addr, baud):
             pass # Do nothing, wait
 
+    # TODO: add handling for serial exception and an optional timeout
     def get_request(self):
         header = self.ser.read(CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES) # Read header
         msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
