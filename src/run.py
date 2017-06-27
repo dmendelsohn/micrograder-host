@@ -41,10 +41,15 @@ def run_session(handler, *, verbose=False, timeout=DEFAULT_TIMEOUT):
     return log
 
 def build_test_case(log, verbose=False):
-    #TODO: implement
+    #TODO: implement (probably in a different file)
     pass
 
-# TODO: make this the entry point for both RECORDING and TESTING
-def main(filepath, verbose=False):
-    #TODO: implement
-    pass
+# Runs the RequestHandler saved at handler_filepath
+# If log_filepath is not None, RequestLog is saved there
+# Returns: RequestLog
+def main(handler_filepath, log_filepath, *, verbose=False, timeout=DEFAULT_TIMEOUT):
+    handler = utils.load(handler_filepath)
+    log = run_session(handler, verbose=verbose, timeout=timeout)
+    if log_filepath:
+        utils.save(log, log_filepath)
+    return log
