@@ -1,14 +1,14 @@
-from . import utils
-from .case import TestCase
-from .case import TestPoint
-from .condition import Condition
-from .condition import ConditionType
-from .frame import Frame
-from .request import EventType
-from .request import InputType
-from .request import OutputType
-from .sequence import Sequence
-from .screen import Screen
+from src. import utils
+from src.case import TestCase
+from src.case import TestPoint
+from src.condition import Condition
+from src.condition import ConditionType
+from src.frame import Frame
+from src.request import EventType
+from src.request import InputType
+from src.request import OutputType
+from src.sequence import Sequence
+from src.screen import Screen
 
 import numpy as np
 import operator
