@@ -29,7 +29,7 @@ class Screen:
         return self.buffer.shape[1]
 
     def __eq__(self, other):
-        return np.array_equal(self.buffer, other.buffer)
+        return type(other) is Screen and np.array_equal(self.buffer, other.buffer)
 
     def copy(self):
         return Screen(buff=self.buffer)

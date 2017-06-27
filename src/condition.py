@@ -21,9 +21,6 @@ class Condition:
     def is_satisfied(self):
         return self.satisfied_at is not None
 
-    def satisfied_at(self):
-        return self.satisfied_at
-
     # request: of type Request
     # returns None
     # updates satisfied_at given the incoming request, and updates child conditions if necessary

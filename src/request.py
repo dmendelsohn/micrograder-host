@@ -63,9 +63,10 @@ class OutputRequest(Request):
         super().__init__(timestamp)
         self.is_output = True # Override default
         self.data_type = data_type # Should be OutputType
-        self.values = values # Should be list of values
         self.channels = channels # Should be list of channel (corresponds with values)
+        self.values = values # Should be list of values
         self.analog_params = analog_params
+        self.batch_params = BatchParams(num=1, period=0)
 
     def __str__(self):
         s = "OutputRequest: timestamp={}, data_type={}, channels={}, values={}, analog_params={}"

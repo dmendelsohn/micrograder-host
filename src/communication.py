@@ -286,12 +286,12 @@ class SerialCommunication:
     def response_to_bytes(self, response):
         # First determine message code
         if response.is_error:
-            if response.test_complete:
+            if response.complete:
                 msg_code = MessageCode.ErrorComplete
             else:
                 msg_code = MessageCode.Error
         else:
-            if response.test_complete:
+            if response.complete:
                 msg_code = MessageCode.AckComplete
             else:
                 msg_code = MessageCode.Ack

@@ -177,26 +177,26 @@ class TestSerialCommunication(unittest.TestCase):
 
 
     def test_response_to_bytes(self):
-        resp = AckResponse(test_complete=False)
+        resp = AckResponse(complete=False)
         expected = 0x80, bytes()
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
 
-        resp = AckResponse(test_complete=True)
+        resp = AckResponse(complete=True)
         expected = 0x81, bytes()
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
 
-        resp = ErrorResponse(test_complete=False)
+        resp = ErrorResponse(complete=False)
         expected = 0x82, bytes()
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
 
-        resp = ErrorResponse(test_complete=True)
+        resp = ErrorResponse(complete=True)
         expected = 0x83, bytes()
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
 
-        resp = ValuesResponse(values=[1,0,1], analog=False, test_complete=False)
+        resp = ValuesResponse(values=[1,0,1], analog=False, complete=False)
         expected = 0x80, bytes([1,0,1])
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
 
-        resp = ValuesResponse(values=[-2,-1,65535], analog=True, test_complete=True)
+        resp = ValuesResponse(values=[-2,-1,65535], analog=True, complete=True)
         expected = 0x81, bytes([254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0])
         self.assertEqual(self.sc.response_to_bytes(resp), expected)
