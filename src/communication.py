@@ -82,16 +82,24 @@ class SerialCommunication:
         while not self.connect(addr, baud):
             pass # Do nothing, wait
 
-    # TODO: add handling for serial exception and an optional timeout (no timeout when value is 0)
-    def get_request(self, timeout=0):
-        header = self.ser.read(CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES) # Read header
-        msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
-        timestamp = utils.decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
-        msg_size = utils.decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
-        if msg_size > 0:
-            msg_body = self.ser.read(msg_size)
-        else:
-            msg_body = bytes()
+    # timeout == None -> no timeout
+    def get_request(self, timeout=None):
+        self.ser.timeout = timeout
+        try:
+            header = self.ser.read(CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES) # Read header
+            if len(header) < CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES:
+                return None # read timed out
+            msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
+            timestamp = utils.decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
+            msg_size = utils.decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
+            if msg_size > 0:
+                msg_body = self.ser.read(msg_size)
+                if len(msg_body) < msg_size:
+                    return None # read timed out
+            else:
+                msg_body = bytes()
+        except SerialException:
+            return None # port was closed
         return self.bytes_to_request(msg_code, timestamp, msg_body)
 
     def send_response(self, response):
