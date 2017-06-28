@@ -13,10 +13,7 @@ parser.add_argument("-t", "--timeout", help="Request timeout in seconds", type=f
 args = parser.parse_args()
 
 if args.run:
-    if args.timeout is None:
-        log = run.main(args.filepath, args.logpath, verbose=args.verbose)
-    else:
-        log = run.main(args.filepath, args.logpath, verbose=args.verbose, timeout=args.timeout)
+    log = run.main(args.filepath, args.logpath, verbose=args.verbose, timeout=args.timeout)
 elif args.logpath is not None:
     log = utils.load(args.logpath)
 else:

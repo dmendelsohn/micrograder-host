@@ -4,13 +4,11 @@ from .log import RequestLog
 
 import numpy as np
 
-DEFAULT_TIMEOUT = 30 # seconds
-
 # Runs an interactive session with the embedded side
 # Input: handler is a RequestHandler
 #   timeout: the timeout in seconds (float ok)
 # Returns: RequestLog
-def run_session(handler, *, verbose=False, timeout=DEFAULT_TIMEOUT):
+def run_session(handler, *, verbose=False, timeout=None):
     sc = SerialCommunication()
     sc.wait_for_connection()
 
@@ -48,7 +46,7 @@ def build_test_case(log, verbose=False):
 # If log_filepath is not None, RequestLog is saved there
 # timeout is in seconds, float okay
 # Returns: RequestLog
-def main(test_case_filepath, log_filepath, *, verbose=False, timeout=DEFAULT_TIMEOUT):
+def main(test_case_filepath, log_filepath, *, verbose=False, timeout=None):
     test_case = utils.load(test_case_filepath)
     handler = test_case.handler
     log = run_session(handler, verbose=verbose, timeout=timeout)
