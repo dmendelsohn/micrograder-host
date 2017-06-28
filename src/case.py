@@ -2,6 +2,7 @@ from collections import namedtuple
 from enum import Enum
 
 TestCase = namedtuple("TestCase", ["handler", "evaluator"])
+ScaffoldParmas = namedtuple("ScaffoldParams", []) # TODO
 
 class InterpolationType(Enum):
     START = 0
@@ -11,16 +12,15 @@ class InterpolationType(Enum):
 
 # This class stores information for constructing test cases dynamically
 class Scaffold:
-    def __init__(self, interpolations, template_points, aggregators):
+    def __init__(self, interpolations, template_points, aggregators, frame_triggers, params):
         self.interpolations = interpolations # Map from (InputType,channel)->InterpolationType
         self.template_points = template_points # Map from (data_type,channel)->TestPoint
         self.aggregators = aggregators # Map from (data_type,channel)-> function list(bool)->bool
-        #TODO: add specification for frame triggers
-        #TODO: add specification for start/end buffers for frames
+        self.frame_triggers # A list of Conditions that, if met, are start_condition for a frame
+        self.params = params # ScaffoldParams
 
-# Input: log is a RequestLog
-# Input: scaffold is a Scaffold
-# Returns: a TestCase build off that Scaffold using that log
-def construct_test_case(log, scaffold):
-    #TODO: implement
-    pass
+    # Input: a RequestLog
+    # Retunrs a TestCase
+    def generate_test_case(self, log):
+        #TODO: implement
+        pass

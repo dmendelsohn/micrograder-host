@@ -175,7 +175,7 @@ def construct_hardcode(verbose=False):
 # Input: scaffold is a Scaffold
 # Returns: a TestCase build off that Scaffold using that log
 def construct_dynamic(log, scaffold):
-    return case.construct_
+    return scaffold.generate_test_case(log)
 
 def default_scaffold():
     # TODO: return a Scaffold
