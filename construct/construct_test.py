@@ -1,9 +1,11 @@
-from src. import utils
+from src import utils
 from src.case import TestCase
-from src.case import TestPoint
 from src.condition import Condition
 from src.condition import ConditionType
+from src.evaluator import Evaluator
+from src.evaluator import TestPoint
 from src.frame import Frame
+from src.handler import RequestHandler
 from src.request import EventType
 from src.request import InputType
 from src.request import OutputType
@@ -13,6 +15,12 @@ from src.screen import Screen
 import numpy as np
 import operator
 
+def frameless_test_case(): # Good for making recordings
+    end_condition = Condition(ConditionType.After, cause=10**10)
+    handler = RequestHandler(end_condition=end_condition, frames=[])
+    evaluator = Evaluator(conditions=[], test_points=[], aggregators={})
+    return TestCase(handler=handler, evaluator=evaluator)
+ 
 def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)
@@ -32,7 +40,9 @@ def constant_test_case():
                         (InputType.Magnetometer, 'y'): Sequence([0], [11000]),
                         (InputType.Magnetometer, 'z'): Sequence([0], [12000])
                     })
-    return TestCase(end_condition, frames=[frame], test_points=[], aggregators={})
+    handler = RequestHandler(end_condition=end_condition, frames=[frame])
+    evaluator = Evaluator(conditions=[], test_points=[], aggregators={})
+    return TestCase(handler=handler, evaluator=evaluator)
 
 def blinky_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
@@ -40,6 +50,7 @@ def blinky_test_case(with_oled=False):
     end_condition = Condition(ConditionType.After,
                               cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition, inputs={})
+    handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
     points = []
     for i in range(1, 5):
@@ -49,8 +60,8 @@ def blinky_test_case(with_oled=False):
             expected_value = 1
 
         points.append(TestPoint(
-            frame_id=0,
-            output_type=output_type,
+            condition_id=0,
+            data_type=output_type,
             channel=channel,
             expected_value=expected_value,
             check_interval=(i*1000 + 100,i*1000 + 900),
@@ -67,17 +78,17 @@ def blinky_test_case(with_oled=False):
             expected_value.paint(rect, x=20, y=10)
 
         points.append(TestPoint(
-            frame_id=0,
-            output_type=output_type,
+            condition_id=0,
+            data_type=output_type,
             channel=channel,
             expected_value=expected_value,
             check_interval=(i*1000 + 100,i*1000 + 900),
             check_function=operator.eq,
             aggregator=all))
 
-
     aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
-    return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
+    evaluator = Evaluator(conditions=[init_condition], test_points=points, aggregators=aggs)
+    return TestCase(handler=handler, evaluator=evaluator)
 
 def button_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After,
@@ -90,6 +101,7 @@ def button_test_case(with_oled=False):
                                                         [0,1000,2000,3000,4000,5000],
                                                         [1,0,1,0,1,0])
                     })
+    handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
     points = []
     for i in range(1, 5):
@@ -99,8 +111,8 @@ def button_test_case(with_oled=False):
             expected_value = 1
 
         points.append(TestPoint(
-            frame_id=0,
-            output_type=output_type,
+            condition_id=0,
+            data_type=output_type,
             channel=channel,
             expected_value=expected_value,
             check_interval=(i*1000 + 100,i*1000 + 900),
@@ -117,8 +129,8 @@ def button_test_case(with_oled=False):
             expected_value.paint(rect, x=20, y=10)
 
         points.append(TestPoint(
-            frame_id=0,
-            output_type=output_type,
+            condition_id=0,
+            data_type=output_type,
             channel=channel,
             expected_value=expected_value,
             check_interval=(i*1000 + 100,i*1000 + 900),
@@ -126,11 +138,16 @@ def button_test_case(with_oled=False):
             aggregator=all))
 
     aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
-    return TestCase(end_condition, frames=[frame], test_points=points, aggregators=aggs)
+    evaluator = Evaluator(conditions=[init_condition], test_points=points, aggregators=aggs)
+    return TestCase(handler=handler, evaluator=evaluator)
 
 def main(verbose=False):
     if verbose:
         print("Constructing test cases and saving to files")
+
+    case = frameless_test_case()
+    filepath = "resources/frameless.tc"
+    utils.save(case, filepath)
 
     case = constant_test_case()
     filepath = "resources/constant.tc"
