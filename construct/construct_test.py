@@ -46,7 +46,7 @@ def constant_test_case():
 
 def blinky_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
-                               cause=lambda req: req.arg == 'Loop')
+                               cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
                               cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition, inputs={})
@@ -92,7 +92,7 @@ def blinky_test_case(with_oled=False):
 
 def button_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After,
-                               cause=lambda req: req.arg == 'Loop')
+                               cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
                                cause=5000, subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,

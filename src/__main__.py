@@ -23,7 +23,7 @@ if args.evaluate:
     if log is None:
         print("Error: no log to evalute")
     else:
-        test_case = utils.load(filepath)
+        test_case = utils.load(args.filepath)
         results = test_case.evaluator.evaluate(log)
         print("Results: {}".format(results))
 
