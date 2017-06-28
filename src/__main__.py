@@ -9,7 +9,7 @@ parser.add_argument("-r", "--run", help="Run session", action="store_true")
 parser.add_argument("-e", "--evaluate", help="Evaluate log", action="store_true")
 parser.add_argument("-l", "--logpath", help="Path at which to save RequestLog")
 parser.add_argument("-v", "--verbose", help="Verbose printing", action="store_true")
-parser.add_argument("-t", "--timeout", help="Request timeout in seconds", type=int)
+parser.add_argument("-t", "--timeout", help="Request timeout in seconds", type=float)
 args = parser.parse_args()
 
 if args.run:

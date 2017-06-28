@@ -3,12 +3,12 @@ from .communication import SerialCommunication
 from .log import RequestLog
 
 import numpy as np
-import datetime
 
-DEFAULT_TIMEOUT = datetime.timedelta(seconds=30)
+DEFAULT_TIMEOUT = 30 # seconds
 
 # Runs an interactive session with the embedded side
 # Input: handler is a RequestHandler
+#   timeout: the timeout in seconds (float ok)
 # Returns: RequestLog
 def run_session(handler, *, verbose=False, timeout=DEFAULT_TIMEOUT):
     sc = SerialCommunication()
@@ -46,9 +46,11 @@ def build_test_case(log, verbose=False):
 
 # Runs the RequestHandler saved at handler_filepath
 # If log_filepath is not None, RequestLog is saved there
+# timeout is in seconds, float okay
 # Returns: RequestLog
-def main(handler_filepath, log_filepath, *, verbose=False, timeout=DEFAULT_TIMEOUT):
-    handler = utils.load(handler_filepath)
+def main(test_case_filepath, log_filepath, *, verbose=False, timeout=DEFAULT_TIMEOUT):
+    test_case = utils.load(test_case_filepath)
+    handler = test_case.handler
     log = run_session(handler, verbose=verbose, timeout=timeout)
     if log_filepath:
         utils.save(log, log_filepath)
