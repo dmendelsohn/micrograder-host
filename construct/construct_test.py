@@ -1,3 +1,4 @@
+from src import case
 from src import utils
 from src.case import TestCase
 from src.condition import Condition
@@ -141,7 +142,8 @@ def button_test_case(with_oled=False):
     evaluator = Evaluator(conditions=[init_condition], test_points=points, aggregators=aggs)
     return TestCase(handler=handler, evaluator=evaluator)
 
-def main(verbose=False):
+# Saves a bunch of hardcoded test_cases to files
+def construct_hardcode(verbose=False):
     if verbose:
         print("Constructing test cases and saving to files")
 
@@ -168,3 +170,22 @@ def main(verbose=False):
     case = button_test_case(with_oled=True)
     filepath = "resources/button_oled.tc"
     utils.save(case, filepath)
+
+# Input: log is a RequestLog
+# Input: scaffold is a Scaffold
+# Returns: a TestCase build off that Scaffold using that log
+def construct_dynamic(log, scaffold):
+    return case.construct_
+
+def default_scaffold():
+    # TODO: return a Scaffold
+    pass
+
+def main(logpath=None, verbose=False):
+    if logpath:
+        log = utils.load(logpath)
+        scaffold = default_scaffold() # Later, make this from a file as well
+        test_case = construct_dynamic(log, scaffold)
+        utils.save(test_case, "resources/temp.tc") # TODO: make this dynamically chosen
+    else:
+        construct_hardcode(verbose)
