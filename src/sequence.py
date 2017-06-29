@@ -54,6 +54,11 @@ class Sequence:
             index += 1
         return results
 
+    # Returns a new Sequence object shifted in time
+    def shift(self, time_shift):
+        times = [(t+time_shift) for t in self.times]
+        return Sequence(times=times, values=self.values)
+
     def __getitem__(self, key):  # To allow for list-style access
         return (self.times[key], self.values[key])
 
