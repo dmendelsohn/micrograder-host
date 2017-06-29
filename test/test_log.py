@@ -66,3 +66,11 @@ class TestRequestLog(unittest.TestCase):
         self.assertEqual(self.log.condition_satisfied_at(cond1), 150)
         self.assertIsNone(self.log.condition_satisfied_at(cond2))
 
+    def test_get_end_time(self):
+        #TODO: write test
+        pass
+
+    def test_filter(self):
+        #TODO: write test
+        pass
+

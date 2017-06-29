@@ -53,6 +53,23 @@ class RequestLog:
 
         return None # Condition never satisfied
 
+    # Returns the maximum timestamp in any request
+    def get_end_time(self):
+        max_so_far = None
+        for request in self.requests:
+            t = request.timestamp
+            batch_params = getattr(request, 'batch_params', BatchParams(num=1, period=0))
+            t += (batch_params.num-1)*(batch_params.period)
+            if max_so_far is None or t > max_so_far:
+                max_so_far = t
+        return max_so_far
+        
+    # Return new RequestLog with only subset of requests where func(request) is True
+    def filter(self, func): 
+        log = RequestLog()
+        log.requests = list(filter(func, self.requests))
+        return log
+
     def __eq__(self, other):
         return self.requests == other.requests #  conditions being equal is unnecessary
 

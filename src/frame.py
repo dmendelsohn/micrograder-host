@@ -11,7 +11,7 @@ class FrameStatus(Enum):
     Avoided = 4
 
 class Frame:
-    def __init__(self, start_condition, end_condition, inputs, priority=0):
+    def __init__(self, start_condition, end_condition, inputs={}, priority=0):
         self.start_condition = start_condition # Should be of type Condition
         self.end_condition = end_condition  # Should be of type Condition
         self.start_time = None

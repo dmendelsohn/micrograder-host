@@ -26,7 +26,7 @@ class Sequence:
             return self.values[index]
 
     def get_samples(self, start_time, num_samples, period): #TODO: make this legit
-        index = bisect.bisect(self.times, start_time+0.1) # +0.1 to break ties
+        index = bisect.bisect(self.times, start_time)
         index -= 1
         if index < 0:
             return None # No inputs before start_time
@@ -42,7 +42,7 @@ class Sequence:
 
     # Returns list of values in time range [start, end), or [] if no such values exist
     def get_values(self, start_time, end_time):
-        index = bisect.bisect(self.times, start_time+0.1) # +0.1 to break ties
+        index = bisect.bisect(self.times, start_time)
         index -= 1
         results = []
         if index < 0:
@@ -54,10 +54,32 @@ class Sequence:
             index += 1
         return results
 
+    # Returns a subsequence consisting of elements with time in [start, end)
+    def get_subsequence(self, start_time, end_time):
+        start_index = bisect.bisect(self.times, start_time-0.1) # -0.1 to include exact start
+        end_index = bisect.bisect(self.times, end_time-0.1) # -0.1 to exluce exact end
+        return Sequence(times=self.times[start_index:end_index],
+                        values=self.values[start_index:end_index])
+
     # Returns a new Sequence object shifted in time
     def shift(self, time_shift):
         times = [(t+time_shift) for t in self.times]
         return Sequence(times=times, values=self.values)
+
+    # Returns a new Sequence with all duplicates removed
+    # A duplicate is a point where the value is the same as the previous point's value
+    def remove_duplicates(self):
+        if len(self) < 1:
+            return Sequence()
+        last_value = self.values[0]
+        times = [self.times[0]]
+        values = [self.values[0]]
+        for i in range(1,len(self)):
+            if self.values[i] != last_value:
+                times.append(self.times[i])
+                values.append(self.values[i])
+            last_value = self.values[i]
+        return Sequence(times=times, values=values)
 
     def __getitem__(self, key):  # To allow for list-style access
         return (self.times[key], self.values[key])

@@ -40,3 +40,11 @@ class TestSequence(unittest.TestCase):
         self.assertEqual(self.seq.get_values(9, 20), [10, 8.5])
         self.assertEqual(self.seq.get_values(10,20), [8.5])
 
+    def test_get_subsequence(self):
+        #TODO: implement
+        pass
+
+    def test_remove_duplicates(self):
+        #TODO: implement
+        pass
+
