@@ -1,4 +1,14 @@
 import bisect
+from collections import namedtuple
+from enum import Enum
+
+TimedValue = namedtuple('TimedValue', ['time', 'value'])
+
+class InterpolationType(Enum):
+    START = 0 # Position samples are start of range
+    MID = 1 # Position samples in middle of range
+    END = 2 # Position samples at end of range
+    LINEAR = 3 # Interpolate linearly between samples
 
 class Sequence:
     # times must be list of unique increasing integers
@@ -61,12 +71,19 @@ class Sequence:
         return Sequence(times=self.times[start_index:end_index],
                         values=self.values[start_index:end_index])
 
-    # Returns a new Sequence object shifted in time
-    def shift(self, time_shift):
-        times = [(t+time_shift) for t in self.times]
-        return Sequence(times=times, values=self.values)
+    # Inserta a point into the sequence, returns self
+    def insert(self, time, value):
+        index = bisect.bisect(self.times, time)
+        self.times.insert(index, time)
+        self.values.insert(index, value)
+        return self
 
-    # Returns a new Sequence with all duplicates removed
+    # Shifts this sequence, returns self
+    def shift(self, time_shift):
+        self.times = [(t+time_shift) for t in self.times]
+        return self
+
+    # Removes duplicates, returns itself
     # A duplicate is a point where the value is the same as the previous point's value
     def remove_duplicates(self):
         if len(self) < 1:
@@ -79,10 +96,21 @@ class Sequence:
                 times.append(self.times[i])
                 values.append(self.values[i])
             last_value = self.values[i]
-        return Sequence(times=times, values=values)
+        self.times = times
+        self.values = values
+        return self
+
+    # Returns a new Sequence that is an interpolated version of self
+    def interpolation(self, interpolation_type):
+        #TODO: implement
+        return self.copy()
+
+    def copy(self):
+        return Sequence(times=self.times[:], values=self.values[:])
 
     def __getitem__(self, key):  # To allow for list-style access
-        return (self.times[key], self.values[key])
+        # TODO: handle slices correctly
+        return TimedValue(time=self.times[key], value=self.values[key])
 
     def __len__(self):
         return len(self.times)  # Should be same as len(self.values)

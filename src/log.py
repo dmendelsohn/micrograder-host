@@ -20,7 +20,7 @@ class RequestLog:
 
         for request in self.requests:
             if not request.is_valid:
-                pass # Do nothing
+                continue # Do nothing
             elif request.is_event:
                 channel = None
                 add_entry(request.data_type, channel, request.timestamp, request.arg)
@@ -29,16 +29,13 @@ class RequestLog:
                 channels = request.channels
                 batch_params = request.batch_params
                 for i in range(batch_params.num):
-                    if request.values is not None:
+                    if request.values is not None: # Don't include TEST mode input requests
                         values = request.values[i*len(channels):(i+1)*len(channels)]
-                    else:
-                        values = [None]*len(channels)
-
-                    for (channel, value) in zip(channels, values):
-                        if request.analog_params is not None: # Need to do ADC conversion
-                            value = utils.digital_to_analog(value, request.analog_params)
-                        timestamp = request.timestamp + i*batch_params.period
-                        add_entry(data_type, channel, timestamp, value)
+                        for (channel, value) in zip(channels, values):
+                            if request.analog_params is not None: # Need to do ADC conversion
+                                value = utils.digital_to_analog(value, request.analog_params)
+                            timestamp = request.timestamp + i*batch_params.period
+                            add_entry(data_type, channel, timestamp, value)
 
         return sequences
 
@@ -53,16 +50,6 @@ class RequestLog:
 
         return None # Condition never satisfied
 
-    # Returns the maximum timestamp in any request
-    def get_end_time(self):
-        max_so_far = None
-        for request in self.requests:
-            t = request.timestamp
-            batch_params = getattr(request, 'batch_params', BatchParams(num=1, period=0))
-            t += (batch_params.num-1)*(batch_params.period)
-            if max_so_far is None or t > max_so_far:
-                max_so_far = t
-        return max_so_far
         
     # Return new RequestLog with only subset of requests where func(request) is True
     def filter(self, func): 

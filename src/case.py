@@ -10,11 +10,6 @@ from .request import OutputType
 TestCase = namedtuple("TestCase", ["handler", "evaluator"])
 ScaffoldParmas = namedtuple("ScaffoldParams", []) # TODO
 
-class InterpolationType(Enum):
-    START = 0 # Position samples are start of range
-    MID = 1 # Position samples in middle of range
-    END = 2 # Position samples at end of range
-    LINEAR = 3 # Interpolate linearly between samples
 
 # Check_interval is relative to observed time of point, not any condition
 # Either elemnt of check_interval tuple can be string, it will be eval-ed
@@ -29,7 +24,7 @@ TestPointTemplate = namedtuple('TestPointTemplate', ['data_type',
 FrameTemplate = namedtuple('FrameTemplate', ['start_condition',
                                              'end_condition',
                                              'priority',
-                                             'initialize_to_default', # if True, insert default input at t=0
+                                             'init_to_default', # if True, insert default input at t=0
                                              ])
 
 # This class stores information for constructing test cases dynamically
@@ -53,7 +48,6 @@ class Scaffold:
             return not (request.is_input and request.values is None)
         log = log.filter(f)
 
-        overall_end_time = log.get_end_time()
         overall_sequences = log.extract_sequences()
 
         frames = []
@@ -65,7 +59,7 @@ class Scaffold:
 
                 # Generate relative input sequences that occurred in this frame
                 inputs = self.generate_inputs(overall_sequences, start_time, end_time,
-                                              frame_template.initialize_to_default)
+                                              frame_template.init_to_default)
                 frames.append(Frame(start_condition=frame_template.start_condition,
                                     end_condition=frame_template.end_condition,
                                     inputs=inputs,
@@ -76,8 +70,6 @@ class Scaffold:
                 test_points.extend(self.generate_test_points(overall_sequences, start_time, 
                                                              end_time, condition_id))
 
-                # TODO: construct relevant test_points and add to test_points list
-                #    Don't forget to remove redundancies
 
         handler_end_condition = Condition(ConditionType.And,
                                           subconditions=[frame.end_condition for frame in frames])
@@ -98,16 +90,25 @@ class Scaffold:
             return None
 
     # TODO: description
-    def generate_inputs(self, overall_sequences, start_time, end_time):
+    def generate_inputs(self, overall_sequences, start_time, end_time, init_to_default):
         inputs = {}
         for (data_type, channel) in overall_sequences:
             if type(data_type) is InputType:
                 sequence = overall_sequences[(data_type,channel)]
-                sequence = sequence.get_subsequence(start_time, end_time)
-                sequence = sequence.shift(-start_time)
-                #TODO: insert a lead in point
-                #TODO: interpolate
-                inputs[(data_type,channel)] = sequence
+                subsequence = sequence.get_subsequence(start_time, end_time)
+                subsequence.shift(-start_time)
+                if len(subsequence) < 1 or subsequence[0].time > 0: # Need to insert initial point
+                    start_value = sequence.get_value(start_time)
+                    if init_to_default or start_value is None: # Use default
+                        start_value = self.defaults[(data_type,channel)]
+                        if start_value is None:
+                            #TODO: handle unspecified default
+                            pass
+                    subsequence.insert(time=0, value=start_value)
+
+                interpolation_type = self.interpolations[(data_type,channel)]
+                subsequence = subsequence.interpolate(interpolation_type)
+                inputs[(data_type,channel)] = subsequence
         return inputs
 
     # TODO: description
@@ -115,10 +116,28 @@ class Scaffold:
         test_points = []
         for (data_type, channel) in overall_sequences:
             if type(data_type) is OutputType:
+                point_template = self.point_templates[(data_type,channel)]
                 sequence = overall_sequences[(data_type,channel)]
                 sequence = sequence.get_subsequence(start_time, end_time)
-                sequence = sequence.shift(-start_time)
-                sequence = sequence.remove_duplicates()
-                #TODO: for (time, value) in sequence:
-                #   create a new test point
+                sequence.shift(-start_time)
+                sequence.remove_duplicates()
+                for i in range(len(sequence)):
+
+                    # Make T so we can "eval" it in start and end strings
+                    if i+1 < len(sequence):
+                        T = sequence[i+1].time - sequence[i].time
+                    else:
+                        T = (end_time - start_time) - sequence[i].time
+                    start, end = point_template.check_interval
+                    start = eval(str(start)) + sequence[i].time
+                    end = eval(str(end)) + sequence[i].time
+
+                    point = TestPoint(condition_id=condition_id,
+                                      data_type=point_template.data_type,
+                                      channel=point_template.channel,
+                                      expected_value=sequence[i].value,
+                                      check_interval=(start,end),
+                                      check_function=point_template.check_function,
+                                      aggregator=point_template.aggregator)
+                    test_points.append(point)
         return test_points

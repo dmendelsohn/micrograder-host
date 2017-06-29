@@ -41,8 +41,8 @@ class TestRequestLog(unittest.TestCase):
         seq1 = Sequence(times=[300], values=[5.0])
         seq2 = Sequence(times=[400], values=[Screen(width=128, height=64)])
         seq3 = Sequence(times=[200], values=[1])
-        seq4 = Sequence(times=[500,510,600,610],values=[None,None,0,0])
-        seq5 = Sequence(times=[500,510,600,610],values=[None,None,1,1])
+        seq4 = Sequence(times=[600,610],values=[0,0])
+        seq5 = Sequence(times=[600,610],values=[1,1])
         seq6 = Sequence(times=[700], values=["foo"])
 
         expected_sequences = {
@@ -65,10 +65,6 @@ class TestRequestLog(unittest.TestCase):
         self.assertEqual(self.log.condition_satisfied_at(cond0), 100)
         self.assertEqual(self.log.condition_satisfied_at(cond1), 150)
         self.assertIsNone(self.log.condition_satisfied_at(cond2))
-
-    def test_get_end_time(self):
-        #TODO: write test
-        pass
 
     def test_filter(self):
         #TODO: write test
