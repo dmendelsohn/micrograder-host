@@ -22,6 +22,7 @@ class ScaffoldTest(unittest.TestCase):
     def setUp(self):
         def is_start_request(request):
             return (request.data_type == EventType.Print and request.arg == "Start")
+        self.is_start_request = is_start_request
         start_cond = Condition(ConditionType.After, cause=is_start_request)
         end_cond = Condition(ConditionType.After, cause=5000, subconditions=[start_cond])
         ft0 = FrameTemplate(start_condition=start_cond,
@@ -78,8 +79,29 @@ class ScaffoldTest(unittest.TestCase):
             self.log.update(request)
 
     def test_generate_case(self):
-        #TODO: This is gonna be a doozy
-        pass
+        start_cond = Condition(ConditionType.After, cause=self.is_start_request)
+        end_cond = Condition(ConditionType.After, cause=5000, subconditions=[start_cond])
+        overall_end_cond = Condition(ConditionType.And, subconditions=[end_cond])
+        values = [1] + [1]*20 + [0]*40 + [1]*10 + [0]*10 + [1]*30 # OFF,ON,OFF,ON,OFF
+        times = [0] + list(range(1, 6000-1000, 50))
+        seq = Sequence(times=times, values=values[:len(times)])
+        inputs = {(InputType.DigitalRead, 6): seq}
+        frame = Frame(start_condition=start_cond,
+                      end_condition=end_cond,
+                      inputs=inputs,
+                      priority=0)
+        handler = RequestHandler(end_condition=overall_end_cond,
+                                 frames=[frame],
+                                 preempt=True)
+
+        evaluator = Evaluator(conditions=[start_cond],
+                              test_points=??, #TODO create
+                              aggregators=self.scaffold.aggregators)
+
+        expected = (handler, evaluator)
+        actual = self.scaffold.generate_test_case(self.log)
+        self.assertEqual(actual.handler, handler)
+        #self.assertEqual(actual, expected)
 
 
     def test_generate_frame_bounds(self):

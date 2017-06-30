@@ -2,6 +2,8 @@ from collections import namedtuple
 from enum import Enum
 
 from . import utils
+from .condition import Condition
+from .condition import ConditionType
 from .evaluator import Evaluator
 from .evaluator import TestPoint
 from .frame import Frame

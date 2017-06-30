@@ -65,3 +65,19 @@ class Condition:
             
             if None not in sub_times: # If all elts in sub_times are not None, we're satisfied
                 self.satisfied_at = max(sub_times)
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return False
+        return (self.type == other.type
+                and self.cause == other.cause
+                and self.subconditions == other.subconditions)
+
+
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        string = "Condition: type={}, cause={}, subconditions={}"
+        return string.format(self.type, self.cause, self.subconditions)
+

@@ -72,3 +72,18 @@ class Frame:
 
     def is_active(self):
         return self.status == FrameStatus.InProgress
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return False
+        return (self.start_condition == other.start_condition
+                and self.end_condition == other.end_condition
+                and self.inputs == other.inputs
+                and self.priority == other.priority)
+
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        s = "Frame: start_condition={}, end_condition={}, inputs={}, priority={}"
+        return s.format(self.start_condition, self.end_condition, self.inputs, self.priority)

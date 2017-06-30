@@ -45,3 +45,17 @@ class RequestHandler:
             return priority_actives[-1][0] # Return id of frame with latest start_time
         else:
             return priority_actives[0][0] # Return id of frame with earlest start_time
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return False
+        return (self.end_condition == other.end_condition
+                and self.frames == other.frames
+                and self.preempt == other.preempt)
+
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        s = "RequestHandler: frames={}, end_condition={}, preempt={}"
+        return s.format(self.frames, self.end_condition, self.preempt)

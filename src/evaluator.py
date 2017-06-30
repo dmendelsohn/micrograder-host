@@ -66,3 +66,17 @@ class Evaluator:
             return test_point.check_function(test_point.expected_value, value)
 
         return test_point.aggregator(map(check, values))
+
+    def __eq__(self, other):
+        if type(self) is not type(other):
+            return False
+        return (self.conditions == other.conditions
+                and self.aggregators == other.aggregators
+                and set(self.test_points) == set(other.test_points))
+
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        s = "Evaluator: conditions={}, test_points={}, aggregators={}"
+        return s.format(self.conditions, self.test_points, self.aggregators)
