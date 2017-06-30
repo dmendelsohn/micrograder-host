@@ -67,9 +67,10 @@ class Scaffold:
                                     priority=frame_template.priority))
 
                 # Generate test_points for all outputs that occurred during this frame
-                condition_id = len(frames)-1
-                test_points.extend(self.generate_test_points(overall_sequences, start_time, 
-                                                             end_time, condition_id))
+                new_points = self.generate_test_points(overall_sequences, start_time, end_time)
+                for point in new_points:
+                    point.condition_id = len(frames)-1
+                test_points.extend(new_points)
 
 
         handler_end_condition = Condition(ConditionType.And,
@@ -126,9 +127,8 @@ class Scaffold:
     # and fill in check_interval, condition_id (given to this function) and expeccted_value
     # Input: overall_sequences: map from (data_type,channel)->Sequence, in absolute time
     # Input: start_time, end_time: an interval with usual inclusiveness rules
-    # Input: condution_id: index of a condition that was presumable met at start_time
-    # Returns: a list of test_points
-    def generate_test_points(self, overall_sequences, start_time, end_time, condition_id):
+    # Returns: a list of test_points (condition_id field should be -1)
+    def generate_test_points(self, overall_sequences, start_time, end_time):
         test_points = []
         for (data_type, channel) in overall_sequences:
             if type(data_type) is OutputType:
@@ -148,7 +148,7 @@ class Scaffold:
                     start = int(eval(str(start))) + sequence[i].time
                     end = int(eval(str(end))) + sequence[i].time
 
-                    point = TestPoint(condition_id=condition_id,
+                    point = TestPoint(condition_id=-1, # Filled in later
                                       data_type=data_type,
                                       channel=channel,
                                       expected_value=sequence[i].value,

@@ -68,6 +68,8 @@ class ScaffoldTest(unittest.TestCase):
             if dread[i]==0:
                 screen.paint(np.ones((10,20)), x=20, y=10)
                 self.screen_on = screen
+            else:
+                self.screen_off = screen
             requests.append(OutputRequest(timestamp=(1000+50*i+2),
                                           data_type=OutputType.Screen,
                                           channels=[None],
@@ -94,14 +96,37 @@ class ScaffoldTest(unittest.TestCase):
                                  frames=[frame],
                                  preempt=True)
 
+        test_points = []
+        check_intervals = [(202,802),(1402,2602),(3102,3402),(3602,3902),(4201,4800)]
+        digital_values = [0,1,0,1,0]
+        screen_values = [self.screen_off, self.screen_on, self.screen_off,
+                         self.screen_on, self.screen_off]
+        for (check_interval, value) in zip(check_intervals, digital_values):
+            test_points.append(TestPoint(condition_id=0,
+                                         data_type=OutputType.DigitalWrite,
+                                         channel=13,
+                                         expected_value=value,
+                                         check_interval=check_interval,
+                                         check_function=operator.__eq__,
+                                         aggregator=all))
+
+        for (check_interval, value) in zip(check_intervals, screen_values):
+            test_points.append(TestPoint(condition_id=0,
+                                         data_type=OutputType.Screen,
+                                         channel=None,
+                                         expected_value=value,
+                                         check_interval=check_interval,
+                                         check_function=operator.__eq__,
+                                         aggregator=all))            
+
+
         evaluator = Evaluator(conditions=[start_cond],
-                              test_points=??, #TODO create
+                              test_points=test_points,
                               aggregators=self.scaffold.aggregators)
 
-        expected = (handler, evaluator)
-        actual = self.scaffold.generate_test_case(self.log)
-        self.assertEqual(actual.handler, handler)
-        #self.assertEqual(actual, expected)
+        expected = TestCase(handler=handler, evaluator=evaluator)
+        actual = self.scaffold.generate_test_case(self.log) 
+        self.assertEqual(actual, expected)
 
 
     def test_generate_frame_bounds(self):
@@ -206,18 +231,17 @@ class ScaffoldTest(unittest.TestCase):
         overall_sequences = self.log.extract_sequences()
         start_time = 1000
         end_time = 3000
-        condition_id = 0
         expected = []
 
         # OFF from (relative) t=2 to t=1002
-        expected.append(TestPoint(condition_id=condition_id,
+        expected.append(TestPoint(condition_id=-1,
                                 data_type=OutputType.DigitalWrite,
                                 channel=13,
                                 expected_value=0,
                                 check_interval=(202,802),
                                 check_function=operator.__eq__,
                                 aggregator=all))
-        expected.append(TestPoint(condition_id=condition_id,
+        expected.append(TestPoint(condition_id=-1,
                                 data_type=OutputType.Screen,
                                 channel=None,
                                 expected_value=Screen(width=128, height=64),
@@ -226,14 +250,14 @@ class ScaffoldTest(unittest.TestCase):
                                 aggregator=all))
 
         # ON from relative t=1002 to t=2000
-        expected.append(TestPoint(condition_id=condition_id,
+        expected.append(TestPoint(condition_id=-1,
                                 data_type=OutputType.DigitalWrite,
                                 channel=13,
                                 expected_value=1,
                                 check_interval=(1201,1800),
                                 check_function=operator.__eq__,
                                 aggregator=all))
-        expected.append(TestPoint(condition_id=condition_id,
+        expected.append(TestPoint(condition_id=-1,
                                 data_type=OutputType.Screen,
                                 channel=None,
                                 expected_value=self.screen_on,
@@ -242,14 +266,8 @@ class ScaffoldTest(unittest.TestCase):
                                 aggregator=all))
 
         expected.sort(key=lambda point:(point.check_interval, point.data_type.value))
-        actual = self.scaffold.generate_test_points(overall_sequences, start_time,
-                                                    end_time, condition_id)
+        actual = self.scaffold.generate_test_points(overall_sequences, start_time, end_time)
         actual.sort(key=lambda point: (point.check_interval, point.data_type.value))
 
-        self.assertEqual(len(expected), len(actual))
-        for (exp_point, actual_point) in zip(expected, actual):
-            self.assertEqual(exp_point.condition_id, actual_point.condition_id)
-            self.assertEqual(exp_point.data_type, actual_point.data_type)
-            self.assertEqual(exp_point.channel, actual_point.channel)
-            self.assertEqual(exp_point.expected_value, actual_point.expected_value)
-            self.assertEqual(exp_point.check_interval, actual_point.check_interval)
+        self.assertEqual(actual, expected)
+
