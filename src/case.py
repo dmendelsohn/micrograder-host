@@ -1,6 +1,7 @@
 from collections import namedtuple
 from enum import Enum
 
+from . import utils
 from .evaluator import Evaluator
 from .frame import Frame
 from .handler import RequestHandler
@@ -8,15 +9,12 @@ from .request import InputType
 from .request import OutputType
 
 TestCase = namedtuple("TestCase", ["handler", "evaluator"])
-ScaffoldParmas = namedtuple("ScaffoldParams", []) # TODO
 
 
 # Check_interval is relative to observed time of point, not any condition
 # Either elemnt of check_interval tuple can be string, it will be eval-ed
 # In string expression for check_interval elt, use "T" as length of this output
-TestPointTemplate = namedtuple('TestPointTemplate', ['data_type',
-                                                     'channel',
-                                                     'check_interval', # Relative to observed time
+TestPointTemplate = namedtuple('TestPointTemplate', ['check_interval', # Relative to observed time
                                                      'check_function',
                                                      'aggregator',
                                                      ])
@@ -89,7 +87,13 @@ class Scaffold:
         else:
             return None
 
-    # TODO: description
+    # Generates input sequences based on all InputRequests in a given time frame
+    # Sequences have t=0 at start_time
+    # overall_sequences: (data_type,channel)->Sequence dict from the log
+    # start_time, end_time: start is inclusive, end is not.  As usual.
+    # init_to_default: if necessary, prefer to fill in t=0 to first value with the default
+    #       (rather than the t<0 value)
+    # Returns: (InputType,channel)->Sequence to be used as the inputs attribute for a Frame
     def generate_inputs(self, overall_sequences, start_time, end_time, init_to_default):
         inputs = {}
         for (data_type, channel) in overall_sequences:
@@ -98,16 +102,16 @@ class Scaffold:
                 subsequence = sequence.get_subsequence(start_time, end_time)
                 subsequence.shift(-start_time)
                 if len(subsequence) < 1 or subsequence[0].time > 0: # Need to insert initial point
-                    start_value = sequence.get_value(start_time)
+                    start_value = sequence.get_sample(start_time)
                     if init_to_default or start_value is None: # Use default
                         start_value = self.defaults[(data_type,channel)]
                         if start_value is None:
-                            #TODO: handle unspecified default
+                            #Later: handle unspecified default
                             pass
                     subsequence.insert(time=0, value=start_value)
 
                 interpolation_type = self.interpolations[(data_type,channel)]
-                subsequence = subsequence.interpolate(interpolation_type)
+                subsequence = subsequence.interpolate(interpolation_type, res=utils.MILLISECOND)
                 inputs[(data_type,channel)] = subsequence
         return inputs
 
@@ -133,8 +137,8 @@ class Scaffold:
                     end = eval(str(end)) + sequence[i].time
 
                     point = TestPoint(condition_id=condition_id,
-                                      data_type=point_template.data_type,
-                                      channel=point_template.channel,
+                                      data_type=data_type,
+                                      channel=channel,
                                       expected_value=sequence[i].value,
                                       check_interval=(start,end),
                                       check_function=point_template.check_function,

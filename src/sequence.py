@@ -28,7 +28,7 @@ class Sequence:
 
     # Returns latest value with .time <= time, or None if no value exists with .time <= time
     def get_sample(self, time):
-        index = bisect.bisect(self.times, time+0.1) # +0.1 to break ties
+        index = bisect.bisect(self.times, time+0.0001) # +0.0001 to break ties
         index -= 1
         if index < 0:
             return None # No inputs before time t
@@ -66,8 +66,8 @@ class Sequence:
 
     # Returns a subsequence consisting of elements with time in [start, end)
     def get_subsequence(self, start_time, end_time):
-        start_index = bisect.bisect(self.times, start_time-0.1) # -0.1 to include exact start
-        end_index = bisect.bisect(self.times, end_time-0.1) # -0.1 to exluce exact end
+        start_index = bisect.bisect(self.times, start_time-0.0001) # - to include exact start
+        end_index = bisect.bisect(self.times, end_time-0.0001) # - to exluce exact end
         return Sequence(times=self.times[start_index:end_index],
                         values=self.values[start_index:end_index])
 
@@ -101,16 +101,51 @@ class Sequence:
         return self
 
     # Returns a new Sequence that is an interpolated version of self
-    def interpolation(self, interpolation_type):
-        #TODO: implement
-        return self.copy()
+    # if interpolation_type is LINEAR, res must be specified
+    def interpolate(self, interpolation_type, res=None):
+        if len(self) == 0:
+            return Sequence()
+        
+        if interpolation_type == InterpolationType.START: # No need to do anything
+            return self.copy()
+        elif interpolation_type == InterpolationType.MID:
+            times = [self.times[0]]
+            for i in range(1,len(self)):
+                t = (self.times[i-1]+self.times[i])//2
+                times.append(t)
+            return Sequence(times=times, values=self.values[:])
+        elif interpolation_type == InterpolationType.END:
+            times = []
+            for i in range(1,len(self)):
+                t = self.times[i-1]
+                times.append(t)
+            return Sequence(times=times, values=self.values[1:])
+        elif interpolation_type == InterpolationType.LINEAR:
+            result = Sequence()
+            for i in range(1,len(self)):
+                start_time, start_val = self[i-1]
+                end_time, end_val = self[i]
+                time = start_time
+                while time < end_time:
+                    frac = (time-start_time)/(end_time-start_time)
+                    val = frac*(end_val-start_val) + start_val
+                    result.append(time=time, value=val)
+                    time += res
+            result.append(time=self.times[-1], value=self.values[-1])
+            return result
+        else: # Unsupported type
+            return self.copy()
 
     def copy(self):
         return Sequence(times=self.times[:], values=self.values[:])
 
     def __getitem__(self, key):  # To allow for list-style access
-        # TODO: handle slices correctly
-        return TimedValue(time=self.times[key], value=self.values[key])
+        if type(key) is slice:
+            times = self.times[key]
+            values = self.values[key]
+            return [TimedValue(time=time, value=value) for (time, value) in zip(times,values)]
+        else:
+            return TimedValue(time=self.times[key], value=self.values[key])
 
     def __len__(self):
         return len(self.times)  # Should be same as len(self.values)

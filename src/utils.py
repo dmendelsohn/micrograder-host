@@ -3,6 +3,8 @@ import dill as pickle
 import numpy as np
 import struct
 
+MILLISECOND = 1 # Current time unit is millisecond #TODO: change to 1000
+
 # value: a numeric
 # params: of type AnalogParams
 # Returns "bin" for value according to the params (with bounding)

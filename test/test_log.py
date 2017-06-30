@@ -35,6 +35,7 @@ class TestRequestLog(unittest.TestCase):
         req6 = EventRequest(timestamp=700, data_type=EventType.Print, arg="foo")
         for request in [req0, req1, req2, req3, req4, req5, req6]:
             self.log.update(request)
+        self.requests = [req0, req1, req2, req3, req4, req5, req6]
     
     def test_extract_sequences(self):
         seq0 = Sequence(times=[100, 200], values=[1,0])
@@ -67,6 +68,9 @@ class TestRequestLog(unittest.TestCase):
         self.assertIsNone(self.log.condition_satisfied_at(cond2))
 
     def test_filter(self):
-        #TODO: write test
-        pass
+        def f(request):
+            return request.is_output
+        log = self.log.filter(f)
+        self.assertEqual(self.log.requests, self.requests)
+        self.assertEqual(log.requests, self.requests[:4])
 
