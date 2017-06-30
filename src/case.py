@@ -77,7 +77,9 @@ class Scaffold:
                               aggregators=self.aggregators)
         return TestCase(handler=handler, evaluator=evaluator)
 
-    #TOOD: description
+    # If both start and end conditions of the frame_template are met in the 
+    # log, and the start condition is met first, return (start_time, end_time)
+    # Otherwise, return None
     def generate_frame_bounds(self, log, frame_template):
         start_time = log.condition_satisfied_at(frame_template.start_condition)
         end_time = log.condition_satisfied_at(frame_template.end_condition)
