@@ -3,6 +3,7 @@ from enum import Enum
 
 from . import utils
 from .evaluator import Evaluator
+from .evaluator import TestPoint
 from .frame import Frame
 from .handler import RequestHandler
 from .request import InputType
@@ -117,7 +118,14 @@ class Scaffold:
                 inputs[(data_type,channel)] = subsequence
         return inputs
 
-    # TODO: description
+    # Generates test_points based on non-redundant outputs in the specified
+    # range in the overall sequence
+    # For each non-redundant output, we use the relevant template point,
+    # and fill in check_interval, condition_id (given to this function) and expeccted_value
+    # Input: overall_sequences: map from (data_type,channel)->Sequence, in absolute time
+    # Input: start_time, end_time: an interval with usual inclusiveness rules
+    # Input: condution_id: index of a condition that was presumable met at start_time
+    # Returns: a list of test_points
     def generate_test_points(self, overall_sequences, start_time, end_time, condition_id):
         test_points = []
         for (data_type, channel) in overall_sequences:
@@ -135,8 +143,8 @@ class Scaffold:
                     else:
                         T = (end_time - start_time) - sequence[i].time
                     start, end = point_template.check_interval
-                    start = eval(str(start)) + sequence[i].time
-                    end = eval(str(end)) + sequence[i].time
+                    start = int(eval(str(start))) + sequence[i].time
+                    end = int(eval(str(end))) + sequence[i].time
 
                     point = TestPoint(condition_id=condition_id,
                                       data_type=data_type,

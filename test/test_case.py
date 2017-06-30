@@ -3,6 +3,7 @@ import unittest
 
 from src.condition import Condition
 from src.condition import ConditionType
+from src.evaluator import TestPoint
 from src.log import RequestLog
 from src.request import EventRequest
 from src.request import EventType
@@ -50,7 +51,7 @@ class ScaffoldTest(unittest.TestCase):
         requests.append(EventRequest(timestamp=900, data_type=EventType.Init))
         requests.append(EventRequest(timestamp=1000, data_type=EventType.Print, arg="Start"))
 
-        dread = [1]*20 + [0]*40 + [1]*10 + [0]*10 + [1]*30 # OFF,ON,OFF,ON,OFF
+        dread = [1]*20 + [0]*40 + [1]*10 + [0]*10 + [1]*40 # OFF,ON,OFF,ON,OFF
         for i in range(len(dread)):  # Add input/outputs for each loop
             requests.append(InputRequest(timestamp=(1000+50*i+1),
                                          data_type=InputType.DigitalRead,
@@ -65,6 +66,7 @@ class ScaffoldTest(unittest.TestCase):
             screen = Screen(width=128, height=64)
             if dread[i]==0:
                 screen.paint(np.ones((10,20)), x=20, y=10)
+                self.screen_on = screen
             requests.append(OutputRequest(timestamp=(1000+50*i+2),
                                           data_type=OutputType.Screen,
                                           channels=[None],
@@ -76,7 +78,7 @@ class ScaffoldTest(unittest.TestCase):
             self.log.update(request)
 
     def test_generate_case(self):
-        #TODO: test
+        #TODO: This is gonna be a doozy
         pass
 
 
@@ -179,5 +181,53 @@ class ScaffoldTest(unittest.TestCase):
         self.assertEqual(actual, expected)       
 
     def test_generate_test_points(self):
-        #TODO: implement
-        pass
+        overall_sequences = self.log.extract_sequences()
+        start_time = 1000
+        end_time = 3000
+        condition_id = 0
+        expected = []
+
+        # OFF from (relative) t=2 to t=1002
+        expected.append(TestPoint(condition_id=condition_id,
+                                data_type=OutputType.DigitalWrite,
+                                channel=13,
+                                expected_value=0,
+                                check_interval=(202,802),
+                                check_function=operator.__eq__,
+                                aggregator=all))
+        expected.append(TestPoint(condition_id=condition_id,
+                                data_type=OutputType.Screen,
+                                channel=None,
+                                expected_value=Screen(width=128, height=64),
+                                check_interval=(202,802),
+                                check_function=operator.__eq__,
+                                aggregator=all))
+
+        # ON from relative t=1002 to t=2000
+        expected.append(TestPoint(condition_id=condition_id,
+                                data_type=OutputType.DigitalWrite,
+                                channel=13,
+                                expected_value=1,
+                                check_interval=(1201,1800),
+                                check_function=operator.__eq__,
+                                aggregator=all))
+        expected.append(TestPoint(condition_id=condition_id,
+                                data_type=OutputType.Screen,
+                                channel=None,
+                                expected_value=self.screen_on,
+                                check_interval=(1201,1800),
+                                check_function=operator.__eq__,
+                                aggregator=all))
+
+        expected.sort(key=lambda point:(point.check_interval, point.data_type.value))
+        actual = self.scaffold.generate_test_points(overall_sequences, start_time,
+                                                    end_time, condition_id)
+        actual.sort(key=lambda point: (point.check_interval, point.data_type.value))
+
+        self.assertEqual(len(expected), len(actual))
+        for (exp_point, actual_point) in zip(expected, actual):
+            self.assertEqual(exp_point.condition_id, actual_point.condition_id)
+            self.assertEqual(exp_point.data_type, actual_point.data_type)
+            self.assertEqual(exp_point.channel, actual_point.channel)
+            self.assertEqual(exp_point.expected_value, actual_point.expected_value)
+            self.assertEqual(exp_point.check_interval, actual_point.check_interval)
