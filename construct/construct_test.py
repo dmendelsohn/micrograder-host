@@ -1,6 +1,9 @@
 from src import case
 from src import utils
+from src.case import FrameTemplate
+from src.case import Scaffold
 from src.case import TestCase
+from src.case import TestPointTemplate
 from src.condition import Condition
 from src.condition import ConditionType
 from src.evaluator import Evaluator
@@ -10,6 +13,7 @@ from src.handler import RequestHandler
 from src.request import EventType
 from src.request import InputType
 from src.request import OutputType
+from src.sequence import InterpolationType
 from src.sequence import Sequence
 from src.screen import Screen
 
@@ -178,14 +182,45 @@ def construct_dynamic(log, scaffold):
     return scaffold.generate_test_case(log)
 
 def default_scaffold():
-    # TODO: return a Scaffold
-    pass
+    def is_start_request(request):
+        return request.data_type == EventType.Print and request.arg == "Start"
+    start_condition = Condition(ConditionType.After, cause=is_start_request)
+    end_condition = Condition(ConditionType.After, cause=5000, subconditions=[start_condition])
+    frame_templates = [FrameTemplate(start_condition=start_condition,
+                                   end_condition=end_condition,
+                                   priority=0,
+                                   init_to_default=True)]
 
-def main(logpath=None, verbose=False):
+    interpolations = {(InputType.DigitalRead, 6): InterpolationType.Start}
+    defaults = {(InputType.DigitalRead, 6): 1} # Button not pressed
+
+    temp = TestPointTemplate(check_interval=("0.2*T","0.8*T"),
+                             check_function=operator.__eq__,
+                             aggregator=all)
+    point_templates = {
+        (OutputType.DigitalWrite, 13): temp,
+        (OutputType.Screen, None): temp
+    }
+    
+    aggregators = {
+        (OutputType.DigitalWrite, 13): all,
+        (OutputType.Screen, None): all   
+    }
+    return Scaffold(frame_templates=frame_templates,
+                    interpolations=interpolations,
+                    defaults=defaults,
+                    point_templates=point_templates,
+                    aggregators=aggregators)
+
+def main(logpath=None, testcasepath=None, verbose=False):
     if logpath:
         log = utils.load(logpath)
-        scaffold = default_scaffold() # Later, make this from a file as well
+        scaffold = default_scaffold() # Later, make scaffolds loadable from files as well
         test_case = construct_dynamic(log, scaffold)
-        utils.save(test_case, "resources/temp.tc") # TODO: make this dynamically chosen
+        try:
+            utils.save(test_case, testcasepath)
+        except:
+            print("Failed to save to given testcasepath, using default path instead")
+            utils.save(test_case, "resources/temp.tc") # TODO: make this dynamically chosen
     else:
         construct_hardcode(verbose)

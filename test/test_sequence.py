@@ -83,16 +83,16 @@ class TestSequence(unittest.TestCase):
     def test_interpolate(self):
         seq = Sequence(times=[0,5,9], values=[0, 1, 2])
 
-        seq1 = seq.interpolate(InterpolationType.START)
+        seq1 = seq.interpolate(InterpolationType.Start)
         self.assertEqual(seq1, Sequence(times=[0,5,9], values=[0, 1, 2]))
 
-        seq2 = seq.interpolate(InterpolationType.END)
+        seq2 = seq.interpolate(InterpolationType.End)
         self.assertEqual(seq2, Sequence(times=[0,5], values=[1, 2]))
 
-        seq3 = seq.interpolate(InterpolationType.MID)
+        seq3 = seq.interpolate(InterpolationType.Mid)
         self.assertEqual(seq3, Sequence(times=[0,2,7], values=[0,1,2]))
 
-        seq4 = seq.interpolate(InterpolationType.LINEAR, res=2)
+        seq4 = seq.interpolate(InterpolationType.Linear, res=2)
         self.assertEqual(seq4, Sequence(times=[0,2,4,5,7,9], values=[0, 0.4, 0.8, 1, 1.5, 2]))
 
         #TODO: more

@@ -5,10 +5,10 @@ from enum import Enum
 TimedValue = namedtuple('TimedValue', ['time', 'value'])
 
 class InterpolationType(Enum):
-    START = 0 # Position samples are start of range
-    MID = 1 # Position samples in middle of range
-    END = 2 # Position samples at end of range
-    LINEAR = 3 # Interpolate linearly between samples
+    Start = 0 # Position samples are start of range
+    Mid = 1 # Position samples in middle of range
+    End = 2 # Position samples at end of range
+    Linear = 3 # Interpolate linearly between samples
 
 class Sequence:
     # times must be list of unique increasing integers
@@ -106,21 +106,21 @@ class Sequence:
         if len(self) == 0:
             return Sequence()
         
-        if interpolation_type == InterpolationType.START: # No need to do anything
+        if interpolation_type == InterpolationType.Start: # No need to do anything
             return self.copy()
-        elif interpolation_type == InterpolationType.MID:
+        elif interpolation_type == InterpolationType.Mid:
             times = [self.times[0]]
             for i in range(1,len(self)):
                 t = (self.times[i-1]+self.times[i])//2
                 times.append(t)
             return Sequence(times=times, values=self.values[:])
-        elif interpolation_type == InterpolationType.END:
+        elif interpolation_type == InterpolationType.End:
             times = []
             for i in range(1,len(self)):
                 t = self.times[i-1]
                 times.append(t)
             return Sequence(times=times, values=self.values[1:])
-        elif interpolation_type == InterpolationType.LINEAR:
+        elif interpolation_type == InterpolationType.Linear:
             result = Sequence()
             for i in range(1,len(self)):
                 start_time, start_val = self[i-1]

@@ -18,7 +18,14 @@ class Frame:
         self.status = FrameStatus.NotBegun
         self.inputs = inputs # Should be dict mapping (InputType,channel)->ValueSequence
         self.priority = priority # Should be an integer
+        self.clear() # Make sure all state is cleared out
 
+    # Reset the stateful fields
+    def clear(self):
+        self.start_condition.clear()
+        self.end_condition.clear()
+        self.start_time = None
+        self.status = FrameStatus.NotBegun
 
     # request is an InputRequest
     # returns ValueResponse for these (input type,channel) with latests values 

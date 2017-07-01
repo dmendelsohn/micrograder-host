@@ -11,7 +11,7 @@ class Condition:
     #   cause is evaluated after subcondition[0].satisfied_at
     #       ... or t=0 if subconditions not given
     # if cond_type is Or or And, subconditions must be non-empty list of conditions, cause is ignored
-    def __init__(self, cond_type, cause=None, subconditions=None):
+    def __init__(self, cond_type, cause=None, subconditions=[]):
         self.satisfied_at = None  # Initially, condition is automatically unsatisfied (i.e. t=None)
         self.type = cond_type
         self.cause = cause # integer (i.e. time), or function from request -> boolean
@@ -20,6 +20,14 @@ class Condition:
 
     def is_satisfied(self):
         return self.satisfied_at is not None
+
+    # Reset the stateful fields
+    def clear(self):
+        self.satisfied_at = None
+        self.last_update_request = None
+        for sub in self.subconditions:
+            sub.clear()
+
 
     # request: of type Request
     # returns None

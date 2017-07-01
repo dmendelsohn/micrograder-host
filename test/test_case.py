@@ -31,7 +31,7 @@ class ScaffoldTest(unittest.TestCase):
                             init_to_default=True
             )
         frame_templates = [ft0]
-        interpolations = {(InputType.DigitalRead, 6): InterpolationType.START}
+        interpolations = {(InputType.DigitalRead, 6): InterpolationType.Start}
         defaults = {(InputType.DigitalRead, 6): 1}
 
         pt0 = TestPointTemplate(check_interval=("0.2*T", "0.8*T"),
@@ -214,14 +214,14 @@ class ScaffoldTest(unittest.TestCase):
         self.assertEqual(actual, expected)
 
          # Test that linear interpolation usage
-        self.scaffold.interpolations[(InputType.DigitalRead, 6)] = InterpolationType.LINEAR
+        self.scaffold.interpolations[(InputType.DigitalRead, 6)] = InterpolationType.Linear
         start_time = 1001
         end_time = 6000
         init_to_default = False
         values = [1]*20 + [0]*40 + [1]*10 + [0]*10 + [1]*30 # OFF,ON,OFF,ON,OFF
         times = list(range(0, end_time - start_time, 50))
         seq = Sequence(times=times, values=values[:len(times)])
-        seq = seq.interpolate(InterpolationType.LINEAR, res=utils.MILLISECOND)
+        seq = seq.interpolate(InterpolationType.Linear, res=utils.MILLISECOND)
         expected = {(InputType.DigitalRead, 6): seq}
         actual = self.scaffold.generate_inputs(overall_sequences, start_time,
                                                end_time, init_to_default)

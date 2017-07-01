@@ -8,6 +8,13 @@ class RequestHandler:
         self.end_condition = end_condition # Condition for overall test completion
         self.preempt = preempt # If True, later frame wins in when priority is tied
         self.frames = frames # List of frames
+        self.clear() # Make sure all state is cleared out
+
+    # Reset the stateful fields
+    def clear(self):
+        self.end_condition.clear()
+        for frame in self.frames:
+            frame.clear()
 
     # Input: Request
     # Return: Response
@@ -29,6 +36,9 @@ class RequestHandler:
 
         # Set complete field and return
         self.end_condition.update(request)
+        a = self.end_condition.satisfied_at
+        b = self.end_condition.subconditions[0].satisfied_at
+        c = self.end_condition.subconditions[0].subconditions[0].satisfied_at
         response.complete = self.end_condition.is_satisfied()
         return response
 
