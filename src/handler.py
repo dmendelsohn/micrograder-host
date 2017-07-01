@@ -36,9 +36,6 @@ class RequestHandler:
 
         # Set complete field and return
         self.end_condition.update(request)
-        a = self.end_condition.satisfied_at
-        b = self.end_condition.subconditions[0].satisfied_at
-        c = self.end_condition.subconditions[0].subconditions[0].satisfied_at
         response.complete = self.end_condition.is_satisfied()
         return response
 
