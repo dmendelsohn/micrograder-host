@@ -1,6 +1,7 @@
-from src.case import *
+from src.scaffold import *
 import unittest
 
+from src.case import TestCase
 from src.condition import Condition
 from src.condition import ConditionType
 from src.evaluator import TestPoint
@@ -270,4 +271,3 @@ class ScaffoldTest(unittest.TestCase):
         actual.sort(key=lambda point: (point.check_interval, point.data_type.value))
 
         self.assertEqual(actual, expected)
-

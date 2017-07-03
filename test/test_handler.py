@@ -14,7 +14,7 @@ from src.response import ValuesResponse
 from src.sequence import Sequence
 from src.utils import AnalogParams
 
-class TestTestCase(unittest.TestCase): # This unittest.TestCase is testing the TestCase class
+class TestRequestHandler(unittest.TestCase):
     def setUp(self):
         end_condition = Condition(ConditionType.After, cause=2000)
 

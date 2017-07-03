@@ -38,10 +38,6 @@ def run_session(handler, *, verbose=False, timeout=None):
         print("Session complete")
     return log
 
-def build_test_case(log, verbose=False):
-    #TODO: implement (probably in a different file)
-    pass
-
 # Runs the RequestHandler saved at handler_filepath
 # If log_filepath is not None, RequestLog is saved there
 # timeout is in seconds, float okay
