@@ -1,13 +1,17 @@
 from enum import Enum
 
+from . import utils
 from .response import AckResponse
 from .response import ErrorResponse
+from .response import ValuesResponse
 
 class RequestHandler:
-    def __init__(self, end_condition, frames, *, preempt=True):
+    def __init__(self, end_condition, frames, 
+                 *, preempt=True, default_values=utils.DEFAULT_VALUES):
         self.end_condition = end_condition # Condition for overall test completion
         self.preempt = preempt # If True, later frame wins in when priority is tied
         self.frames = frames # List of frames
+        self.default_values = default_values
         self.clear() # Make sure all state is cleared out
 
     # Reset the stateful fields
@@ -31,6 +35,21 @@ class RequestHandler:
             else:
                 frame = self.frames[frame_id]
                 response = frame.get_response(request)
+                if type(response) is ErrorResponse: # Frame couldn't respond, so construct default
+                    values = []
+                    for i in range(request.batch_params.num):
+                        for channel in request.channels:
+                            value = utils.get_default_value(request.data_type, channel,
+                                                            defaults=self.default_values)
+                            values.append(value)
+
+                    if None in values: # Some channel had undefined default
+                        response = ErrorResponse()
+                    elif request.analog_params is None: # digital values
+                        response = ValuesResponse(values=values, analog=False)
+                    else: # analog
+                        values = [utils.analog_to_digital(v, request.analog_params) for v in values]
+                        response = ValuesResponse(values=values, analog=True)
         else:
             response = AckResponse() # Just acknowledge request that doesn't need values
 

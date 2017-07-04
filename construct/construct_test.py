@@ -10,12 +10,12 @@ from src.evaluator import Evaluator
 from src.evaluator import TestPoint
 from src.frame import Frame
 from src.handler import RequestHandler
-from src.request import EventType
-from src.request import InputType
-from src.request import OutputType
 from src.sequence import InterpolationType
 from src.sequence import Sequence
 from src.screen import Screen
+from src.utils import EventType
+from src.utils import InputType
+from src.utils import OutputType
 
 import numpy as np
 import operator
@@ -159,16 +159,8 @@ def construct_hardcode(verbose=False):
     filepath = "resources/constant.tc"
     utils.save(case, filepath)
 
-    case = blinky_test_case(with_oled=False)
-    filepath = "resources/blinky.tc"
-    utils.save(case, filepath)
-
     case = blinky_test_case(with_oled=True)
     filepath = "resources/blinky_oled.tc"
-    utils.save(case, filepath)
-
-    case = button_test_case(with_oled=False)
-    filepath = "resources/button.tc"
     utils.save(case, filepath)
 
     case = button_test_case(with_oled=True)
@@ -220,7 +212,7 @@ def main(logpath=None, testcasepath=None, verbose=False):
         try:
             utils.save(test_case, testcasepath)
         except:
-            print("Failed to save to given testcasepath, using default path instead")
+            print("Failed to save to given testcasepath, using resources/temp.tc instead")
             utils.save(test_case, "resources/temp.tc") # TODO: make this dynamically chosen
     else:
         construct_hardcode(verbose)

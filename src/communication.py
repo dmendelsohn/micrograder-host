@@ -5,12 +5,9 @@ from enum import Enum
 from . import request
 from . import utils
 from .request import EventRequest
-from .request import EventType
 from .request import InputRequest
-from .request import InputType
 from .request import InvalidRequest
 from .request import OutputRequest
-from .request import OutputType
 from .response import AckResponse
 from .response import ErrorResponse
 from .response import ValuesResponse
@@ -18,6 +15,9 @@ from .screen import Screen
 from .screen import ScreenShape
 from .utils import AnalogParams
 from .utils import BatchParams
+from .utils import EventType
+from .utils import InputType
+from .utils import OutputType
 
 # COM port parameters
 #ADDR = '/dev/cu.usbmodem1880221'

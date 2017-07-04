@@ -1,9 +1,77 @@
 from collections import namedtuple
 import dill as pickle
+from enum import Enum
 import numpy as np
+import operator
 import struct
 
 MILLISECOND = 1 # Current time unit is millisecond #TODO: change to 1000
+
+class InputType(Enum):
+    Accelerometer = 1
+    Gyroscope = 2
+    Magnetometer = 3
+    DigitalRead = 4
+    AnalogRead = 5
+
+class OutputType(Enum):
+    DigitalWrite = 1
+    AnalogWrite = 2
+    Screen = 3
+
+class EventType(Enum):
+    Init = 1
+    ScreenInit = 2
+    Print = 3
+    Wifi = 4
+    Gps = 5
+
+# If no channel is specified, that's a default across all channels
+# If both input_type and (input_type,channel) are keys, more specific default "wins"
+DEFAULT_VALUES = {
+    InputType.DigitalRead: 0,
+    InputType.AnalogRead: 0,
+    InputType.Accelerometer: 0,
+    (InputType.Accelerometer, 'z'): 1, # Gravity baked in by default on 'z' channel
+    InputType.Gyroscope: 0,
+    InputType.Magnetometer: 0,
+}
+
+DEFAULT_CHECK_FUNCTIONS = {
+    OutputType.DigitalWrite: operator.__eq__,
+    OutputType.AnalogWrite: operator.__eq__,
+    OutputType.Screen: operator.__eq__,
+}
+
+DEFAULT_AGGREGATORS = {
+    OutputType.DigitalWrite: all,
+    OutputType.AnalogWrite: all,
+    OutputType.Screen: all,
+}
+
+
+def get_default_value(data_type, channel=None, defaults=DEFAULT_VALUES):
+    return get_default(data_type, channel, defaults)
+
+def get_default_check_function(data_type, channel=None, defaults=DEFAULT_CHECK_FUNCTIONS):
+    return get_default(data_type, channel, defaults)
+
+def get_default_aggregator(data_type, channel=None, defaults=DEFAULT_AGGREGATORS):
+    return get_default(data_type, channel, defaults)
+
+
+# Generic helper function for getting a values for Inputs, Outputs, Requests
+# First check if (data_type, channel) is key in defaults, and return value
+# If not, check if (data_type) is key in defaults, and return value
+# If not, return None
+def get_default(data_type, channel, defaults):
+    if (data_type,channel) in defaults:
+        return defaults[(data_type, channel)]
+    elif data_type in defaults:
+        return defaults[data_type] # Across all channels
+    else:
+        return None
+
 
 # value: a numeric
 # params: of type AnalogParams

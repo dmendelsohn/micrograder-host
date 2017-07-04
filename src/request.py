@@ -1,28 +1,11 @@
-from enum import Enum
 from collections import namedtuple
 
 from .utils import BatchParams
+from .utils import EventType
+from .utils import InputType
+from .utils import OutputType
 
 THREE_AXIS = ['x', 'y', 'z']  # Standard channels for three axis quantities
-
-class InputType(Enum):
-    Accelerometer = 1
-    Gyroscope = 2
-    Magnetometer = 3
-    DigitalRead = 4
-    AnalogRead = 5
-
-class OutputType(Enum):
-    DigitalWrite = 1
-    AnalogWrite = 2
-    Screen = 3
-
-class EventType(Enum):
-    Init = 1
-    ScreenInit = 2
-    Print = 3
-    Wifi = 4
-    Gps = 5
 
 ### REQUEST CLASSES
 class Request:

@@ -1,7 +1,7 @@
 from src.condition import *
 
 from src.request import EventRequest
-from src.request import EventType
+from src.utils import EventType
 
 import unittest
 

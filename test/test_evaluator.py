@@ -7,9 +7,9 @@ from src.condition import Condition
 from src.condition import ConditionType
 from src.log import RequestLog
 from src.request import EventRequest
-from src.request import EventType
 from src.request import OutputRequest
-from src.request import OutputType
+from src.utils import EventType
+from src.utils import OutputType
 
 class TestEvaluator(unittest.TestCase):
     def setUp(self): #TODO: finish

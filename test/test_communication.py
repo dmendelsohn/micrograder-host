@@ -1,17 +1,17 @@
 from src.communication import *
 from src.request import EventRequest
-from src.request import EventType
 from src.request import InputRequest
-from src.request import InputType
 from src.request import InvalidRequest
 from src.request import OutputRequest
-from src.request import OutputType
 from src.response import AckResponse
 from src.response import ErrorResponse
 from src.response import ValuesResponse
 from src.screen import Screen
 from src.screen import ScreenShape
 from src.utils import AnalogParams
+from src.utils import EventType
+from src.utils import InputType
+from src.utils import OutputType
 
 import itertools
 import numpy as np

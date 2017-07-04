@@ -4,15 +4,15 @@ import unittest
 from src.condition import Condition
 from src.condition import ConditionType
 from src.request import EventRequest
-from src.request import EventType
 from src.request import InputRequest
-from src.request import InputType
 from src.request import OutputRequest
-from src.request import OutputType
 from src.screen import Screen
 from src.sequence import Sequence
 from src.utils import AnalogParams
 from src.utils import BatchParams
+from src.utils import EventType
+from src.utils import InputType
+from src.utils import OutputType
 
 class TestRequestLog(unittest.TestCase):
     def setUp(self):

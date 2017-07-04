@@ -8,8 +8,8 @@ from .evaluator import Evaluator
 from .evaluator import TestPoint
 from .frame import Frame
 from .handler import RequestHandler
-from .request import InputType
-from .request import OutputType
+from .utils import InputType
+from .utils import OutputType
 
 # Check_interval is relative to observed time of point, not any condition
 # Either elemnt of check_interval tuple can be string, it will be eval-ed

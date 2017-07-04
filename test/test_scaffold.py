@@ -7,14 +7,14 @@ from src.condition import ConditionType
 from src.evaluator import TestPoint
 from src.log import RequestLog
 from src.request import EventRequest
-from src.request import EventType
 from src.request import InputRequest
-from src.request import InputType
 from src.request import OutputRequest
-from src.request import OutputType
 from src.screen import Screen
 from src.sequence import InterpolationType
 from src.sequence import Sequence
+from src.utils import EventType
+from src.utils import InputType
+from src.utils import OutputType
 
 import numpy as np
 import operator

@@ -1,8 +1,10 @@
 from .sequence import Sequence
 
+import operator
+
 class TestPoint:
-    def __init__(self, condition_id, data_type, channel, expected_value,
-                 check_interval, check_function, aggregator):
+    def __init__(self, condition_id, data_type, channel, expected_value, check_interval,
+                 *, check_function=operator.__eq__, aggregator=all): #TODO: more configurable defaults
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
@@ -25,7 +27,7 @@ class TestPoint:
         return s.format(self.condition_id, self.data_type, self.channel, self.expected_value,
                         self.check_interval, self.check_function, self.aggregator)
 
-    def __lt__(self, other):
+    def __lt__(self, other): # Mostly used for test purposes
         t1 = (self.condition_id, hash(type(self.data_type)), self.data_type.value, 
               self.check_interval, hash(self.channel))
         t2 = (other.condition_id, hash(type(other.data_type)), other.data_type.value,

@@ -3,14 +3,14 @@ from src.frame import *
 from src.condition import Condition
 from src.condition import ConditionType
 from src.request import EventRequest
-from src.request import EventType
 from src.request import InputRequest
-from src.request import InputType
 from src.response import ErrorResponse
 from src.response import ValuesResponse
 from src.sequence import Sequence
 from src.utils import AnalogParams
 from src.utils import BatchParams
+from src.utils import EventType
+from src.utils import InputType
 
 import unittest
 

@@ -5,14 +5,14 @@ from src.condition import Condition
 from src.condition import ConditionType
 from src.frame import Frame
 from src.request import InputRequest
-from src.request import InputType
 from src.request import OutputRequest
-from src.request import OutputType
 from src.response import AckResponse
 from src.response import ErrorResponse
 from src.response import ValuesResponse
 from src.sequence import Sequence
 from src.utils import AnalogParams
+from src.utils import InputType
+from src.utils import OutputType
 
 class TestRequestHandler(unittest.TestCase):
     def setUp(self):
@@ -52,8 +52,14 @@ class TestRequestHandler(unittest.TestCase):
         self.assertEqual(self.handler.update(request), expected)
 
         request = InputRequest(150, InputType.AnalogRead, [1], analog_params=self.a_params)
-        expected = ErrorResponse(complete=False) # No data for that channel
-        self.assertEqual(self.handler.update(request), expected) 
+        # No data, so use default value from utils.py
+        expected = ValuesResponse(values=[-128], analog=True, complete=False)
+        self.assertEqual(self.handler.update(request), expected)
+
+        request = InputRequest(150, InputType.AnalogRead, [1], analog_params=self.a_params)
+        self.handler.default_values[(InputType.AnalogRead, 1)] = 5.0 # Set new default for this channel
+        expected = ValuesResponse(values=[127], analog=True, complete=False)
+        self.assertEqual(self.handler.update(request), expected)
 
         request = InputRequest(2150, InputType.AnalogRead, [0], analog_params=self.a_params)
         expected = ErrorResponse(complete=True)
