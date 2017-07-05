@@ -9,13 +9,19 @@ class TestUtils(unittest.TestCase):
     def test_get_default(self):
         # Test the generic function
         defaults = {
+            None: 1,
             InputType.DigitalRead: 0,
             (InputType.DigitalRead, 0): 1, # Different default for specific channel
         }
         self.assertEqual(get_default(InputType.DigitalRead, 0, defaults), 1)
         self.assertEqual(get_default(InputType.DigitalRead, 1, defaults), 0)
         self.assertEqual(get_default(InputType.DigitalRead, None, defaults), 0)
+        self.assertEqual(get_default(InputType.AnalogRead, 0, defaults), 1)
+
+
+        del defaults[None]
         self.assertIsNone(get_default(InputType.AnalogRead, 0, defaults))
+        
 
         # Now test the particular functionss
         self.assertEqual(get_default_value(InputType.Accelerometer, 'x'), 0.0)

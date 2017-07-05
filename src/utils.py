@@ -63,12 +63,15 @@ def get_default_aggregator(data_type, channel=None, defaults=DEFAULT_AGGREGATORS
 # Generic helper function for getting a values for Inputs, Outputs, Requests
 # First check if (data_type, channel) is key in defaults, and return value
 # If not, check if (data_type) is key in defaults, and return value
-# If not, return None
+# If not, check if there None is key in defaults, and return value
+# Else return None
 def get_default(data_type, channel, defaults):
     if (data_type,channel) in defaults:
         return defaults[(data_type, channel)]
     elif data_type in defaults:
         return defaults[data_type] # Across all channels
+    elif None in defaults:
+        return defaults[None]
     else:
         return None
 

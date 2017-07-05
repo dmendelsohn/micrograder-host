@@ -4,7 +4,7 @@ import operator
 
 class TestPoint:
     def __init__(self, condition_id, data_type, channel, expected_value, check_interval,
-                 *, check_function=operator.__eq__, aggregator=all): #TODO: more configurable defaults
+                 *, check_function=operator.__eq__, aggregator=all):
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
@@ -40,7 +40,7 @@ class Evaluator:
     def __init__(self, conditions, test_points, aggregators):
         self.conditions = conditions # List of relevant Conditions
         self.test_points = test_points # List of test_points
-        self.aggregators = aggregators # (data_type,channel)->function(list(bool)->bool) 
+        self.aggregators = aggregators # (data_type,channel)->function(list(bool)->bool)
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result
