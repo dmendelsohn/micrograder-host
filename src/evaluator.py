@@ -1,10 +1,11 @@
+from . import utils
 from .sequence import Sequence
 
 import operator
 
 class TestPoint:
-    def __init__(self, condition_id, data_type, channel, expected_value, check_interval,
-                 *, check_function=operator.__eq__, aggregator=all):
+    def __init__(self, condition_id, data_type, channel, expected_value, check_interval, *,
+                 check_function, aggregator):
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
@@ -12,6 +13,7 @@ class TestPoint:
         self.check_interval = check_interval
         self.check_function = check_function
         self.aggregator = aggregator
+
 
     def __eq__(self, other):
         if type(self) is not type(other):
@@ -37,10 +39,25 @@ class TestPoint:
 class Evaluator:
     # conditions: a list of relevant Conditions
     # test_points: a list of test points
-    def __init__(self, conditions, test_points, aggregators):
+    def __init__(self, conditions, test_points, *,
+                 aggregators=utils.DEFAULT_AGGREGATORS,
+                 default_intrapoint_aggregators=utils.DEFAULT_AGGREGATORS,
+                 default_check_functions=utils.DEFAULT_CHECK_FUNCTIONS):
         self.conditions = conditions # List of relevant Conditions
         self.test_points = test_points # List of test_points
         self.aggregators = aggregators # (data_type,channel)->function(list(bool)->bool)
+
+        # Defaults for test_points if respective fields are None
+        self.default_intrapoint_aggregators = default_intrapoint_aggregators
+        self.default_check_functions = default_check_functions
+
+        for point in test_points: # Populate missing fields with Evalutor's defaults
+            if point.aggregator is None:
+                point.aggregator = utils.get_default(point.data_type, point.channel,
+                                                     default_intrapoint_aggregators)
+            if point.check_function is None:
+                point.check_function = utils.get_default(point.data_type, point.channel,
+                                                         default_check_functions)
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result

@@ -66,7 +66,7 @@ class TestEvaluator(unittest.TestCase):
             (EventType.Print, None): all
         }
 
-        self.evaluator = Evaluator(conditions, test_points, aggregators)
+        self.evaluator = Evaluator(conditions, test_points, aggregators=aggregators)
 
 
 
