@@ -5,7 +5,7 @@ import numpy as np
 import operator
 import struct
 
-MILLISECOND = 1 # Current time unit is millisecond #TODO: change to 1000
+MILLISECOND = 1000 # 1000 time units per millisecond
 
 class InputType(Enum):
     Accelerometer = 1

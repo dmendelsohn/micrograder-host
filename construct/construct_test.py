@@ -21,7 +21,7 @@ import numpy as np
 import operator
 
 def frameless_test_case(): # Good for making recordings
-    end_condition = Condition(ConditionType.After, cause=10**10)
+    end_condition = Condition(ConditionType.After, cause=10**12)
     handler = RequestHandler(end_condition=end_condition, frames=[])
     evaluator = Evaluator(conditions=[], test_points=[], aggregators={})
     return TestCase(handler=handler, evaluator=evaluator)
@@ -30,7 +30,7 @@ def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)
     end_condition = Condition(ConditionType.After,
-                              cause=3000, subconditions=[init_condition])
+                              cause=3*(10**6), subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,
                     inputs={
                         (InputType.DigitalRead, 13): Sequence([0],[1]),
@@ -53,7 +53,7 @@ def blinky_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
-                              cause=5000, subconditions=[init_condition])
+                              cause=5*(10**6), subconditions=[init_condition])
     frame = Frame(init_condition, end_condition, inputs={})
     handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
@@ -64,12 +64,15 @@ def blinky_test_case(with_oled=False):
         if i%2==1:
             expected_value = 1
 
+        start = (i+0.1)*(10**6)
+        end = (i+0.9)*(10**6)
+
         points.append(TestPoint(
             condition_id=0,
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_interval=(start,end),
             check_function=operator.eq,
             aggregator=all))
 
@@ -87,7 +90,7 @@ def blinky_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_interval=(start,end),
             check_function=operator.eq,
             aggregator=all))
 
@@ -99,13 +102,11 @@ def button_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After,
                                cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
-                               cause=5000, subconditions=[init_condition])
+                               cause=5*(10**6), subconditions=[init_condition])
+
+    seq = Sequence(times=[i*10**6 for i in range(6)], values=[1,0,1,0,1,0])
     frame = Frame(init_condition, end_condition,
-                    inputs={
-                        (InputType.DigitalRead, 6): Sequence(
-                                                        [0,1000,2000,3000,4000,5000],
-                                                        [1,0,1,0,1,0])
-                    })
+                    inputs={(InputType.DigitalRead, 6): seq})
     handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
     points = []
@@ -115,12 +116,15 @@ def button_test_case(with_oled=False):
         if i%2==1:
             expected_value = 1
 
+        start = (i+0.1)*(10**6)
+        end = (i+0.9)*(10**6)
+
         points.append(TestPoint(
             condition_id=0,
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_interval=(start,end),
             check_function=operator.eq,
             aggregator=all))
 
@@ -138,7 +142,7 @@ def button_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(i*1000 + 100,i*1000 + 900),
+            check_interval=(start,end),
             check_function=operator.eq,
             aggregator=all))
 
@@ -177,7 +181,7 @@ def default_scaffold():
     def is_start_request(request):
         return request.data_type == EventType.Print and request.arg == "Start"
     start_condition = Condition(ConditionType.After, cause=is_start_request)
-    end_condition = Condition(ConditionType.After, cause=5000, subconditions=[start_condition])
+    end_condition = Condition(ConditionType.After, cause=5*10**6, subconditions=[start_condition])
     frame_templates = [FrameTemplate(start_condition=start_condition,
                                    end_condition=end_condition,
                                    priority=0,

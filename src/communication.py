@@ -91,6 +91,7 @@ class SerialCommunication:
                 return None # read timed out
             msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
             timestamp = utils.decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
+            timestamp *= utils.MILLISECOND # Convert to interal time resolution
             msg_size = utils.decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
             if msg_size > 0:
                 msg_body = self.ser.read(msg_size)

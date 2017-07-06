@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+from . import utils
 from .utils import BatchParams
 from .utils import EventType
 from .utils import InputType
