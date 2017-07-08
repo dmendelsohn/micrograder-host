@@ -35,7 +35,7 @@ class Sequence:
         else:
             return self.values[index]
 
-    def get_samples(self, start_time, num_samples, period): #TODO: make this legit
+    def get_samples(self, start_time, num_samples, period):
         index = bisect.bisect(self.times, start_time)
         index -= 1
         if index < 0:

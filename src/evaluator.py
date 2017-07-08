@@ -40,9 +40,16 @@ class Evaluator:
     # conditions: a list of relevant Conditions
     # test_points: a list of test points
     def __init__(self, conditions, test_points, *,
-                 aggregators=utils.DEFAULT_AGGREGATORS,
-                 default_intrapoint_aggregators=utils.DEFAULT_AGGREGATORS,
-                 default_check_functions=utils.DEFAULT_CHECK_FUNCTIONS):
+                 aggregators=None, default_intrapoint_aggregators=None,
+                 default_check_functions=None):
+        if aggregators is None:
+            aggregators = utils.DEFAULT_AGGREGATORS
+        if default_intrapoint_aggregators is None:
+            default_intrapoint_aggregators = utils.DEFAULT_AGGREGATORS
+        if default_check_functions is None:
+            default_check_functions = utils.DEFAULT_CHECK_FUNCTIONS
+
+
         self.conditions = conditions # List of relevant Conditions
         self.test_points = test_points # List of test_points
         self.aggregators = aggregators # (data_type,channel)->function(list(bool)->bool)

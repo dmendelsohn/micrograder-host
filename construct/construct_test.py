@@ -20,17 +20,20 @@ from src.utils import OutputType
 import numpy as np
 import operator
 
-def frameless_test_case(): # Good for making recordings
-    end_condition = Condition(ConditionType.After, cause=10**12)
+ # Good for making recordings
+def frameless_test_case(duration=10**12, default_values=None):
+    end_condition = Condition(ConditionType.After, cause=duration)
     handler = RequestHandler(end_condition=end_condition, frames=[])
-    evaluator = Evaluator(conditions=[], test_points=[], aggregators={})
+    evaluator = Evaluator(conditions=[], test_points=[])
     return TestCase(handler=handler, evaluator=evaluator)
  
+#TODO: make inputs default in a frameless case, merge with frameless_test_case
 def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)
     end_condition = Condition(ConditionType.After,
                               cause=3*(10**3), subconditions=[init_condition])
+
     frame = Frame(init_condition, end_condition,
                     inputs={
                         (InputType.DigitalRead, 13): Sequence([0],[1]),
@@ -54,8 +57,7 @@ def blinky_test_case(with_oled=False):
                                cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
                               cause=5*(10**3), subconditions=[init_condition])
-    frame = Frame(init_condition, end_condition, inputs={})
-    handler = RequestHandler(end_condition=end_condition, frames=[frame])
+    handler = RequestHandler(end_condition=end_condition)
 
     points = []
     for i in range(1, 5):
@@ -72,9 +74,7 @@ def blinky_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(start,end),
-            check_function=operator.eq,
-            aggregator=all))
+            check_interval=(start,end)))
 
         if not with_oled:
             continue
@@ -90,12 +90,9 @@ def blinky_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(start,end),
-            check_function=operator.eq,
-            aggregator=all))
+            check_interval=(start,end)))
 
-    aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
-    evaluator = Evaluator(conditions=[init_condition], test_points=points, aggregators=aggs)
+    evaluator = Evaluator(conditions=[init_condition], test_points=points)
     return TestCase(handler=handler, evaluator=evaluator)
 
 def button_test_case(with_oled=False):
@@ -124,9 +121,7 @@ def button_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(start,end),
-            check_function=operator.eq,
-            aggregator=all))
+            check_interval=(start,end)))
 
         if not with_oled:
             continue
@@ -142,12 +137,9 @@ def button_test_case(with_oled=False):
             data_type=output_type,
             channel=channel,
             expected_value=expected_value,
-            check_interval=(start,end),
-            check_function=operator.eq,
-            aggregator=all))
+            check_interval=(start,end)))
 
-    aggs = {(OutputType.DigitalWrite, 13): all, (OutputType.Screen, None): all}
-    evaluator = Evaluator(conditions=[init_condition], test_points=points, aggregators=aggs)
+    evaluator = Evaluator(conditions=[init_condition], test_points=points)
     return TestCase(handler=handler, evaluator=evaluator)
 
 # Saves a bunch of hardcoded test_cases to files

@@ -28,7 +28,7 @@ class TestSerialCommunication(unittest.TestCase):
         self.t = 1000 # Arbitrary timestamp
 
 
-    def test_build_input_request(self): #TODO
+    def test_build_input_request(self):
         data_type = None # This just gets passed along
         channels = [0,1,2] # Only the length of this list matters
         batch_bytes = bytes([2, 0, 0, 1, 0, 0])
@@ -79,7 +79,7 @@ class TestSerialCommunication(unittest.TestCase):
     def test_bytes_to_request_input(self):
         code = 0x20  # Digital read
         body = bytes([13]) + bytes([0])
-        expected = InputRequest(self.t, InputType.DigitalRead, [13]) # TODO: update
+        expected = InputRequest(self.t, InputType.DigitalRead, [13])
         self.assertEqual(self.sc.bytes_to_request(code, self.t, body), expected)
 
         code = 0x22 # Analog Read

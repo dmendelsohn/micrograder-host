@@ -12,7 +12,7 @@ from src.utils import EventType
 from src.utils import OutputType
 
 class TestEvaluator(unittest.TestCase):
-    def setUp(self): #TODO: finish
+    def setUp(self):
         conditions = [Condition(ConditionType.After, cause=50),
                       Condition(ConditionType.After, cause=5000)]
         tp0 = TestPoint(condition_id=0,
@@ -67,7 +67,7 @@ class TestEvaluator(unittest.TestCase):
                        expected_value=1,
                        check_interval=(0,100)) # Use some defaults
         ]
-        
+
         with self.assertRaises(ValueError):
             evaluator = Evaluator(conditions, test_points,
                                   default_intrapoint_aggregators={})

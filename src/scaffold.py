@@ -34,10 +34,18 @@ class FrameTemplate:
 # This class stores information for constructing test cases dynamically
 class Scaffold:
     def __init__(self, frame_templates,
-                 interpolations={None: InterpolationType.Mid},
-                 defaults=utils.DEFAULT_VALUES,
-                 point_templates={None: TestPointTemplate()},
-                 aggregators=utils.DEFAULT_AGGREGATORS):
+                 interpolations=None, defaults=None,
+                 point_templates=None, aggregators=None):
+        if interpolations is None:
+            interpolations = {None: InterpolationType.Mid}
+        if defaults is None:
+            defaults = utils.DEFAULT_VALUES
+        if point_templates is None:
+            point_templates = {None: TestPointTemplate()}
+        if aggregators is None:
+            aggregators = utils.DEFAULT_AGGREGATORS
+
+
         self.frame_templates = frame_templates # List of FrameTemplates
         self.interpolations = interpolations # Defaults<InterpolationType>
         self.defaults = defaults # Defaults<value>

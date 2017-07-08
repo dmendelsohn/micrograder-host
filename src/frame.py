@@ -11,11 +11,14 @@ class FrameStatus(Enum):
     Avoided = 4
 
 class Frame:
-    def __init__(self, start_condition, end_condition, inputs={}, priority=0):
+    def __init__(self, start_condition, end_condition, inputs=None, priority=0):
         self.start_condition = start_condition # Should be of type Condition
         self.end_condition = end_condition  # Should be of type Condition
         self.start_time = None
         self.status = FrameStatus.NotBegun
+
+        if inputs is None:
+            inputs = {}
         self.inputs = inputs # Should be dict mapping (InputType,channel)->ValueSequence
         self.priority = priority # Should be an integer
         self.clear() # Make sure all state is cleared out

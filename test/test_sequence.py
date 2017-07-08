@@ -94,6 +94,3 @@ class TestSequence(unittest.TestCase):
 
         seq4 = seq.interpolate(InterpolationType.Linear, res=2)
         self.assertEqual(seq4, Sequence(times=[0,2,4,5,7,9], values=[0, 0.4, 0.8, 1, 1.5, 2]))
-
-        #TODO: more
-
