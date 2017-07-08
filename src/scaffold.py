@@ -116,8 +116,8 @@ class Scaffold:
                     if init_to_default or start_value is None: # Use default
                         start_value = utils.get_default(data_type, channel, self.defaults)
                         if start_value is None:
-                            #Later: handle unspecified default
-                            pass
+                            msg = "No default start value for data_type={}, channel={}"
+                            raise ValueError(msg.format(data_type, channel))
                     subsequence.insert(time=0, value=start_value)
 
                 interpolation_type = utils.get_default(data_type, channel, self.interpolations)

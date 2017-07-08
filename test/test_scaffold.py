@@ -32,14 +32,13 @@ class ScaffoldTest(unittest.TestCase):
                             init_to_default=True
             )
         frame_templates = [ft0]
-        interpolations = {(InputType.DigitalRead, 6): InterpolationType.Start}
-        defaults = {(InputType.DigitalRead, 6): 1}
+        interpolations = {InputType.DigitalRead: InterpolationType.Start}
+        defaults = {InputType.DigitalRead: 1}
 
         pt0 = TestPointTemplate(check_interval=("0.2*T", "0.8*T"),
                                 check_function=operator.__eq__,
                                 aggregator=all)
-        point_templates = {(OutputType.DigitalWrite, 13): pt0,
-                           (OutputType.Screen, None): pt0}
+        point_templates = {None: pt0}
         aggregators = {(OutputType.DigitalWrite, 13): all,
                        (OutputType.Screen, None): all}
         self.scaffold = Scaffold(frame_templates=frame_templates,
