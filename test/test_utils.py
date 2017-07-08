@@ -96,7 +96,7 @@ class TestUtils(unittest.TestCase):
 
     def test_decode_batch_params(self):
         b = bytes([2, 1, 1, 1, 0, 0])
-        expected = BatchParams(num=258, period=257)
+        expected = BatchParams(num=258, period=0.257)
         self.assertEqual(decode_batch_params(b), expected)
 
     def test_decode_screen_tile(self):

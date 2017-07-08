@@ -32,7 +32,7 @@ class TestSerialCommunication(unittest.TestCase):
         data_type = None # This just gets passed along
         channels = [0,1,2] # Only the length of this list matters
         batch_bytes = bytes([2, 0, 0, 1, 0, 0])
-        batch_params = BatchParams(num=2, period=256)
+        batch_params = BatchParams(num=2, period=0.256)
 
         count = 0
         for (is_analog, is_batch, is_recording) in itertools.product([False, True], repeat=3):

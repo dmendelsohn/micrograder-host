@@ -140,7 +140,7 @@ BatchParams = namedtuple('BatchParams', ['num', 'period']) # Period is in micros
 # Return: BatchParams
 def decode_batch_params(raw):
     num = decode_int(raw[0:2], signed=False)
-    period = decode_int(raw[2:6], signed=False)
+    period = decode_int(raw[2:6], signed=False)/1000 # Conversion micros->millis
     return BatchParams(num, period)
 
 # Input: bytes of length 8
