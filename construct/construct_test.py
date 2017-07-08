@@ -30,7 +30,7 @@ def constant_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.data_type == EventType.Init)
     end_condition = Condition(ConditionType.After,
-                              cause=3*(10**6), subconditions=[init_condition])
+                              cause=3*(10**3), subconditions=[init_condition])
     frame = Frame(init_condition, end_condition,
                     inputs={
                         (InputType.DigitalRead, 13): Sequence([0],[1]),
@@ -53,7 +53,7 @@ def blinky_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After, 
                                cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
-                              cause=5*(10**6), subconditions=[init_condition])
+                              cause=5*(10**3), subconditions=[init_condition])
     frame = Frame(init_condition, end_condition, inputs={})
     handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
@@ -64,8 +64,8 @@ def blinky_test_case(with_oled=False):
         if i%2==1:
             expected_value = 1
 
-        start = (i+0.1)*(10**6)
-        end = (i+0.9)*(10**6)
+        start = (i+0.1)*(10**3)
+        end = (i+0.9)*(10**3)
 
         points.append(TestPoint(
             condition_id=0,
@@ -102,9 +102,9 @@ def button_test_case(with_oled=False):
     init_condition = Condition(ConditionType.After,
                                cause=lambda req: req.arg == 'Start')
     end_condition = Condition(ConditionType.After,
-                               cause=5*(10**6), subconditions=[init_condition])
+                               cause=5*(10**3), subconditions=[init_condition])
 
-    seq = Sequence(times=[i*10**6 for i in range(6)], values=[1,0,1,0,1,0])
+    seq = Sequence(times=[i*10**3 for i in range(6)], values=[1,0,1,0,1,0])
     frame = Frame(init_condition, end_condition,
                     inputs={(InputType.DigitalRead, 6): seq})
     handler = RequestHandler(end_condition=end_condition, frames=[frame])
@@ -116,8 +116,8 @@ def button_test_case(with_oled=False):
         if i%2==1:
             expected_value = 1
 
-        start = (i+0.1)*(10**6)
-        end = (i+0.9)*(10**6)
+        start = (i+0.1)*(10**3)
+        end = (i+0.9)*(10**3)
 
         points.append(TestPoint(
             condition_id=0,
@@ -181,7 +181,7 @@ def default_scaffold():
     def is_start_request(request):
         return request.data_type == EventType.Print and request.arg == "Start"
     start_condition = Condition(ConditionType.After, cause=is_start_request)
-    end_condition = Condition(ConditionType.After, cause=5*10**6, subconditions=[start_condition])
+    end_condition = Condition(ConditionType.After, cause=5*10**3, subconditions=[start_condition])
     frame_templates = [FrameTemplate(start_condition=start_condition,
                                    end_condition=end_condition,
                                    priority=0,
