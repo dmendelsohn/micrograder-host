@@ -5,7 +5,7 @@ import operator
 
 class TestPoint:
     def __init__(self, condition_id, data_type, channel, expected_value, check_interval, *,
-                 check_function, aggregator):
+                 check_function=None, aggregator=None):
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
@@ -55,9 +55,18 @@ class Evaluator:
             if point.aggregator is None:
                 point.aggregator = utils.get_default(point.data_type, point.channel,
                                                      default_intrapoint_aggregators)
+                if point.aggregator is None: # Error
+                    msg = "Evaluator could not resolve aggregator for a test point"
+                    raise ValueError(msg)
+
             if point.check_function is None:
                 point.check_function = utils.get_default(point.data_type, point.channel,
                                                          default_check_functions)
+                if point.check_function is None: # Error
+                    msg = "Evaluator could not resolve check function for a test point"
+                    raise ValueError(msg)
+
+
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result
@@ -75,11 +84,12 @@ class Evaluator:
 
         # Now, for each (data_type, channel), aggregate results to a single bool
         for key in results:
-            if key in self.aggregators:
-                agg = self.aggregators[key]
+            (data_type, channel) = key
+            agg = utils.get_default(data_type, channel, self.aggregators)
+            if agg is None:
+                results[key] = False # No aggregator of this key or a parent
+            else:
                 results[key] = agg(results[key])
-            else: # No aggregator for this (data_type, channel)
-                results[key] = False
         return results
 
     # sequences: Map from (data_type,channel) to Sequence

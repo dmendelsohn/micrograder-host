@@ -38,15 +38,11 @@ DEFAULT_VALUES = {
 }
 
 DEFAULT_CHECK_FUNCTIONS = {
-    OutputType.DigitalWrite: operator.__eq__,
-    OutputType.AnalogWrite: operator.__eq__,
-    OutputType.Screen: operator.__eq__,
+    None: operator.__eq__
 }
 
 DEFAULT_AGGREGATORS = {
-    OutputType.DigitalWrite: all,
-    OutputType.AnalogWrite: all,
-    OutputType.Screen: all,
+    None: all
 }
 
 

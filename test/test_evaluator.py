@@ -19,16 +19,12 @@ class TestEvaluator(unittest.TestCase):
                        data_type=OutputType.DigitalWrite,
                        channel=13,
                        expected_value=1,
-                       check_interval=(0,100),
-                       check_function=operator.eq,
-                       aggregator=all)
+                       check_interval=(0,100)) # Use some defaults
         tp1 = TestPoint(condition_id=0,
                        data_type=OutputType.DigitalWrite,
                        channel=13,
                        expected_value=0,
-                       check_interval=(0,100),
-                       check_function=operator.eq,
-                       aggregator=all)
+                       check_interval=(0,100)) # Use some defaults
         tp2 = TestPoint(condition_id=0,
                        data_type=OutputType.DigitalWrite,
                        channel=14,
@@ -60,14 +56,25 @@ class TestEvaluator(unittest.TestCase):
 
         test_points = [tp0, tp1, tp2, tp3, tp4, tp5]
 
-        aggregators = {
-            (OutputType.DigitalWrite, 13): all,
-            (OutputType.DigitalWrite, 15): all,
-            (EventType.Print, None): all
-        }
+        self.evaluator = Evaluator(conditions, test_points)
 
-        self.evaluator = Evaluator(conditions, test_points, aggregators=aggregators)
+    def test_value_error(self):
+        conditions = self.evaluator.conditions
+        test_points = [
+            TestPoint(condition_id=0,
+                       data_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100)) # Use some defaults
+        ]
+        
+        with self.assertRaises(ValueError):
+            evaluator = Evaluator(conditions, test_points,
+                                  default_intrapoint_aggregators={})
 
+        with self.assertRaises(ValueError):
+            evaluator = Evaluator(conditions, test_points,
+                                  default_check_functions={})
 
 
     def test_evaluate(self):
@@ -82,13 +89,16 @@ class TestEvaluator(unittest.TestCase):
 
         expected = {
             (OutputType.DigitalWrite, 13): False,
-            (OutputType.DigitalWrite, 14): False,
+            (OutputType.DigitalWrite, 14): True,
             (OutputType.DigitalWrite, 15): False,
             (EventType.Print, None): True
         }
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
-        self.evaluator.aggregators[(OutputType.DigitalWrite, 13)] = any
+        self.evaluator.aggregators = {
+            None: all,
+            (OutputType.DigitalWrite, 13): any
+        }
         expected[(OutputType.DigitalWrite, 13)] = True # 1 out 2 points should be good enough
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
@@ -102,7 +112,7 @@ class TestEvaluator(unittest.TestCase):
         expected = [
             True, # Regular success
             False, # Regular failure
-            True, # Always True, despite not even being in sequnces
+            True, # Always True, despite not even being in sequences
             False, # Failure due to unmet condition
             False, # Failure due to out of bounds condition ID
             True # Regular success
@@ -110,6 +120,46 @@ class TestEvaluator(unittest.TestCase):
         actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
                     for test_point in self.evaluator.test_points]
         self.assertEqual(actual, expected)
+
+    def test_evaluate_point_defaults(self): # Focus on filling in of default vals
+        satisfied_times = [50, None]
+        sequences = {
+            (OutputType.DigitalWrite, 13): Sequence(times=[0], values=[1]),
+            (EventType.Print, None): Sequence(times=[100], values=["foo"])
+        }
+        conditions = self.evaluator.conditions
+        test_points = [
+            TestPoint(condition_id=0,
+                       data_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100)), # Use some defaults
+            TestPoint(condition_id=0,
+                       data_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=0,
+                       check_interval=(0,100)) # Use some defaults
+        ]
+
+        evaluator = Evaluator(conditions, test_points,
+                              default_check_functions={None: (lambda x,y: False)})
+
+
+        actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
+        self.assertFalse(actual)
+
+        actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[1])
+        self.assertFalse(actual)
+
+        evaluator = Evaluator(conditions, test_points,
+                              default_intrapoint_aggregators={None: (lambda vals: False)})
+
+        actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
+        self.assertFalse(actual)
+
+        actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[1])
+        self.assertFalse(actual)
+
 
     def test_evalute_point_fine(self): # Focus on exact boundary conditions
         times = [1000]
