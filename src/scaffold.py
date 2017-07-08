@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from . import utils
 from .case import TestCase
 from .condition import Condition
@@ -8,34 +6,43 @@ from .evaluator import Evaluator
 from .evaluator import TestPoint
 from .frame import Frame
 from .handler import RequestHandler
+from .sequence import InterpolationType
 from .utils import InputType
 from .utils import OutputType
+
+
+DEFAULT_CHECK_INTERVAL = ("0.2*T", "0.8*T")
 
 # Check_interval is relative to observed time of point, not any condition
 # Either elemnt of check_interval tuple can be string, it will be eval-ed
 # In string expression for check_interval elt, use "T" as length of this output
-TestPointTemplate = namedtuple('TestPointTemplate', ['check_interval', # Relative to observed time
-                                                     'check_function',
-                                                     'aggregator',
-                                                     ])
+class TestPointTemplate:
+    def __init__(self, check_interval=DEFAULT_CHECK_INTERVAL,
+                 check_function=None, aggregator=None):
+        self.check_interval = check_interval
+        self.check_function = check_function
+        self.aggregator = aggregator
 
-FrameTemplate = namedtuple('FrameTemplate', ['start_condition',
-                                             'end_condition',
-                                             'priority',
-                                             'init_to_default', # if True, insert default input at t=0
-                                             ])
+class FrameTemplate:
+    def __init__(self, start_condition, end_condition, *,
+                 priority=0, init_to_default=True):
+        self.start_condition = start_condition
+        self.end_condition = end_condition
+        self.priority = priority
+        self.init_to_default = init_to_default
 
 # This class stores information for constructing test cases dynamically
 class Scaffold:
-    def __init__(self,
-                 frame_templates,
-                 interpolations, defaults,
-                 point_templates, aggregators):
+    def __init__(self, frame_templates,
+                 interpolations={None: InterpolationType.Mid},
+                 defaults=utils.DEFAULT_VALUES,
+                 point_templates={None: TestPointTemplate()},
+                 aggregators=utils.DEFAULT_AGGREGATORS):
         self.frame_templates = frame_templates # List of FrameTemplates
-        self.interpolations = interpolations # Map from (InputType,channel)->InterpolationType
-        self.defaults = defaults # Map from (InputType,channel)->value
-        self.point_templates = point_templates # Map from (data_type,channel)->TestPointTemplate
-        self.aggregators = aggregators # Map from (data_type,channel)-> function list(bool)->bool
+        self.interpolations = interpolations # Defaults<InterpolationType>
+        self.defaults = defaults # Defaults<value>
+        self.point_templates = point_templates # Defaults<TestPointTemplate>
+        self.aggregators = aggregators # Defaults<f(list of bool)->bool>
 
     # Input: a RequestLog
     # Retunrs a TestCase
@@ -107,13 +114,13 @@ class Scaffold:
                 if len(subsequence) < 1 or subsequence[0].time > 0: # Need to insert initial point
                     start_value = sequence.get_sample(start_time)
                     if init_to_default or start_value is None: # Use default
-                        start_value = self.defaults[(data_type,channel)]
+                        start_value = utils.get_default(data_type, channel, self.defaults)
                         if start_value is None:
                             #Later: handle unspecified default
                             pass
                     subsequence.insert(time=0, value=start_value)
 
-                interpolation_type = self.interpolations[(data_type,channel)]
+                interpolation_type = utils.get_default(data_type, channel, self.interpolations)
                 subsequence = subsequence.interpolate(interpolation_type, res=utils.MILLISECOND)
                 inputs[(data_type,channel)] = subsequence
         return inputs
@@ -129,7 +136,7 @@ class Scaffold:
         test_points = []
         for (data_type, channel) in overall_sequences:
             if type(data_type) is OutputType:
-                point_template = self.point_templates[(data_type,channel)]
+                point_template = utils.get_default(data_type, channel, self.point_templates)
                 sequence = overall_sequences[(data_type,channel)]
                 sequence = sequence.get_subsequence(start_time, end_time)
                 sequence.shift(-start_time)

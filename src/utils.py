@@ -45,7 +45,6 @@ DEFAULT_AGGREGATORS = {
     None: all
 }
 
-
 def get_default_value(data_type, channel=None, defaults=DEFAULT_VALUES):
     return get_default(data_type, channel, defaults)
 
