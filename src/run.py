@@ -43,15 +43,3 @@ def run_session(handler, *, verbose=False, timeout=None):
     if verbose:
         print("Session complete")
     return log
-
-# Runs the RequestHandler saved at handler_filepath
-# If log_filepath is not None, RequestLog is saved there
-# timeout is in seconds, float okay
-# Returns: RequestLog
-def main(test_case_filepath, log_filepath, *, verbose=False, timeout=None):
-    test_case = utils.load(test_case_filepath)
-    handler = test_case.handler
-    log = run_session(handler, verbose=verbose, timeout=timeout)
-    if log_filepath:
-        utils.save(log, log_filepath)
-    return log

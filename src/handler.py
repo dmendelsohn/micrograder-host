@@ -1,13 +1,18 @@
 from enum import Enum
 
 from . import utils
+from .condition import Condition
+from .condition import ConditionType
 from .response import AckResponse
 from .response import ErrorResponse
 from .response import ValuesResponse
 
 class RequestHandler:
-    def __init__(self, end_condition, frames=None, 
+    def __init__(self, end_condition=None, frames=None, 
                  *, preempt=True, default_values=None):
+        if end_condition is None:
+            t = utils.MILLISECOND * 10**12
+            end_condition = Condition(ConditionType.After, cause=t) # Forever-ish
         if frames is None:
             frames = []
         if default_values is None:

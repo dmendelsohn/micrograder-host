@@ -189,17 +189,3 @@ def default_scaffold(num_frames=1):
     defaults[InputType.DigitalRead] = 1 # Button presses are active low
     return Scaffold(frame_templates=frame_templates,
                     defaults=defaults)
-
-def main(logpath=None, testcasepath=None, verbose=False, num_frames=1):
-    if logpath:
-        log = utils.load(logpath)
-        scaffold = default_scaffold(num_frames) # Later, make scaffolds loadable from files as well
-        test_case = construct_dynamic(log, scaffold)
-        try:
-            utils.save(test_case, testcasepath)
-        except:
-            path = "resources/cases/temp.tc"
-            print("Failed to save to given testcasepath, using {} instead".format(path))
-            utils.save(test_case, path)
-    else:
-        construct_hardcode(verbose)
