@@ -128,6 +128,15 @@ class ScaffoldTest(unittest.TestCase):
         actual = self.scaffold.generate_test_case(self.log) 
         self.assertEqual(actual, expected)
 
+    def test_generate_case_default_end_frame(self):
+        self.scaffold.frame_templates[0].end_condition = None # Use end of log instead
+        case = self.scaffold.generate_test_case(self.log)
+
+        expected = Condition(ConditionType.After,
+                             cause=(self.log.requests[-1].timestamp-1000),
+                             subconditions=[self.scaffold.frame_templates[0].start_condition])
+        actual = case.handler.frames[0].end_condition
+        self.assertEqual(actual, expected)
 
     def test_generate_frame_bounds(self):
         ft1 = self.scaffold.frame_templates[0]
@@ -140,18 +149,21 @@ class ScaffoldTest(unittest.TestCase):
         never = Condition(ConditionType.After, cause=lambda req: False)
 
         ft2 = FrameTemplate(start_condition=ft1.start_condition,
-                            end_condition=always,
-                            priority=0,
-                            init_to_default=True)
+                            end_condition=always)
         actual = self.scaffold.generate_frame_bounds(self.log, ft2)
         self.assertIsNone(actual) # Because end is before start
 
         ft3 = FrameTemplate(start_condition=ft1.start_condition,
-                            end_condition=never,
-                            priority=0,
-                            init_to_default=True)
+                            end_condition=never)
         actual = self.scaffold.generate_frame_bounds(self.log, ft3)
         self.assertIsNone(actual) # Because end_condition never occurs
+
+        ft4 = FrameTemplate(start_condition=ft1.start_condition,
+                            end_condition=None)
+        expected = (1000, self.log.requests[-1].timestamp)
+        actual = self.scaffold.generate_frame_bounds(self.log, ft4)
+        self.assertEqual(expected, actual)
+
 
     def test_generate_inputs(self):
         overall_sequences = self.log.extract_sequences()

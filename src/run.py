@@ -1,6 +1,7 @@
 from . import utils
 from .communication import SerialCommunication
 from .log import RequestLog
+from .utils import EventType
 
 import numpy as np
 
@@ -26,12 +27,17 @@ def run_session(handler, *, verbose=False, timeout=None):
         log.update(request)
         if verbose:
             print("Request={}".format(request))
+        elif request.data_type == EventType.Print:
+            print("Debug: {}".format(request.arg))
 
         response = handler.update(request)
         if verbose:
             print("Response={}".format(response))
         sc.send_response(response)
         if response.is_error or response.complete:
+            if response.is_error:
+                print(request)
+                print(response)
             break
 
     if verbose:

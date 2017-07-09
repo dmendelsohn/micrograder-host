@@ -37,8 +37,9 @@ class InputRequest(Request):
         self.batch_params = batch_params
 
     def __str__(self):
-        s = "InputRequest: timestamp={}, data_type={}, channels={}, analog_params={}"
-        return s.format(self.timestamp, self.data_type, self.channels, self.analog_params)
+        s = "InputRequest: timestamp={}, data_type={}, channels={}, values={}, analog_params={}"
+        return s.format(self.timestamp, self.data_type, self.channels, self.values,
+                        self.analog_params)
 
 
 # Subclass for requests that are reporting system outputs

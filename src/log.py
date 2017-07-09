@@ -50,7 +50,12 @@ class RequestLog:
 
         return None # Condition never satisfied
 
-        
+    def get_end_time(self):
+        if len(self.requests) > 0:
+            return self.requests[-1].timestamp
+        else:
+            return None
+
     # Return new RequestLog with only subset of requests where func(request) is True
     def filter(self, func): 
         log = RequestLog()

@@ -36,25 +36,26 @@ class RequestHandler:
         elif request.is_input and request.values is None: # Get values from a frame
             frame_id = self.get_current_frame_id()
             if frame_id is None: # No frame currently in progress
-                response = ErrorResponse() # Cannot respond to request
+                response = ErrorResponse() # No frame can respond to request
             else:
                 frame = self.frames[frame_id]
                 response = frame.get_response(request)
-                if type(response) is ErrorResponse: # Frame couldn't respond, so construct default
-                    values = []
-                    for i in range(request.batch_params.num):
-                        for channel in request.channels:
-                            value = utils.get_default_value(request.data_type, channel,
+                
+            if type(response) is ErrorResponse: # Frame couldn't respond, so construct default
+                values = []
+                for i in range(request.batch_params.num):
+                    for channel in request.channels:
+                        value = utils.get_default_value(request.data_type, channel,
                                                             defaults=self.default_values)
-                            values.append(value)
+                        values.append(value)
 
-                    if None in values: # Some channel had undefined default
-                        response = ErrorResponse()
-                    elif request.analog_params is None: # digital values
-                        response = ValuesResponse(values=values, analog=False)
-                    else: # analog
-                        values = [utils.analog_to_digital(v, request.analog_params) for v in values]
-                        response = ValuesResponse(values=values, analog=True)
+                if None in values: # Some channel had undefined default
+                    response = ErrorResponse()
+                elif request.analog_params is None: # digital values
+                    response = ValuesResponse(values=values, analog=False)
+                else: # analog
+                    values = [utils.analog_to_digital(v, request.analog_params) for v in values]
+                    response = ValuesResponse(values=values, analog=True)
         else:
             response = AckResponse() # Just acknowledge request that doesn't need values
 

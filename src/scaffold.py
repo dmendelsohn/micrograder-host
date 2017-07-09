@@ -27,7 +27,7 @@ class FrameTemplate:
     def __init__(self, start_condition, end_condition, *,
                  priority=0, init_to_default=True):
         self.start_condition = start_condition
-        self.end_condition = end_condition
+        self.end_condition = end_condition # If None: gets resolved later
         self.priority = priority
         self.init_to_default = init_to_default
 
@@ -69,6 +69,10 @@ class Scaffold:
             bounds = self.generate_frame_bounds(log, frame_template)
             if bounds:
                 (start_time, end_time) = bounds
+                if frame_template.end_condition is None: # Need to generate it
+                    frame_template.end_condition = Condition(ConditionType.After,
+                                    cause=(end_time-start_time),
+                                    subconditions=[frame_template.start_condition])
 
                 # Generate relative input sequences that occurred in this frame
                 inputs = self.generate_inputs(overall_sequences, start_time, end_time,
@@ -98,7 +102,10 @@ class Scaffold:
     # Otherwise, return None
     def generate_frame_bounds(self, log, frame_template):
         start_time = log.condition_satisfied_at(frame_template.start_condition)
-        end_time = log.condition_satisfied_at(frame_template.end_condition)
+        if frame_template.end_condition is None:
+            end_time = log.get_end_time()
+        else:
+            end_time = log.condition_satisfied_at(frame_template.end_condition)
 
         if start_time is not None and end_time is not None and start_time < end_time:
             return (start_time, end_time)
