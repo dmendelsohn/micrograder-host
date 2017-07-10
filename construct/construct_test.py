@@ -40,11 +40,11 @@ def is_start_msg(request):
 
 # TODO: update this once I've updated the embedded wifi lib
 def is_wifi_request(request):
-    return request.data_type == EventType.Print and request.arg == "Wifi Request"
+    return request.data_type == EventType.Wifi and request.arg == "request"
 
 # TODO: update this once I've updated the embedded wifi lib
 def is_wifi_response(request):
-    return request.data_type == EventType.Print and request.arg == "Wifi Response"
+    return request.data_type == EventType.Wifi and request.arg == "response"
 
  # Good for making recordings, or for basic tests
 def blank_case(duration=10**12, default_values=None):

@@ -282,10 +282,10 @@ class SerialCommunication:
             return EventRequest(timestamp=timestamp, data_type=EventType.Gps)
 
         elif msg_code == MessageCode.WifiReq: # Later: expand protocol
-            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, arg="request")
 
         elif msg_code == MessageCode.WifiResp: # Later: expand protocol
-            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, arg="response")
 
         else:  # Unsupported message code
             return InvalidRequest(timestamp=timestamp)

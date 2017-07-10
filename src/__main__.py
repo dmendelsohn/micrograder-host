@@ -31,10 +31,7 @@ if args.mode == "assess":
     print("Results: {}".format(results))
 
 elif args.mode == "record":
-    if args.testcase is None:
-        handler = RequestHandler() # Blank, endless handler
-    else:
-        handler = utils.load(args.testcase).handler
+    handler = RequestHandler() # Blank, endless handler
     log = run.run_session(handler, verbose=args.verbose)
 
     if args.log is not None: # Save at that path
