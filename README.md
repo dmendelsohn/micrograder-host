@@ -25,7 +25,7 @@ Neither of these practices is required.
 ## Assessing
 * To use a particular testcase file to assess an embedded system, run:
 
-`python -m src assess --testcase path/to/testcase [--log path/to/save/log]`
+    `python -m src assess --testcase path/to/testcase [--log path/to/save/log]`
 
 * If the --log option is specified, a log will be saved at that path.
 
