@@ -15,13 +15,23 @@ top level directory.
 for USB serial communication.
 
 # Usage
-* There are two relevant "file types": Log files and TestCase files.  These
+* There are two relevant "file types": log files and testcase files.  These
 are truly separate types, since they're both just pickled Python objects (
 of types RequestLog and TestCase respectively).  Typically, I use the
-extension ".log" for Log files and put them in host/resources/logs/, and I use
-the extension ".tc" for TestCase files and put them in host/resources/cases/.
+extension ".log" for log files and put them in host/resources/logs/, and I use
+the extension ".tc" for testcase files and put them in host/resources/cases/.
 Neither of these practices is required.
+
+## Assessing
+* In order to use a particular testcase file to assess an embedded system, run:
+`python -m src assess --testcase path/to/testcase [--log path/to/log]`
+* If the --log option is specified, a log will be saved at that path.
+
+## Recording
+* TODO
+
+## Constructing new test cases
 * TODO
 
 # Architecture
-...
+* TODO
