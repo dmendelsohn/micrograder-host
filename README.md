@@ -33,7 +33,7 @@ Neither of these practices is required.
 * To record the actions of a system (presumeably running in RECORD mode),
 without performing any assessmenet, run:
 
-`python -m src record --log path/to/save/log`
+    `python -m src record --log path/to/save/log`
 
 * To stop recording, simply unplug the embedded system.  The log file will be
 saved at the specified path.
@@ -44,12 +44,12 @@ familiar with the system to do so.  Just save those objects using dill (an
 improvement on Python's `pickle` module).
 * You can create a TestCase from an existing log automatically.  To do so, run:
 
-`python -m construct --log path/to/log --testcase path/to/save/testcase`
+    `python -m construct --log path/to/log --testcase path/to/save/testcase`
 
 * It is also possible to create a multi-Frame TestCase (learn more below).
 For example, create a 2-Frame TestCase by running:
 
-`python -m construct --log path/to/log --testcase path/to/save/testcase -n 2`
+    `python -m construct --log path/to/log --testcase path/to/save/testcase -n 2`
 
 * By default, Frames end when a Wifi request occurs, and the next frame begins when
 the subsequent Wifi response comes in.  The first Frame begins with a "Start" Print statement,
