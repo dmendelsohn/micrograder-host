@@ -34,4 +34,8 @@ class TestScreen(unittest.TestCase):
         actual = screen.get_box_values(box_width, box_height)
         self.assertEqual(actual, expected)
 
+    def test_extract_text(self):
+        #TODO: implement
+        pass
+
 

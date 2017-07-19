@@ -52,11 +52,23 @@ class Screen:
                 return 0
         return Image.fromarray(self.buffer).point(lut, mode="1")
 
-    # Uses pytesseract to extract text (lines separated by \n), returns string
-    # TODO: replace with something that works...
-    def extract_text(self):
-        im = self.get_image()
-        return pytesseract.image_to_string(im)
+    #TODO: description
+    def extract_text(self, font, line_delimeter='\n'):
+        lut = {}
+        for (key, val) in font.chars.items():
+            lut[val] = key # Inverted chars dictionary
+        labels = self.get_box_values(font.width, font.height)
+        text = ""
+        for row in labels:
+            line = ""
+            for elt in row:
+                if elt in lut:
+                    line += chr(lut[elt])
+            if len(line) > 0:
+                text += line
+                if line_delimeter:
+                    text += line_delimeter
+        return text
 
     # Return 2D list of same shape as buffer, elements are ints
     # Each element in the "box value" of the box with top-left corner at that position
