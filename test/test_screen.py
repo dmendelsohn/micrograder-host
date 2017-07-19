@@ -19,5 +19,19 @@ class TestScreen(unittest.TestCase):
         screen2.paint(rect, x=0, y=0)
         self.assertEqual(screen2, screen3)
 
-    # Later: tests for more sophisticated screen methods
+    def test_get_box_values(self):
+        screen = Screen(width=4, height=3)
+        rect = np.ones((2,2))
+        screen.paint(rect, x=0, y=0)
+        box_width = 3
+        box_height = 2
+
+        expected = [
+            [60, 48, 0, 0],
+            [40, 32, 0, 0],
+            [0, 0, 0, 0]
+        ]
+        actual = screen.get_box_values(box_width, box_height)
+        self.assertEqual(actual, expected)
+
 
