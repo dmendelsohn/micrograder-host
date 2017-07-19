@@ -2,6 +2,8 @@ from src.screen import *
 import unittest
 import numpy as np
 
+from src import utils
+
 class TestScreen(unittest.TestCase):
     def test_basic_functions(self):
         screen1 = Screen(width=128, height=64)
@@ -35,7 +37,10 @@ class TestScreen(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_extract_text(self):
-        #TODO: implement
-        pass
+        screen = utils.load('resources/screens/multiline_text')
+        font = utils.load('fonts/u8g2_5x7') # TODO: make this a real thing
+        actual = screen.extract_text(font)
+        expected = "This is a multi-line stri\nng"
+        self.assertEqual(actual, expected)
 
 
