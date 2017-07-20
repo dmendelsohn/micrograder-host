@@ -77,11 +77,30 @@ class TestScreen(unittest.TestCase):
             screen2.get_num_matching_pixels(screen3)
 
 
-    def test_pixel_match_counter(self):
-        screen1 = Screen(buff=np.eye(3, dtype=np.uint8))
-        screen2 = Screen(buff=np.ones((3,3), dtype=np.uint8))
-        f3 = pixel_match_counter(3)
-        f4 = pixel_match_counter(4)
+    def test_check_functions(self):
+        screen_i = Screen(buff=np.eye(3, dtype=np.uint8))
+        screen_on = Screen(buff=np.ones((3,3), dtype=np.uint8))
+        screen_off = Screen(buff=np.zeros((3,3), dtype=np.uint8))
+        f3 = pixel_match_min(3)
+        f4 = pixel_match_min(4)
+        e5 = pixel_error_max(5)
+        e6 = pixel_error_max(6)
 
-        self.assertTrue(f3(screen1, screen2))
-        self.assertFalse(f4(screen1, screen2))
+        self.assertTrue(f3(screen_i, screen_on))
+        self.assertFalse(f4(screen_i, screen_on))
+        self.assertFalse(e5(screen_i, screen_on))
+        self.assertTrue(e6(screen_i, screen_on))
+
+        # Now test the more complicated relatively_close funtion
+        r00 = relatively_close(0.0) # Off screen is considered correct
+        r30 = relatively_close(0.30)
+        r35 = relatively_close(0.35)
+        r100 = relatively_close(1.00) # Equivalent to op.__eq__
+
+        self.assertTrue(r00(screen_on, screen_off))
+        self.assertFalse(r30(screen_on, screen_off))
+        self.assertTrue(r30(screen_on, screen_i)) # 3 out of 9 pixels is enough...
+        self.assertFalse(r35(screen_on, screen_i)) # ...Not anymore
+        self.assertTrue(r100(screen_on, screen_on))
+
+

@@ -147,10 +147,34 @@ class Screen:
 #   f raises ValueError if screens are not same shape
 # Usage of other arguments is same as Screen.get_num_matching_pixels, directions
 # refer to movement of second Screen relative to first.
-def pixel_match_counter(num, *, shift=None, left=0, right=0, up=0, down=0):
+def pixel_match_min(num, *, shift=None, left=0, right=0, up=0, down=0):
     def f(expected, actual):
-        n = expected.get_num_matching_pixels(actual, shift=shift, left=left, up=up, down=down)
-        return (n >= num)
+        matches = expected.get_num_matching_pixels(actual, shift=shift, left=left, up=up, down=down)
+        return (matches >= num)
+    return f
+
+# Complement of the above function, f returns True if num errors <= num
+def pixel_error_max(num, *, shift=None, left=0, right=0, up=0, down=0):
+    def f(expected, actual):
+        matches = expected.get_num_matching_pixels(actual, shift=shift, left=left, up=up, down=down)
+        errors = expected.height()*expected.width() - matches
+        return (errors <= num)
+    return f
+
+# This function is a nice one for comparing screen closeness.  Like the ones above, it
+# returns a function, f, that takes in two Screens and outputs a boolean.  The function returns
+# True if a sufficient number of pixels match.  That cutoff is dynamically chosen as a number
+# between the number of unlit pixels in the first Screen, and the total Screen size, and the input
+# ratio determines the fraction of the way from the former to the latter.  That is, a ratio of 0 would
+# allow f to return True if the second Screen is blank, and a ratio of 1 requires the two Screens
+# are perfect matches
+def relatively_close(ratio, *, shift=None, left=0, right=0, up=0, down=0):
+    def f(expected, actual):
+        expected_lit = sum(sum(expected.buffer))
+        expected_off = expected.width() * expected.height() - expected_lit
+        cutoff = expected_off + ratio*expected_lit
+        matches = expected.get_num_matching_pixels(actual, shift=shift, left=left, up=up, down=down)
+        return (matches >= cutoff)
     return f
 
 
