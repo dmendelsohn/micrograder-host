@@ -77,3 +77,11 @@ class TestScreen(unittest.TestCase):
             screen2.get_num_matching_pixels(screen3)
 
 
+    def test_pixel_match_counter(self):
+        screen1 = Screen(buff=np.eye(3, dtype=np.uint8))
+        screen2 = Screen(buff=np.ones((3,3), dtype=np.uint8))
+        f3 = pixel_match_counter(3)
+        f4 = pixel_match_counter(4)
+
+        self.assertTrue(f3(screen1, screen2))
+        self.assertFalse(f4(screen1, screen2))

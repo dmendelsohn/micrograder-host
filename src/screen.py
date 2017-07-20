@@ -142,6 +142,17 @@ class Screen:
         return best
 
 
+# Returns a function, f, that takes in two Screens
+#   f returns True if num matching pixels is >= num, False otherwise
+#   f raises ValueError if screens are not same shape
+# Usage of other arguments is same as Screen.get_num_matching_pixels, directions
+# refer to movement of second Screen relative to first.
+def pixel_match_counter(num, *, shift=None, left=0, right=0, up=0, down=0):
+    def f(expected, actual):
+        n = expected.get_num_matching_pixels(actual, shift=shift, left=left, up=up, down=down)
+        return (n >= num)
+    return f
+
 
 
 
