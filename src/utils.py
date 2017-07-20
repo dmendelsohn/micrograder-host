@@ -151,6 +151,25 @@ def decode_screen_tile(data):
     tile = np.unpackbits(data, axis=1)
     return tile.transpose()
 
+# Returns int representation of binary 2D numpy array (i.e. packs the bits)
+# bits are packed by column, MSB in top-left corner (i.e. location (0,0))
+def bitmap_to_int(bitmap):
+    height, width = bitmap.shape
+    num = 0
+    for x in range(width):
+        for y in range(height):
+            num = (num << 1) + bitmap[y,x]
+    return num
+
+# Inverse of the above function, returns a binary 2D numpy array
+def int_to_bitmap(num, width, height):
+    bitmap = np.zeros((height,width), dtype=np.uint8)
+    for x in range(width-1, -1, -1):
+        for y in range(height-1, -1, -1):
+            bitmap[y,x] = num%2
+            num >>= 1
+    return bitmap
+
 # Saves an objec to a file
 def save(obj, filename):
     f = open(filename, 'wb')

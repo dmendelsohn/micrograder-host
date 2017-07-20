@@ -105,3 +105,17 @@ class TestUtils(unittest.TestCase):
         expected[:,0] = 1 # Left edge
         expected[7,:] = 1 # Bottom edge
         self.assertTrue(np.array_equal(decode_screen_tile(b), expected))
+
+    def test_bitmap_to_int(self):
+        bitmap = np.zeros((2,3), dtype=np.uint8)
+        bitmap[0,0] = 1
+        bitmap[1,1] = 1
+        bitmap[0,2] = 1
+        self.assertEqual(bitmap_to_int(bitmap), 0b100110)
+
+    def test_int_to_bitmap(self):
+        bitmap = np.zeros((2,3), dtype=np.uint8)
+        bitmap[0,0] = 1
+        bitmap[1,1] = 1
+        bitmap[0,2] = 1
+        self.assertTrue(np.array_equal(int_to_bitmap(0b100110, width=3, height=2), bitmap))

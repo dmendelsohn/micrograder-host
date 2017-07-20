@@ -7,6 +7,7 @@ import pytesseract
 # chars is map of codepoint to integer packing of bitmap
 # integer packing is done column-by-column, MSB in top-left (i.e. lowest indices are MSB)
 Font = namedtuple('Font', ['width','height', 'chars'])
+DEFAULT_IGNORED_CHARS = set(["-","_", ",", ".", "\"", "\'", "|", "`"]) # These are a pain
 
 ScreenShape = namedtuple('ScreenShape', ['width', 'height'])  # In pixels
 
@@ -28,6 +29,9 @@ class Screen:
     # Later: make this handle out-of-bounds issues
     def paint(self, rect, x, y):
         self.buffer[y:y+rect.shape[0],x:x+rect.shape[1]] = rect
+
+    def get_box(self, x, y, width, height):
+        return self.buffer[y:y+height,x:x+width]
 
     def height(self):
         return self.buffer.shape[0]
@@ -53,7 +57,9 @@ class Screen:
         return Image.fromarray(self.buffer).point(lut, mode="1")
 
     #TODO: description
-    def extract_text(self, font, line_delimeter='\n'):
+    def extract_text(self, font, *, ignored_chars=None, line_delimeter='\n'):
+        if ignored_chars is None:
+            ignored_chars = DEFAULT_IGNORED_CHARS
         lut = {}
         for (key, val) in font.chars.items():
             lut[val] = key # Inverted chars dictionary
@@ -63,12 +69,16 @@ class Screen:
             line = ""
             for elt in row:
                 if elt in lut:
-                    line += chr(lut[elt])
+                    char = chr(lut[elt])
+                    if char not in ignored_chars:
+                        line += char
+            line = line.strip() # Remove leading and trailing whitespace
+            line = " ".join(line.split()) # Remove duplicate internal spaces
             if len(line) > 0:
                 text += line
                 if line_delimeter:
                     text += line_delimeter
-        return text
+        return text.strip() # strip removes trailing newline
 
     # Return 2D list of same shape as buffer, elements are ints
     # Each element in the "box value" of the box with top-left corner at that position

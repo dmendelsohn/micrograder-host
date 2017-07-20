@@ -21,6 +21,10 @@ class TestScreen(unittest.TestCase):
         screen2.paint(rect, x=0, y=0)
         self.assertEqual(screen2, screen3)
 
+        expected = np.zeros((3,2))
+        expected[0,0] = 1
+        self.assertTrue(np.array_equal(screen2.get_box(0,0,2,3), expected))
+
     def test_get_box_values(self):
         screen = Screen(width=4, height=3)
         rect = np.ones((2,2))
@@ -38,9 +42,9 @@ class TestScreen(unittest.TestCase):
 
     def test_extract_text(self):
         screen = utils.load('resources/screens/multiline_text')
-        font = utils.load('fonts/u8g2_5x7') # TODO: make this a real thing
+        font = utils.load('fonts/u8g2_5x7')
         actual = screen.extract_text(font)
-        expected = "This is a multi-line stri\nng"
+        expected = "This is a multiline stri\nng"
         self.assertEqual(actual, expected)
 
 
