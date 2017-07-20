@@ -47,4 +47,8 @@ class TestScreen(unittest.TestCase):
         expected = "This is a multiline stri\nng"
         self.assertEqual(actual, expected)
 
+    def test_get_num_matching_pixels(self):
+        #TODO: implement
+        pass
+
 

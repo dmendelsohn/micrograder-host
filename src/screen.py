@@ -33,6 +33,9 @@ class Screen:
     def get_box(self, x, y, width, height):
         return self.buffer[y:y+height,x:x+width]
 
+    def get_num_pixels_lit(self):
+        return sum(sum(self.buffer))
+
     def height(self):
         return self.buffer.shape[0]
 
@@ -48,13 +51,6 @@ class Screen:
     def __repr__(self):
         return repr(self.buffer)
 
-    def get_image(self):
-        def lut(val):
-            if val:
-                return 255
-            else:
-                return 0
-        return Image.fromarray(self.buffer).point(lut, mode="1")
 
     # Extracts text out of the buffer, using a given monospace font (basically, a set of bitmaps)
     # font: namedtuple Font (see above)
@@ -116,3 +112,17 @@ class Screen:
                     labels[y][x-box_width+1] = rolling_sum
 
         return labels
+
+    # Returns number of matching pixels between this screen's buffer and another screen's buffer
+    # left, right, up, and down are all allowabled shifts of the other screen to get the best match
+    # Empty space due to a shift is filled with 0s
+    # If shift (an int) is provided, that overrides all of left, right, up, and down
+    def get_num_matching_pixels(self, other, *, shift=None, left=0, right=0, up=0, down=0):
+        if shift is not None:
+            left = shift
+            right = shift
+            up = shift
+            down = shift
+
+        #TODO: implement
+        pass
