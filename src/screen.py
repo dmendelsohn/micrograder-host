@@ -74,7 +74,7 @@ class Screen:
                     if char not in ignored_chars:
                         line += char
             line = line.strip() # Remove leading and trailing whitespace
-            if "_" in ignored_chars:
+            if " " in ignored_chars:
                 line = "".join(line.split()) # Remove internal whitespace entirely
             else:
                 line = " ".join(line.split()) # Remove duplicate internal spaces
@@ -119,10 +119,30 @@ class Screen:
     # If shift (an int) is provided, that overrides all of left, right, up, and down
     def get_num_matching_pixels(self, other, *, shift=None, left=0, right=0, up=0, down=0):
         if shift is not None:
-            left = shift
-            right = shift
-            up = shift
-            down = shift
+            left = right = up = down = shift
 
-        #TODO: implement
-        pass
+        if type(other) is not Screen or self.shape != other.shape:
+            raise ValueError("Invalid argument: other={}".format(other))
+
+        padded_buffer = np.zeros((self.height()+up+down, self.width()+right+left), dtype=np.uint8)
+        padded_buffer[up:up+self.height(),left:left+self.width()] = self.buffer
+
+        best = 0
+        for x_shift in range(-left,right+1):
+            for y_shift in range(-up,down+1):
+                x_min = x_shift + left
+                x_max = x_min + self.width()
+                y_min = y_shift + up
+                y_max = y_min + self.height()
+                diff = np.mod(padded_buffer[y_min:y_max, x_min:x_max] + other.buffer, 2) # XOR
+                num_matching_pixels = self.width() * self.height() - sum(sum(diff))
+                if num_matching_pixels > best:
+                    best = num_matching_pixels
+
+        return best
+
+
+
+
+
+
