@@ -56,7 +56,12 @@ class Screen:
                 return 0
         return Image.fromarray(self.buffer).point(lut, mode="1")
 
-    #TODO: description
+    # Extracts text out of the buffer, using a given monospace font (basically, a set of bitmaps)
+    # font: namedtuple Font (see above)
+    # ignored_chars: set of characters to ignore.  If None, defaults are used.
+    # line_delimeter: character inserted between lines
+    # Note that lines can overlap in height.  Also, whitespace is stripped off start and end
+    # of each line, and whitespace within a single line is reduced to a single space
     def extract_text(self, font, *, ignored_chars=None, line_delimeter='\n'):
         if ignored_chars is None:
             ignored_chars = DEFAULT_IGNORED_CHARS
@@ -73,7 +78,10 @@ class Screen:
                     if char not in ignored_chars:
                         line += char
             line = line.strip() # Remove leading and trailing whitespace
-            line = " ".join(line.split()) # Remove duplicate internal spaces
+            if "_" in ignored_chars:
+                line = "".join(line.split()) # Remove internal whitespace entirely
+            else:
+                line = " ".join(line.split()) # Remove duplicate internal spaces
             if len(line) > 0:
                 text += line
                 if line_delimeter:
