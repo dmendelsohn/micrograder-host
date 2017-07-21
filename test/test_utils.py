@@ -30,6 +30,20 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(get_default_check_function(OutputType.DigitalWrite), operator.__eq__)
         self.assertEqual(get_default_aggregator(OutputType.DigitalWrite), all)
 
+    def test_get_output_description(self):
+        self.assertEqual(get_output_description(OutputType.DigitalWrite, 2),
+                         "Digital pin 2")
+        self.assertEqual(get_output_description(OutputType.AnalogWrite, 2),
+                         "Analog pin 2")
+        self.assertEqual(get_output_description(OutputType.Screen),
+                         "Screen")
+
+        with self.assertRaises(ValueError):
+            get_output_description(OutputType.DigitalWrite) # No pin num
+
+        with self.assertRaises(ValueError):
+            get_output_description(OutputType.AnalogWrite) # No pin num
+
     def test_decode_int(self):
         # 1 byte
         self.assertEqual(decode_int(bytes([1]),signed=False), 1)

@@ -5,14 +5,39 @@ import operator
 
 class TestPoint:
     def __init__(self, condition_id, data_type, channel, expected_value, check_interval, *,
-                 check_function=None, aggregator=None):
+                 check_function=None, aggregator=None,
+                 check_function_desc=None, aggregator_desc=None):
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
         self.expected_value = expected_value
         self.check_interval = check_interval
         self.check_function = check_function
+        self.check_function_desc = check_function_desc # Description
         self.aggregator = aggregator
+        self.aggregator_desc = aggregator_desc
+
+    def describe(self, condition_desc=None):
+        json = {}
+        json["Output Type"] = utils.get_output_description(output_type=self.data_type, 
+                                                           channel=self.channel)
+
+        interval_desc = str(self.check_interval) + " relative to "
+        if condition_desc is not None:
+            interval_desc += condition_desc
+        else:
+            interval_desc += "time at which condition {} was met".format(self.condition_id)
+        json["Time Interval"] = interval_desc
+
+        json["Expected"] = str(self.expected_value)
+
+        if self.check_function_desc:
+            json["Check Function"] = self.check_function_desc
+
+        if self.aggregator_desc:
+            json["Aggregator Function"] = self.aggregator_desc
+
+        return json
 
 
     def __eq__(self, other):

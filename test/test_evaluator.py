@@ -58,6 +58,20 @@ class TestEvaluator(unittest.TestCase):
 
         self.evaluator = Evaluator(conditions, test_points)
 
+    def test_describe_point(self):
+      tp = self.evaluator.test_points[0]
+      expected = {"Output Type": "Digital pin 13", "Expected":"1",
+                  "Time Interval": "(0, 100) relative to time at which condition 0 was met"}
+      self.assertEqual(tp.describe(), expected)
+
+      expected["Time Interval"] = "(0, 100) relative to foo"
+      self.assertEqual(tp.describe(condition_desc="foo"), expected)
+
+      expected["Check Function"] = tp.check_function_desc = "bar"
+      expected["Aggregator Function"] = tp.aggregator_desc = "baz"
+      self.assertEqual(tp.describe(condition_desc="foo"), expected)
+
+
     def test_value_error(self):
         conditions = self.evaluator.conditions
         test_points = [
