@@ -240,7 +240,7 @@ class SerialCommunication:
             return EventRequest(timestamp=timestamp, data_type=EventType.ScreenInit,
                                 arg=ScreenShape(width=8*tile_width, height=8*tile_height))
 
-        elif msg_code == MessageCode.ScreenFull: # <uint8 tile_width, tile_height, uint8 * buffer>
+        elif msg_code == MessageCode.ScreenFull: # <uint8 * buffer>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
             if self.last_screen is None:
                 return InvalidRequest(timestamp=timestamp) # No screen initialization
