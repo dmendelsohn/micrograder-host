@@ -67,8 +67,10 @@ class TestEvaluator(unittest.TestCase):
       expected["Time Interval"] = "(0, 100) relative to foo"
       self.assertEqual(tp.describe(condition_desc="foo"), expected)
 
-      expected["Check Function"] = tp.check_function_desc = "bar"
-      expected["Aggregator Function"] = tp.aggregator_desc = "baz"
+      tp.check_function = (tp.check_function, "bar") # Add a description
+      tp.aggregator = (tp.aggregator, "baz") # Add a description
+      expected["Check Function"] = "bar"
+      expected["Aggregator Function"] = "baz"
       self.assertEqual(tp.describe(condition_desc="foo"), expected)
 
 

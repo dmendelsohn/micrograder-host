@@ -12,10 +12,8 @@ class TestPoint:
         self.channel = channel
         self.expected_value = expected_value
         self.check_interval = check_interval
-        self.check_function = check_function
-        self.check_function_desc = check_function_desc # Description
-        self.aggregator = aggregator
-        self.aggregator_desc = aggregator_desc
+        self.check_function = check_function # Can be func or (func, str) tuple
+        self.aggregator = aggregator # Can be func or (func, str) tuple
 
     def describe(self, condition_desc=None):
         json = {}
@@ -31,11 +29,11 @@ class TestPoint:
 
         json["Expected"] = str(self.expected_value)
 
-        if self.check_function_desc:
-            json["Check Function"] = self.check_function_desc
+        if type(self.check_function) is tuple and len(self.check_function) >= 2:
+            json["Check Function"] = self.check_function[1]
 
-        if self.aggregator_desc:
-            json["Aggregator Function"] = self.aggregator_desc
+        if type(self.aggregator) is tuple and len(self.aggregator) >= 2:
+            json["Aggregator Function"] = self.aggregator[1]
 
         return json
 
@@ -65,7 +63,8 @@ class Evaluator:
     # conditions: a list of relevant Conditions
     # test_points: a list of test points
     def __init__(self, conditions, test_points, *,
-                 aggregators=None, default_intrapoint_aggregators=None,
+                 aggregators=None,
+                 default_intrapoint_aggregators=None,
                  default_check_functions=None):
         if aggregators is None:
             aggregators = utils.DEFAULT_AGGREGATORS
@@ -73,7 +72,6 @@ class Evaluator:
             default_intrapoint_aggregators = utils.DEFAULT_AGGREGATORS
         if default_check_functions is None:
             default_check_functions = utils.DEFAULT_CHECK_FUNCTIONS
-
 
         self.conditions = conditions # List of relevant Conditions
         self.test_points = test_points # List of test_points
@@ -108,7 +106,8 @@ class Evaluator:
 
         results = {} # Map from (data_type,channel) to list(bool) representing relevant results
         for test_point in self.test_points:
-            result = self.evaluate_test_point(sequences, satisfied_times, test_point)
+            result = self.evaluate_test_point(sequences, satisfied_times, test_point,
+                                              describe=False)
             key = (test_point.data_type, test_point.channel)
             if key not in results:
                 results[key] = []
@@ -125,10 +124,14 @@ class Evaluator:
         return results
 
     # sequences: Map from (data_type,channel) to Sequence
-    # satisfied_times: A list of satisfied times (or None) for conditions
+    # satisfied_times: A list of satisfied times (or None) for all conditions
+    # condition_descriptions: A list of strings (or None) for describing conditions.
+    #    - optional...if provided, must be same length as conditions list
     # test_point: the test_point to evaulate
-    # Returns: a bool representing the result for this point
-    def evaluate_test_point(self, sequences, satisfied_times, test_point):
+    # Returns: a bool representing the result for this point, or a (bool, description) tuple
+    #       description is a dict where keys are str and values are (str or list or dict)
+    def evaluate_test_point(self, sequences, satisfied_times, test_point, *,
+                            describe=False, condition_descriptions=None):
         if test_point.condition_id >= len(satisfied_times):
             return False # Condition out of bounds
         else:
@@ -146,9 +149,31 @@ class Evaluator:
         values = seq.get_values(start, end)
 
         def check(value):
-            return test_point.check_function(test_point.expected_value, value)
+            if type(test_point.check_function) is tuple:
+                f = test_point.check_function[0]
+            else:
+                f = test_point.check_function
+            return f(test_point.expected_value, value)
 
-        return test_point.aggregator(map(check, values))
+        if type(test_point.aggregator) is tuple:
+            agg = test_point.aggregator[0]
+        else:
+            agg = test_point.aggregator
+        result = agg(map(check, values))
+        if describe:
+            if condition_descriptions:
+                condition_desc = condition_descriptions[test_point.condition_id]
+            else:
+                condition_desc = None
+            point_desc = test_point.describe(condition_desc=condition_desc)
+            point_desc["Values"] = [str(value) for value in values]
+            if result:
+                point_desc["Result"] = "PASS"
+            else:
+                point_desc["Result"] = "FAIL"
+            return (result, point_desc)
+        else:
+            return result
 
     def __eq__(self, other):
         if type(self) is not type(other):
