@@ -1,9 +1,39 @@
+from .utils import InputType
+
+import operator
+
+def default_default_values():
+    # Because the object is each time this function is called, it will
+    # always return the same object (won't be affected by prior calls)
+    return Preferences({
+        (InputType.DigitalRead,): 0,
+        (InputType.AnalogRead,): 0,
+        (InputType.Accelerometer,): 0,
+        (InputType.Accelerometer, 'z'): 1, # Gravity baked in by default on 'z' channel
+        (InputType.Gyroscope,): 0,
+        (InputType.Magnetometer,): 0,
+    })
+
+def default_check_functions():
+    # Because the object is each time this function is called, it will
+    # always return the same object (won't be affected by prior calls)
+    return Preferences({
+        tuple(): operator.__eq__
+    })
+
+def default_aggregators():
+    # Because the object is each time this function is called, it will
+    # always return the same object (won't be affected by prior calls)
+    return Preferences({
+        tuple(): all
+    })
+
 # Wrapper for a preferences dict
 class Preferences:
     def __init__(self, prefs_dict=None):
         if prefs_dict is None:
             prefs_dict = {}
-        self.prefs = prefs_dict
+        self.prefs = prefs_dict.copy() # Copy to partially protect against changes to prefs_dict
 
     # Extracts the preference associated with the key list/tuple
     #   Checks for the full-length tuple and iteratively chops
@@ -29,11 +59,24 @@ class Preferences:
         key = make_key(key)
         self.prefs[key] = value
         if override_subprefs: # Delete any subpreferences
-        
+
             def is_subpref(existing_key): # Any keys for which this is true will be deleted
                 return len(existing_key) > len(key) and existing_key[:len(key)] == key
 
             self.prefs = {k:v for (k,v) in self.prefs.items() if not is_subpref(k)}
+
+    # Returns a copy of this object, including a copy of the underlying dictionary
+    def copy(self):
+        return Preferences(prefs_dict=self.prefs.copy())
+
+    def __eq__(self, other):
+        return type(other) is Preferences and self.prefs == other.prefs
+
+    def __str__(self):
+        return str(self.prefs)
+
+    def __repr__(self):
+        return repr(self.prefs)
 
 # Mostly just a helper method for properly formatting keys
 # None becomes the empty tuple, lists become tuples, tuples stay the same,

@@ -1,3 +1,4 @@
+from . import prefs
 from . import utils
 from .case import TestCase
 from .condition import Condition
@@ -6,6 +7,7 @@ from .evaluator import Evaluator
 from .evaluator import TestPoint
 from .frame import Frame
 from .handler import RequestHandler
+from .prefs import Preferences
 from .sequence import InterpolationType
 from .utils import InputType
 from .utils import OutputType
@@ -34,23 +36,24 @@ class FrameTemplate:
 # This class stores information for constructing test cases dynamically
 class Scaffold:
     def __init__(self, frame_templates,
-                 interpolations=None, defaults=None,
+                 interpolations=None, default_values=None,
                  point_templates=None, aggregators=None):
-        if interpolations is None:
-            interpolations = {None: InterpolationType.Mid}
-        if defaults is None:
-            defaults = utils.DEFAULT_VALUES
-        if point_templates is None:
-            point_templates = {None: TestPointTemplate()}
-        if aggregators is None:
-            aggregators = utils.DEFAULT_AGGREGATORS
 
+        # TODO: use Preferences class for these
+        if interpolations is None:
+            interpolations = Preferences({tuple(): InterpolationType.Mid})
+        if default_values is None:
+            default_values = prefs.default_default_values()
+        if point_templates is None:
+            point_templates = Preferences({tuple(): TestPointTemplate()})
+        if aggregators is None:
+            aggregators = prefs.default_aggregators()
 
         self.frame_templates = frame_templates # List of FrameTemplates
-        self.interpolations = interpolations # Defaults<InterpolationType>
-        self.defaults = defaults # Defaults<value>
-        self.point_templates = point_templates # Defaults<TestPointTemplate>
-        self.aggregators = aggregators # Defaults<f(list of bool)->bool>
+        self.interpolations = interpolations # Preferences<InterpolationType>
+        self.default_values = default_values # Preferences<value>
+        self.point_templates = point_templates # Preferences<TestPointTemplate>
+        self.aggregators = aggregators # Preferences<f(list of bool)->bool>
 
     # Input: a RequestLog
     # Retunrs a TestCase
@@ -129,13 +132,10 @@ class Scaffold:
                 if len(subsequence) < 1 or subsequence[0].time > 0: # Need to insert initial point
                     start_value = sequence.get_sample(start_time)
                     if init_to_default or start_value is None: # Use default
-                        start_value = utils.get_default(data_type, channel, self.defaults)
-                        if start_value is None:
-                            msg = "No default start value for data_type={}, channel={}"
-                            raise ValueError(msg.format(data_type, channel))
+                        start_value = self.default_values.get_preference((data_type, channel))
                     subsequence.insert(time=0, value=start_value)
 
-                interpolation_type = utils.get_default(data_type, channel, self.interpolations)
+                interpolation_type = self.interpolations.get_preference((data_type, channel))
                 subsequence = subsequence.interpolate(interpolation_type, res=utils.MILLISECOND)
                 inputs[(data_type,channel)] = subsequence
         return inputs
@@ -151,7 +151,7 @@ class Scaffold:
         test_points = []
         for (data_type, channel) in overall_sequences:
             if type(data_type) is OutputType:
-                point_template = utils.get_default(data_type, channel, self.point_templates)
+                point_template = self.point_templates.get_preference((data_type, channel))
                 sequence = overall_sequences[(data_type,channel)]
                 sequence = sequence.get_subsequence(start_time, end_time)
                 sequence.shift(-start_time)

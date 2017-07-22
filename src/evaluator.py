@@ -1,3 +1,4 @@
+from . import prefs
 from . import utils
 from .sequence import Sequence
 
@@ -67,36 +68,30 @@ class Evaluator:
                  default_intrapoint_aggregators=None,
                  default_check_functions=None):
         if aggregators is None:
-            aggregators = utils.DEFAULT_AGGREGATORS
+            aggregators = prefs.default_aggregators()
         if default_intrapoint_aggregators is None:
-            default_intrapoint_aggregators = utils.DEFAULT_AGGREGATORS
+            default_intrapoint_aggregators = prefs.default_aggregators()
         if default_check_functions is None:
-            default_check_functions = utils.DEFAULT_CHECK_FUNCTIONS
+            default_check_functions = prefs.default_check_functions()
 
         self.conditions = conditions # List of relevant Conditions
         self.test_points = test_points # List of test_points
-        self.aggregators = aggregators # (data_type,channel)->function(list(bool)->bool)
+        self.aggregators = aggregators # Preferences<Aggregator>
 
         # Defaults for test_points if respective fields are None
-        self.default_intrapoint_aggregators = default_intrapoint_aggregators
-        self.default_check_functions = default_check_functions
+        self.default_intrapoint_aggregators = default_intrapoint_aggregators # Preferences<Aggregator>
+        self.default_check_functions = default_check_functions # Preferences<Check Function>
 
         for point in test_points: # Populate missing fields with Evalutor's defaults
             if point.aggregator is None:
-                point.aggregator = utils.get_default(point.data_type, point.channel,
-                                                     default_intrapoint_aggregators)
-                if point.aggregator is None: # Error
-                    msg = "Evaluator could not resolve aggregator for a test point"
-                    raise ValueError(msg)
+                point.aggregator = default_intrapoint_aggregators.get_preference(
+                                        (point.data_type, point.channel)
+                                   )
 
             if point.check_function is None:
-                point.check_function = utils.get_default(point.data_type, point.channel,
-                                                         default_check_functions)
-                if point.check_function is None: # Error
-                    msg = "Evaluator could not resolve check function for a test point"
-                    raise ValueError(msg)
-
-
+                point.check_function = default_check_functions.get_preference(
+                                            (point.data_type, point.channel)
+                                       )
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result
@@ -129,21 +124,26 @@ class Evaluator:
         # Now, for each (data_type, channel), aggregate results to a single bool
         for key in results:
             (data_type, channel) = key
-            agg = utils.get_default(data_type, channel, self.aggregators)
-            if agg is None:
-                results[key] = False # No aggregator of this key or a parent
-            else:
+
+            # Do aggregation
+            try:
+                agg = self.aggregators.get_preference((data_type, channel))
                 if type(agg) is tuple:
                     results[key] = agg[0](results[key])
                 else:
                     results[key] = agg(results[key])
+            except ValueError:  # No aggregator found
+                agg = None
+                results[key] = False 
 
             if describe:
                 descriptions[key] = {"Points": descriptions[key]}
+
                 if results[key]:
                     descriptions[key]["Result"] = "PASS"
                 else:
                     descriptions[key]["Result"] = "FAIL"
+                    
                 if type(agg) is tuple:
                     descriptions[key]["Aggregator Function"] = agg[1]
 

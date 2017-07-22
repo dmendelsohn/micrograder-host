@@ -1,5 +1,6 @@
 from enum import Enum
 
+from . import prefs
 from . import utils
 from .condition import Condition
 from .condition import ConditionType
@@ -16,7 +17,7 @@ class RequestHandler:
         if frames is None:
             frames = []
         if default_values is None:
-            default_values = utils.DEFAULT_VALUES
+            default_values = prefs.default_default_values()
 
         self.end_condition = end_condition # Condition for overall test completion
         self.preempt = preempt # If True, later frame wins in when priority is tied
@@ -50,8 +51,11 @@ class RequestHandler:
                 values = []
                 for i in range(request.batch_params.num):
                     for channel in request.channels:
-                        value = utils.get_default_value(request.data_type, channel,
-                                                            defaults=self.default_values)
+                        try:
+                            value = self.default_values.get_preference((request.data_type,
+                                                                        channel))
+                        except ValueError: # No default value defined
+                            value = None
                         values.append(value)
 
                 if None in values: # Some channel had undefined default

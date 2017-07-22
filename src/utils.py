@@ -26,50 +26,6 @@ class EventType(Enum):
     Wifi = 4
     Gps = 5
 
-# If no channel is specified, that's a default across all channels
-# If both input_type and (input_type,channel) are keys, more specific default "wins"
-DEFAULT_VALUES = {
-    InputType.DigitalRead: 0,
-    InputType.AnalogRead: 0,
-    InputType.Accelerometer: 0,
-    (InputType.Accelerometer, 'z'): 1, # Gravity baked in by default on 'z' channel
-    InputType.Gyroscope: 0,
-    InputType.Magnetometer: 0,
-}
-
-DEFAULT_CHECK_FUNCTIONS = {
-    None: operator.__eq__
-}
-
-DEFAULT_AGGREGATORS = {
-    None: all
-}
-
-def get_default_value(data_type, channel=None, defaults=DEFAULT_VALUES):
-    return get_default(data_type, channel, defaults)
-
-def get_default_check_function(data_type, channel=None, defaults=DEFAULT_CHECK_FUNCTIONS):
-    return get_default(data_type, channel, defaults)
-
-def get_default_aggregator(data_type, channel=None, defaults=DEFAULT_AGGREGATORS):
-    return get_default(data_type, channel, defaults)
-
-
-# Generic helper function for getting a values for Inputs, Outputs, Requests
-# First check if (data_type, channel) is key in defaults, and return value
-# If not, check if (data_type) is key in defaults, and return value
-# If not, check if there None is key in defaults, and return value
-# Else return None
-def get_default(data_type, channel, defaults):
-    if (data_type,channel) in defaults:
-        return defaults[(data_type, channel)]
-    elif data_type in defaults:
-        return defaults[data_type] # Across all channels
-    elif None in defaults:
-        return defaults[None]
-    else:
-        return None
-
 
 # Returns a string description of the data_type/channel
 # TODO: add more stuff

@@ -57,7 +57,7 @@ class TestRequestHandler(unittest.TestCase):
         self.assertEqual(self.handler.update(request), expected)
 
         request = InputRequest(150, InputType.AnalogRead, [1], analog_params=self.a_params)
-        self.handler.default_values[(InputType.AnalogRead, 1)] = 5.0 # Set new default for this channel
+        self.handler.default_values.set_preference((InputType.AnalogRead, 1), 5.0) # Set new default for this channel
         expected = ValuesResponse(values=[127], analog=True, complete=False)
         self.assertEqual(self.handler.update(request), expected)
 

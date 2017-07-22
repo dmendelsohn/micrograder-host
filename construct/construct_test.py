@@ -1,4 +1,5 @@
 from src import case
+from src import prefs
 from src import utils
 from src.case import TestCase
 from src.condition import Condition
@@ -185,7 +186,7 @@ def default_scaffold(num_frames=1):
         new_template = FrameTemplate(start_condition=start_condition, end_condition=None)
         frame_templates.append(new_template)
 
-    defaults = utils.DEFAULT_VALUES.copy()
-    defaults[InputType.DigitalRead] = 1 # Button presses are active low
+    default_values = prefs.default_default_values()
+    default_values.set_preference(InputType.DigitalRead, 1)
     return Scaffold(frame_templates=frame_templates,
-                    defaults=defaults)
+                    default_values=default_values)

@@ -6,6 +6,7 @@ import operator
 from src.condition import Condition
 from src.condition import ConditionType
 from src.log import RequestLog
+from src.prefs import Preferences
 from src.request import EventRequest
 from src.request import OutputRequest
 from src.utils import EventType
@@ -58,6 +59,7 @@ class TestEvaluator(unittest.TestCase):
 
         self.evaluator = Evaluator(conditions, test_points)
 
+    #TODO: move to a TestTestPoint class
     def test_describe_point(self):
       tp = self.evaluator.test_points[0]
       expected = {"Type": "Digital pin 13 output", "Expected":"1",
@@ -86,11 +88,11 @@ class TestEvaluator(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             evaluator = Evaluator(conditions, test_points,
-                                  default_intrapoint_aggregators={})
+                                  default_intrapoint_aggregators=Preferences({}))
 
         with self.assertRaises(ValueError):
             evaluator = Evaluator(conditions, test_points,
-                                  default_check_functions={})
+                                  default_check_functions=Preferences({}))
 
 
     def test_evaluate(self):
@@ -116,14 +118,13 @@ class TestEvaluator(unittest.TestCase):
 
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
-        self.evaluator.aggregators = {
-            None: all,
+        self.evaluator.aggregators = Preferences({
+            tuple(): all,
             (OutputType.DigitalWrite, 13): any
-        }
+        })
         expected[(OutputType.DigitalWrite, 13)] = True # 1 out 2 points should be good enough
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
-    #TODO: fix
     def test_evaluate_with_description(self):
         requests = [
             OutputRequest(timestamp=0, data_type=OutputType.DigitalWrite,
@@ -143,10 +144,10 @@ class TestEvaluator(unittest.TestCase):
             (EventType.Print, None): True
         }
 
-        self.evaluator.aggregators = {
-            None: all,
-            EventType.Print: (all, "all") # With description
-        }
+        self.evaluator.aggregators = Preferences({
+            tuple(): all,
+            (EventType.Print,): (all, "all") # With description
+        })
         self.evaluator.conditions[0].description = "cond desc 0"
 
         expected_descriptions = {
@@ -274,7 +275,10 @@ class TestEvaluator(unittest.TestCase):
         ]
 
         evaluator = Evaluator(conditions, test_points,
-                              default_check_functions={None: (lambda x,y: False)})
+                              default_check_functions=Preferences(
+                                                        {tuple(): (lambda x,y: False)}
+                                                      )
+                              )
 
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
@@ -284,7 +288,10 @@ class TestEvaluator(unittest.TestCase):
         self.assertFalse(actual)
 
         evaluator = Evaluator(conditions, test_points,
-                              default_intrapoint_aggregators={None: (lambda vals: False)})
+                              default_intrapoint_aggregators=Preferences(
+                                                              {tuple(): (lambda vals: False)}
+                                                             )
+                             )
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
         self.assertFalse(actual)

@@ -6,6 +6,7 @@ from src.condition import Condition
 from src.condition import ConditionType
 from src.evaluator import TestPoint
 from src.log import RequestLog
+from src.prefs import Preferences
 from src.request import EventRequest
 from src.request import InputRequest
 from src.request import OutputRequest
@@ -32,18 +33,19 @@ class ScaffoldTest(unittest.TestCase):
                             init_to_default=True
             )
         frame_templates = [ft0]
-        interpolations = {InputType.DigitalRead: InterpolationType.Start}
-        defaults = {InputType.DigitalRead: 1}
+        interpolations = Preferences({(InputType.DigitalRead,): InterpolationType.Start})
+        default_values = Preferences({(InputType.DigitalRead,): 1})
 
         pt0 = TestPointTemplate(check_interval=("0.2*T", "0.8*T"),
                                 check_function=operator.__eq__,
                                 aggregator=all)
-        point_templates = {None: pt0}
-        aggregators = {(OutputType.DigitalWrite, 13): all,
-                       (OutputType.Screen, None): all}
+        point_templates = Preferences({tuple(): pt0})
+        aggregators = Preferences({(OutputType.DigitalWrite, 13): all,
+                                   (OutputType.Screen, None): all
+                                   })
         self.scaffold = Scaffold(frame_templates=frame_templates,
                                  interpolations=interpolations,
-                                 defaults=defaults,
+                                 default_values=default_values,
                                  point_templates=point_templates,
                                  aggregators=aggregators)
 
@@ -226,7 +228,8 @@ class ScaffoldTest(unittest.TestCase):
         self.assertEqual(actual, expected)
 
          # Test that linear interpolation usage
-        self.scaffold.interpolations[(InputType.DigitalRead, 6)] = InterpolationType.Linear
+        self.scaffold.interpolations.set_preference((InputType.DigitalRead, 6),
+                                                    InterpolationType.Linear)
         start_time = 1001
         end_time = 6000
         init_to_default = False
