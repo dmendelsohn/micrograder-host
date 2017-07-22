@@ -71,21 +71,24 @@ def get_default(data_type, channel, defaults):
         return None
 
 
-# Returns a string description of the output_type/channel
+# Returns a string description of the data_type/channel
+# TODO: add more stuff
 # Later: make names configurable (i.e. analog pin 14 becomes analog A0, screen becomes OLED, etc)
-def get_output_description(output_type, channel=None):
-    if output_type == OutputType.DigitalWrite:
+def get_description(data_type, channel=None):
+    if data_type == OutputType.DigitalWrite:
         if channel is None:
             raise ValueError("DigitalWrite must have a channel (pin number)")
-        return "Digital pin {}".format(channel)
-    elif output_type == OutputType.AnalogWrite:
+        return "Digital pin {} output".format(channel)
+    elif data_type == OutputType.AnalogWrite:
         if channel is None:
             raise ValueError("AnalogWrite must have a channel (pin number)")
-        return "Analog pin {}".format(channel)
-    elif output_type == OutputType.Screen: # Ignore channel
-        return "Screen"    
+        return "Analog pin {} output".format(channel)
+    elif data_type == OutputType.Screen: # Ignore channel
+        return "Screen" 
+    elif data_type == EventType.Print: # Ignore channel
+        return "Print"
     else:
-        desc = str(output_type)
+        desc = str(data_type)
         if channel is not None:
             desc += " {}".format(channel)
         return desc

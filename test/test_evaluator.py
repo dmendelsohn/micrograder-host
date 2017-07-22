@@ -14,7 +14,7 @@ from src.utils import OutputType
 class TestEvaluator(unittest.TestCase):
     def setUp(self):
         conditions = [Condition(ConditionType.After, cause=50),
-                      Condition(ConditionType.After, cause=5000)]
+                      Condition(ConditionType.After, cause=5000)] # Never met
         tp0 = TestPoint(condition_id=0,
                        data_type=OutputType.DigitalWrite,
                        channel=13,
@@ -60,7 +60,7 @@ class TestEvaluator(unittest.TestCase):
 
     def test_describe_point(self):
       tp = self.evaluator.test_points[0]
-      expected = {"Output Type": "Digital pin 13", "Expected":"1",
+      expected = {"Type": "Digital pin 13 output", "Expected":"1",
                   "Time Interval": "(0, 100) relative to time at which condition 0 was met"}
       self.assertEqual(tp.describe(), expected)
 
@@ -109,6 +109,11 @@ class TestEvaluator(unittest.TestCase):
             (OutputType.DigitalWrite, 15): False,
             (EventType.Print, None): True
         }
+
+        with self.assertRaises(ValueError):
+            self.evaluator.evaluate(self.log) # Point 4 has invalid condition ID
+        del self.evaluator.test_points[4]
+
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
         self.evaluator.aggregators = {
@@ -118,9 +123,93 @@ class TestEvaluator(unittest.TestCase):
         expected[(OutputType.DigitalWrite, 13)] = True # 1 out 2 points should be good enough
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
+    #TODO: fix
     def test_evaluate_with_description(self):
-      #TODO: implement
-      self.assertTrue(False)
+        requests = [
+            OutputRequest(timestamp=0, data_type=OutputType.DigitalWrite,
+                          channels=[13,14], values=[1,1]),
+            EventRequest(timestamp=100, data_type=EventType.Print, arg="foo")
+        ]
+        self.log = RequestLog()
+        for request in requests:
+            self.log.update(request)
+
+        del self.evaluator.test_points[4] # Causes ValueError
+
+        expected_results = {
+            (OutputType.DigitalWrite, 13): False,
+            (OutputType.DigitalWrite, 14): True,
+            (OutputType.DigitalWrite, 15): False,
+            (EventType.Print, None): True
+        }
+
+        self.evaluator.aggregators = {
+            None: all,
+            EventType.Print: (all, "all") # With description
+        }
+        self.evaluator.conditions[0].description = "cond desc 0"
+
+        expected_descriptions = {
+            (OutputType.DigitalWrite, 13): {
+                "Result":"FAIL",
+                "Points":[
+                    {
+                        "Type": "Digital pin 13 output",
+                        "Time Interval":"(0, 100) relative to cond desc 0",
+                        "Expected":"1",
+                        "Values":["1"],
+                        "Result":"PASS"
+                    },
+                    {
+                        "Type": "Digital pin 13 output",
+                        "Time Interval":"(0, 100) relative to cond desc 0",
+                        "Expected":"0",
+                        "Values":["1"],
+                        "Result":"FAIL"
+                    }
+                ]
+            },
+            (OutputType.DigitalWrite, 14): {
+                "Result":"PASS",
+                "Points":[
+                    {
+                        "Type": "Digital pin 14 output",
+                        "Time Interval":"(0, 100) relative to cond desc 0",
+                        "Expected":"1",
+                        "Values":["1"],
+                        "Result":"PASS"
+                    }
+                ]
+            },
+            (OutputType.DigitalWrite, 15): {
+                "Result":"FAIL",
+                "Points":[
+                    {
+                        "Type": "Digital pin 15 output",
+                        "Time Interval":"(0, 100) relative to time at which condition 1 was met",
+                        "Expected":"1",
+                        "Values":[],
+                        "Result":"FAIL"
+                    }
+                ]
+            },
+            (EventType.Print, None): {
+                "Result":"PASS",
+                "Points":[
+                    {
+                        "Type": "Print",
+                        "Time Interval":"(0, 100) relative to cond desc 0",
+                        "Expected":"foo",
+                        "Values":["None","foo"],
+                        "Result":"PASS"
+                    }
+                ],
+                "Aggregator Function":"all"
+            }
+        }
+
+        expected = expected_results, expected_descriptions
+        self.assertEqual(self.evaluator.evaluate(self.log, describe=True), expected)
 
     def test_evaluate_point(self):
         satisfied_times = [50, None]
@@ -129,17 +218,17 @@ class TestEvaluator(unittest.TestCase):
             (EventType.Print, None): Sequence(times=[100], values=["foo"])
         }
 
-        expected = [
-            True, # Regular success
-            False, # Regular failure
-            True, # Always True, despite not even being in sequences
-            False, # Failure due to unmet condition
-            False, # Failure due to out of bounds condition ID
-            True # Regular success
-        ]
-        actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
-                    for test_point in self.evaluator.test_points]
-        self.assertEqual(actual, expected)
+        def evaluate_point(test_point):
+          return self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
+        
+        self.assertTrue(evaluate_point(self.evaluator.test_points[0])) # Regular success
+        self.assertFalse(evaluate_point(self.evaluator.test_points[1])) # Regular failure
+        self.assertTrue(evaluate_point(self.evaluator.test_points[2])) # True, despite no values
+        self.assertFalse(evaluate_point(self.evaluator.test_points[3])) # Failure due to unmet condition
+        with self.assertRaises(ValueError):
+          evaluate_point(self.evaluator.test_points[4]) # Out of bounds condition ID
+        self.assertTrue(evaluate_point(self.evaluator.test_points[5])) # Regular success
+
 
     def test_evaluate_point_with_description(self):
         satisfied_times = [50, None]

@@ -17,8 +17,8 @@ class TestPoint:
 
     def describe(self, condition_desc=None):
         json = {}
-        json["Output Type"] = utils.get_output_description(output_type=self.data_type, 
-                                                           channel=self.channel)
+        json["Type"] = utils.get_description(data_type=self.data_type, 
+                                                    channel=self.channel)
 
         interval_desc = str(self.check_interval) + " relative to "
         if condition_desc is not None:
@@ -111,6 +111,7 @@ class Evaluator:
             result = self.evaluate_test_point(sequences, satisfied_times, test_point,
                                               describe=describe,
                                               condition_descriptions=condition_descs)
+
             if describe: # Split off description
                 result, desc = result
 
@@ -160,40 +161,42 @@ class Evaluator:
     #       description is a dict where keys are str and values are (str or list or dict)
     def evaluate_test_point(self, sequences, satisfied_times, test_point, *,
                             describe=False, condition_descriptions=None):
-        if test_point.condition_id >= len(satisfied_times):
-            return False # Condition out of bounds
+        if condition_descriptions is None:
+            condition_descriptions = [None]*len(satisfied_times)
+
+        if test_point.condition_id >= len(satisfied_times): # Condition out of bounds
+            raise ValueError("Condition id out of bounds")
+        
+        zero_point = satisfied_times[test_point.condition_id]
+        if zero_point is None: # Condition never met, this point can't be evaluated
+            values = []
+            result = False
         else:
-            zero_point = satisfied_times[test_point.condition_id]
-            if zero_point is None:
-                return False # Condition never met, this test point can't be evaluated
+            (start, end) = test_point.check_interval
+            start += zero_point
+            end += zero_point
 
-        (start, end) = test_point.check_interval
-        start += zero_point
-        end += zero_point
+            # Get relevant actual ouputs
+            key = (test_point.data_type, test_point.channel)
+            seq = sequences.get(key, Sequence())
+            values = seq.get_values(start, end)
 
-        # Get relevant actual ouputs
-        key = (test_point.data_type, test_point.channel)
-        seq = sequences.get(key, Sequence())
-        values = seq.get_values(start, end)
+            def check(value):
+                if type(test_point.check_function) is tuple:
+                    f = test_point.check_function[0]
+                else:
+                    f = test_point.check_function
+                return f(test_point.expected_value, value)
 
-        def check(value):
-            if type(test_point.check_function) is tuple:
-                f = test_point.check_function[0]
+            if type(test_point.aggregator) is tuple:
+                agg = test_point.aggregator[0]
             else:
-                f = test_point.check_function
-            return f(test_point.expected_value, value)
+                agg = test_point.aggregator
+            result = agg(map(check, values))
 
-        if type(test_point.aggregator) is tuple:
-            agg = test_point.aggregator[0]
-        else:
-            agg = test_point.aggregator
-        result = agg(map(check, values))
-
+        # Formulate output and return
         if describe:
-            if condition_descriptions:
-                condition_desc = condition_descriptions[test_point.condition_id]
-            else:
-                condition_desc = None
+            condition_desc = condition_descriptions[test_point.condition_id]
             point_desc = test_point.describe(condition_desc=condition_desc)
             point_desc["Values"] = [str(value) for value in values]
             if result:
