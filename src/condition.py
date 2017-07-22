@@ -11,13 +11,14 @@ class Condition:
     #   cause is evaluated after subcondition[0].satisfied_at
     #       ... or t=0 if subconditions not given
     # if cond_type is Or or And, subconditions must be non-empty list of conditions, cause is ignored
-    def __init__(self, cond_type, cause=None, subconditions=None):
+    def __init__(self, cond_type, cause=None, subconditions=None, *, description=None):
         self.satisfied_at = None  # Initially, condition is automatically unsatisfied (i.e. t=None)
         self.type = cond_type
         self.cause = cause # integer (i.e. time), or function from request -> boolean
         if subconditions is None:
             subconditions = []
         self.subconditions = subconditions
+        self.description = description
         self.last_update_request = None
 
     def is_satisfied(self):

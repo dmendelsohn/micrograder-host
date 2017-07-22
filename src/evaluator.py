@@ -100,18 +100,30 @@ class Evaluator:
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result
-    def evaluate(self, log):
+    def evaluate(self, log, *, describe=False):
         satisfied_times = [log.condition_satisfied_at(c) for c in self.conditions]
+        condition_descs = [c.description for c in self.conditions]
         sequences = log.extract_sequences()
 
-        results = {} # Map from (data_type,channel) to list(bool) representing relevant results
+        results = {} # Map from (data_type,channel) to list of boolean results
+        descriptions = {} # Map from (data_type,channel) to list of description dicts
         for test_point in self.test_points:
             result = self.evaluate_test_point(sequences, satisfied_times, test_point,
-                                              describe=False)
+                                              describe=describe,
+                                              condition_descriptions=condition_descs)
+            if describe: # Split off description
+                result, desc = result
+
             key = (test_point.data_type, test_point.channel)
             if key not in results:
                 results[key] = []
             results[key].append(result)
+
+            if describe: # Add description to the dictrionary in the same way
+                if key not in descriptions:
+                    descriptions[key] = []
+                descriptions[key].append(desc)
+
 
         # Now, for each (data_type, channel), aggregate results to a single bool
         for key in results:
@@ -120,8 +132,24 @@ class Evaluator:
             if agg is None:
                 results[key] = False # No aggregator of this key or a parent
             else:
-                results[key] = agg(results[key])
-        return results
+                if type(agg) is tuple:
+                    results[key] = agg[0](results[key])
+                else:
+                    results[key] = agg(results[key])
+
+            if describe:
+                descriptions[key] = {"Points": descriptions[key]}
+                if results[key]:
+                    descriptions[key]["Result"] = "PASS"
+                else:
+                    descriptions[key]["Result"] = "FAIL"
+                if type(agg) is tuple:
+                    descriptions[key]["Aggregator Function"] = agg[1]
+
+        if describe:
+            return results, descriptions
+        else:
+            return results
 
     # sequences: Map from (data_type,channel) to Sequence
     # satisfied_times: A list of satisfied times (or None) for all conditions
@@ -160,6 +188,7 @@ class Evaluator:
         else:
             agg = test_point.aggregator
         result = agg(map(check, values))
+
         if describe:
             if condition_descriptions:
                 condition_desc = condition_descriptions[test_point.condition_id]

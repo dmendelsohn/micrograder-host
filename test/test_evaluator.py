@@ -118,6 +118,10 @@ class TestEvaluator(unittest.TestCase):
         expected[(OutputType.DigitalWrite, 13)] = True # 1 out 2 points should be good enough
         self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
+    def test_evaluate_with_description(self):
+      #TODO: implement
+      self.assertTrue(False)
+
     def test_evaluate_point(self):
         satisfied_times = [50, None]
         sequences = {
@@ -135,6 +139,29 @@ class TestEvaluator(unittest.TestCase):
         ]
         actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
                     for test_point in self.evaluator.test_points]
+        self.assertEqual(actual, expected)
+
+    def test_evaluate_point_with_description(self):
+        satisfied_times = [50, None]
+        sequences = {
+            (OutputType.DigitalWrite, 13): Sequence(times=[0], values=[1]),
+            (EventType.Print, None): Sequence(times=[100], values=["foo"])
+        }
+
+        result0 = True
+        result_desc0 = self.evaluator.test_points[0].describe()
+        result_desc0["Values"] = ["1"]
+        result_desc0["Result"] = "PASS"
+
+        result1 = False
+        result_desc1 = self.evaluator.test_points[1].describe()
+        result_desc1["Values"] = ["1"]
+        result_desc1["Result"] = "FAIL"
+
+        expected = [(result0, result_desc0), (result1, result_desc1)]
+        actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point,
+                                                     describe=True)
+                    for test_point in self.evaluator.test_points[:2]] # Just first two points
         self.assertEqual(actual, expected)
 
     def test_evaluate_point_defaults(self): # Focus on filling in of default vals
