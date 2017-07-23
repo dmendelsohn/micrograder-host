@@ -12,6 +12,32 @@ from src.request import OutputRequest
 from src.utils import EventType
 from src.utils import OutputType
 
+class TestTestPoint(unittest.TestCase):
+    def test_describe_point(self):
+        tp = TestPoint(condition_id=0,
+                       data_type=OutputType.DigitalWrite,
+                       channel=13,
+                       expected_value=1,
+                       check_interval=(0,100)) # Use some defaults
+
+        expected = {"Type": "Digital pin 13 output", "Expected":"1",
+                  "Time Interval": "(0, 100) relative to time at which condition 0 was met"}
+        self.assertEqual(tp.describe(), expected)
+
+        expected["Time Interval"] = "(0, 100) relative to foo"
+        self.assertEqual(tp.describe(condition_desc="foo"), expected)
+
+        tp.check_function = lambda x,y: tp.check_function(x,y) # Wrap in case it's a built-in
+        tp.check_function.description = "bar" # Add a description
+
+        tp.aggregator = lambda args: tp.aggregator(args) # Wrap in case it's a built-in
+        tp.aggregator.description = "baz" # Add a description
+
+        expected["Check Function"] = "bar"
+        expected["Aggregator Function"] = "baz"
+        self.assertEqual(tp.describe(condition_desc="foo"), expected)
+
+
 class TestEvaluator(unittest.TestCase):
     def setUp(self):
         conditions = [Condition(ConditionType.After, cause=50),
@@ -58,27 +84,6 @@ class TestEvaluator(unittest.TestCase):
         test_points = [tp0, tp1, tp2, tp3, tp4, tp5]
 
         self.evaluator = Evaluator(conditions, test_points)
-
-    #TODO: move to a TestTestPoint class
-    def test_describe_point(self):
-      tp = self.evaluator.test_points[0]
-      expected = {"Type": "Digital pin 13 output", "Expected":"1",
-                  "Time Interval": "(0, 100) relative to time at which condition 0 was met"}
-      self.assertEqual(tp.describe(), expected)
-
-      expected["Time Interval"] = "(0, 100) relative to foo"
-      self.assertEqual(tp.describe(condition_desc="foo"), expected)
-
-      tp.check_function = lambda x,y: tp.check_function(x,y) # Wrap in case it's a built-in
-      tp.check_function.description = "bar" # Add a description
-
-      tp.aggregator = lambda args: tp.aggregator(args) # Wrap in case it's a built-in
-      tp.aggregator.description = "baz" # Add a description
-
-      expected["Check Function"] = "bar"
-      expected["Aggregator Function"] = "baz"
-      self.assertEqual(tp.describe(condition_desc="foo"), expected)
-
 
     def test_value_error(self):
         conditions = self.evaluator.conditions

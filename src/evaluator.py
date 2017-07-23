@@ -6,8 +6,7 @@ import operator
 
 class TestPoint:
     def __init__(self, condition_id, data_type, channel, expected_value, check_interval, *,
-                 check_function=None, aggregator=None,
-                 check_function_desc=None, aggregator_desc=None):
+                 check_function=None, aggregator=None):
         self.condition_id = condition_id
         self.data_type = data_type
         self.channel = channel
