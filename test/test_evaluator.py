@@ -125,14 +125,16 @@ class TestEvaluator(unittest.TestCase):
             self.evaluator.evaluate(self.log) # Point 4 has invalid condition ID
         del self.evaluator.test_points[4]
 
-        self.assertEqual(self.evaluator.evaluate(self.log), expected)
+        actual = self.evaluator.evaluate(self.log)[0] # Ignore description
+        self.assertEqual(actual, expected)
 
         self.evaluator.aggregators = Preferences({
             tuple(): all,
             (OutputType.DigitalWrite, 13): any
         })
         expected[(OutputType.DigitalWrite, 13)] = True # 1 out 2 points should be good enough
-        self.assertEqual(self.evaluator.evaluate(self.log), expected)
+        actual = self.evaluator.evaluate(self.log)[0] # Ignore description
+        self.assertEqual(actual, expected)
 
     def test_evaluate_with_description(self):
         requests = [
@@ -223,7 +225,7 @@ class TestEvaluator(unittest.TestCase):
         }
 
         expected = expected_results, expected_descriptions
-        self.assertEqual(self.evaluator.evaluate(self.log, describe=True), expected)
+        self.assertEqual(self.evaluator.evaluate(self.log), expected)
 
     def test_evaluate_point(self):
         satisfied_times = [50, None]
@@ -233,7 +235,7 @@ class TestEvaluator(unittest.TestCase):
         }
 
         def evaluate_point(test_point):
-          return self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
+          return self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)[0]
         
         self.assertTrue(evaluate_point(self.evaluator.test_points[0])) # Regular success
         self.assertFalse(evaluate_point(self.evaluator.test_points[1])) # Regular failure
@@ -262,8 +264,7 @@ class TestEvaluator(unittest.TestCase):
         result_desc1["Result"] = "FAIL"
 
         expected = [(result0, result_desc0), (result1, result_desc1)]
-        actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point,
-                                                     describe=True)
+        actual = [self.evaluator.evaluate_test_point(sequences, satisfied_times, test_point)
                     for test_point in self.evaluator.test_points[:2]] # Just first two points
         self.assertEqual(actual, expected)
 
@@ -295,9 +296,11 @@ class TestEvaluator(unittest.TestCase):
 
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
+        actual = actual[0] # Ignore description
         self.assertFalse(actual)
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[1])
+        actual = actual[0] # Ignore description
         self.assertFalse(actual)
 
         evaluator = Evaluator(conditions, test_points,
@@ -307,9 +310,11 @@ class TestEvaluator(unittest.TestCase):
                              )
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[0])
+        actual = actual[0] # Ignore description
         self.assertFalse(actual)
 
         actual = evaluator.evaluate_test_point(sequences, satisfied_times, test_points[1])
+        actual = actual[0] # Ignore description
         self.assertFalse(actual)
 
 
@@ -324,33 +329,33 @@ class TestEvaluator(unittest.TestCase):
                        aggregator=any)
 
         sequences = {key: Sequence(times=[900, 1000, 1050, 1100], values=[0, 1, 1, 0])}
-        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp0))
+        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
 
         # two true points in interval, one false (albeit barely in interval)
         sequences = {key: Sequence(times=[900, 1001, 1050, 1100], values=[0, 1, 1, 0])}
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0))
-        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp1))
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
+        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp1)[0])
 
 
         # sequence becomes false 1 time unit before end of interval
         sequences = {key: Sequence(times=[900, 1000, 1050, 1099], values=[0, 1, 1, 0])}
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0))
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
 
         # Last value in sequence is in check_interval
         sequences = {key: Sequence(times=[900, 1000, 1050], values=[0, 1, 1])}
-        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp0))
+        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
 
         # sequence starts undefined
         sequences = {key: Sequence(times=[1050], values=[1])}
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0))
-        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp1))
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
+        self.assertTrue(self.evaluator.evaluate_test_point(sequences, times, tp1)[0])
 
         # sequence always undefined, but key in dictionary
         sequences = {key: Sequence()}
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0))
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp1))
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp1)[0])
 
         # key not even in sequences dictionary
         sequences = {}
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0))
-        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp1))    
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp0)[0])
+        self.assertFalse(self.evaluator.evaluate_test_point(sequences, times, tp1)[0])    

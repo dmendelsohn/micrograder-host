@@ -94,7 +94,7 @@ class Evaluator:
 
     # log: a RequestLog of the test that was run
     # Returns map from (data_type,channel)->bool representing overall result
-    def evaluate(self, log, *, describe=False):
+    def evaluate(self, log):
         satisfied_times = [log.condition_satisfied_at(c) for c in self.conditions]
         condition_descs = [c.description for c in self.conditions]
         sequences = log.extract_sequences()
@@ -102,22 +102,17 @@ class Evaluator:
         results = {} # Map from (data_type,channel) to list of boolean results
         descriptions = {} # Map from (data_type,channel) to list of description dicts
         for test_point in self.test_points:
-            result = self.evaluate_test_point(sequences, satisfied_times, test_point,
-                                              describe=describe,
-                                              condition_descriptions=condition_descs)
-
-            if describe: # Split off description
-                result, desc = result
+            result, desc = self.evaluate_test_point(sequences, satisfied_times, test_point,
+                                                    condition_descriptions=condition_descs)
 
             key = (test_point.data_type, test_point.channel)
             if key not in results:
                 results[key] = []
             results[key].append(result)
 
-            if describe: # Add description to the dictrionary in the same way
-                if key not in descriptions:
-                    descriptions[key] = []
-                descriptions[key].append(desc)
+            if key not in descriptions:
+                descriptions[key] = []
+            descriptions[key].append(desc)
 
 
         # Now, for each (data_type, channel), aggregate results to a single bool
@@ -132,21 +127,19 @@ class Evaluator:
                 agg = None
                 results[key] = False 
 
-            if describe:
-                descriptions[key] = {"Points": descriptions[key]}
 
-                if results[key]:
-                    descriptions[key]["Result"] = "PASS"
-                else:
-                    descriptions[key]["Result"] = "FAIL"
+            descriptions[key] = {"Points": descriptions[key]}
 
-                if hasattr(agg, "description"):
-                    descriptions[key]["Aggregator Function"] = agg.description
+            if results[key]:
+                descriptions[key]["Result"] = "PASS"
+            else:
+                descriptions[key]["Result"] = "FAIL"
 
-        if describe:
-            return results, descriptions
-        else:
-            return results
+            if hasattr(agg, "description"):
+                descriptions[key]["Aggregator Function"] = agg.description
+
+        return results, descriptions
+
 
     # sequences: Map from (data_type,channel) to Sequence
     # satisfied_times: A list of satisfied times (or None) for all conditions
@@ -156,7 +149,7 @@ class Evaluator:
     # Returns: a bool representing the result for this point, or a (bool, description) tuple
     #       description is a dict where keys are str and values are (str or list or dict)
     def evaluate_test_point(self, sequences, satisfied_times, test_point, *,
-                            describe=False, condition_descriptions=None):
+                            condition_descriptions=None):
         if condition_descriptions is None:
             condition_descriptions = [None]*len(satisfied_times)
 
@@ -187,17 +180,14 @@ class Evaluator:
             result = agg(map(check, values))
 
         # Formulate output and return
-        if describe:
-            condition_desc = condition_descriptions[test_point.condition_id]
-            point_desc = test_point.describe(condition_desc=condition_desc)
-            point_desc["Values"] = [str(value) for value in values]
-            if result:
-                point_desc["Result"] = "PASS"
-            else:
-                point_desc["Result"] = "FAIL"
-            return (result, point_desc)
+        condition_desc = condition_descriptions[test_point.condition_id]
+        point_desc = test_point.describe(condition_desc=condition_desc)
+        point_desc["Values"] = [str(value) for value in values]
+        if result:
+            point_desc["Result"] = "PASS"
         else:
-            return result
+            point_desc["Result"] = "FAIL"
+        return (result, point_desc)
 
     def __eq__(self, other):
         if type(self) is not type(other):
