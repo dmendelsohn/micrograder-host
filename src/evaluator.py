@@ -13,8 +13,8 @@ class TestPoint:
         self.channel = channel
         self.expected_value = expected_value
         self.check_interval = check_interval
-        self.check_function = check_function # Can be func or (func, str) tuple
-        self.aggregator = aggregator # Can be func or (func, str) tuple
+        self.check_function = check_function
+        self.aggregator = aggregator
 
     def describe(self, condition_desc=None):
         json = {}
@@ -30,11 +30,11 @@ class TestPoint:
 
         json["Expected"] = str(self.expected_value)
 
-        if type(self.check_function) is tuple and len(self.check_function) >= 2:
-            json["Check Function"] = self.check_function[1]
+        if hasattr(self.check_function, "description"):
+            json["Check Function"] = self.check_function.description
 
-        if type(self.aggregator) is tuple and len(self.aggregator) >= 2:
-            json["Aggregator Function"] = self.aggregator[1]
+        if hasattr(self.aggregator, "description"):
+            json["Aggregator Function"] = self.aggregator.description
 
         return json
 
@@ -128,10 +128,7 @@ class Evaluator:
             # Do aggregation
             try:
                 agg = self.aggregators.get_preference((data_type, channel))
-                if type(agg) is tuple:
-                    results[key] = agg[0](results[key])
-                else:
-                    results[key] = agg(results[key])
+                results[key] = agg(results[key])
             except ValueError:  # No aggregator found
                 agg = None
                 results[key] = False 
@@ -143,9 +140,9 @@ class Evaluator:
                     descriptions[key]["Result"] = "PASS"
                 else:
                     descriptions[key]["Result"] = "FAIL"
-                    
-                if type(agg) is tuple:
-                    descriptions[key]["Aggregator Function"] = agg[1]
+
+                if hasattr(agg, "description"):
+                    descriptions[key]["Aggregator Function"] = agg.description
 
         if describe:
             return results, descriptions
@@ -182,11 +179,7 @@ class Evaluator:
             values = seq.get_values(start, end)
 
             def check(value):
-                if type(test_point.check_function) is tuple:
-                    f = test_point.check_function[0]
-                else:
-                    f = test_point.check_function
-                return f(test_point.expected_value, value)
+                return test_point.check_function(test_point.expected_value, value)
 
             if type(test_point.aggregator) is tuple:
                 agg = test_point.aggregator[0]

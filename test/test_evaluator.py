@@ -69,8 +69,12 @@ class TestEvaluator(unittest.TestCase):
       expected["Time Interval"] = "(0, 100) relative to foo"
       self.assertEqual(tp.describe(condition_desc="foo"), expected)
 
-      tp.check_function = (tp.check_function, "bar") # Add a description
-      tp.aggregator = (tp.aggregator, "baz") # Add a description
+      tp.check_function = lambda x,y: tp.check_function(x,y) # Wrap in case it's a built-in
+      tp.check_function.description = "bar" # Add a description
+
+      tp.aggregator = lambda args: tp.aggregator(args) # Wrap in case it's a built-in
+      tp.aggregator.description = "baz" # Add a description
+
       expected["Check Function"] = "bar"
       expected["Aggregator Function"] = "baz"
       self.assertEqual(tp.describe(condition_desc="foo"), expected)
@@ -144,9 +148,13 @@ class TestEvaluator(unittest.TestCase):
             (EventType.Print, None): True
         }
 
+        def my_all(args):
+            return all(args)
+        my_all.description = "all"
+
         self.evaluator.aggregators = Preferences({
             tuple(): all,
-            (EventType.Print,): (all, "all") # With description
+            (EventType.Print,): my_all # With description
         })
         self.evaluator.conditions[0].description = "cond desc 0"
 
