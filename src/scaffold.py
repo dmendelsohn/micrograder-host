@@ -89,8 +89,9 @@ class Scaffold:
 
                 # Generate points for all outputs that occurred during this frame
                 new_points = self.generate_eval_points(overall_sequences, start_time, end_time)
-                for point in new_points.values():
-                    point.condition_id = len(frames)-1
+                for key in new_points:
+                    for point in new_points[key]:
+                        point.condition_id = len(frames)-1
                 points_by_frame.append(new_points)
 
         points = {} # Combination of point dicts from all frames

@@ -97,11 +97,7 @@ class Evaluator:
         return results
 
     def __eq__(self, other):
-        if type(self) is not type(other):
-            return False
-        return (self.conditions == other.conditions
-                and self.aggregators == other.aggregators
-                and self.test_points == other.test_points)
+        return type(self) is type(other) and self.__dict__ == other.__dict__
 
     def __str__(self):
         return repr(self)

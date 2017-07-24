@@ -96,32 +96,24 @@ class ScaffoldTest(unittest.TestCase):
                                  frames=[frame],
                                  preempt=True)
 
-        test_points = []
+        eval_points = {(OutputType.DigitalWrite, 13): [], (OutputType.Screen, None): []}
         check_intervals = [(202,802),(1402,2602),(3102,3402),(3602,3902),(4201,4800)]
         digital_values = [0,1,0,1,0]
         screen_values = [self.screen_off, self.screen_on, self.screen_off,
                          self.screen_on, self.screen_off]
         for (check_interval, value) in zip(check_intervals, digital_values):
-            test_points.append(EvalPoint(condition_id=0,
-                                         data_type=OutputType.DigitalWrite,
-                                         channel=13,
-                                         expected_value=value,
-                                         check_interval=check_interval,
-                                         check_function=operator.__eq__,
-                                         aggregator=all))
+            eval_points[(OutputType.DigitalWrite, 13)].append(
+                EvalPoint(condition_id=0, expected_value=value, check_interval=check_interval)
+            )
+
 
         for (check_interval, value) in zip(check_intervals, screen_values):
-            test_points.append(EvalPoint(condition_id=0,
-                                         data_type=OutputType.Screen,
-                                         channel=None,
-                                         expected_value=value,
-                                         check_interval=check_interval,
-                                         check_function=operator.__eq__,
-                                         aggregator=all))            
-
-
+            eval_points[(OutputType.Screen, None)].append(
+                EvalPoint(condition_id=0, expected_value=value, check_interval=check_interval)
+            )
+         
         evaluator = Evaluator(conditions=[start_cond],
-                              test_points=test_points,
+                              points=eval_points,
                               aggregators=self.scaffold.aggregators)
 
         expected = TestCase(handler=handler, evaluator=evaluator)
