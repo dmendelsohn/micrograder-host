@@ -4,8 +4,8 @@ from src import utils
 from src.case import TestCase
 from src.condition import Condition
 from src.condition import ConditionType
+from src.evaluator import EvalPoint
 from src.evaluator import Evaluator
-from src.evaluator import TestPoint
 from src.frame import Frame
 from src.handler import RequestHandler
 from src.scaffold import FrameTemplate
@@ -51,19 +51,18 @@ def is_wifi_response(request):
 def blank_case(duration=10**12, default_values=None):
     end_condition = Condition(ConditionType.After, cause=duration)
     handler = RequestHandler(end_condition=end_condition, default_values=default_values)
-    evaluator = Evaluator(conditions=[], test_points=[])
+    evaluator = Evaluator(conditions=[], points={})
     return TestCase(handler=handler, evaluator=evaluator)
 
-def blinky_test_case(with_oled=False):
+def blinky_test_case():
     init_condition = Condition(ConditionType.After, 
                                cause=is_start_msg)
     end_condition = Condition(ConditionType.After,
                               cause=5*(10**3), subconditions=[init_condition])
     handler = RequestHandler(end_condition=end_condition)
 
-    points = []
+    points = {(OutputType.DigitalWrite, 13): [], (OutputType.Screen, None): []}
     for i in range(1, 5):
-        output_type, channel = OutputType.DigitalWrite, 13
         expected_value = 0
         if i%2==1:
             expected_value = 1
@@ -71,15 +70,10 @@ def blinky_test_case(with_oled=False):
         start = (i+0.1)*(10**3)
         end = (i+0.9)*(10**3)
 
-        points.append(TestPoint(
-            condition_id=0,
-            data_type=output_type,
-            channel=channel,
-            expected_value=expected_value,
-            check_interval=(start,end)))
+        points[(OutputType.DigitalWrite, 13)].append(
+            EvalPoint(condition_id=0, expected_value=expected_value, check_interval=(start,end))
+        )
 
-        if not with_oled:
-            continue
 
         output_type, channel = OutputType.Screen, None
         expected_value = Screen(width=128, height=64) # Blank
@@ -87,17 +81,14 @@ def blinky_test_case(with_oled=False):
             rect = np.ones((10,20))
             expected_value.paint(rect, x=20, y=10)
 
-        points.append(TestPoint(
-            condition_id=0,
-            data_type=output_type,
-            channel=channel,
-            expected_value=expected_value,
-            check_interval=(start,end)))
+        points[(OutputType.Screen, None)].append(
+            EvalPoint(condition_id=0, expected_value=expected_value, check_interval=(start,end))
+        )
 
-    evaluator = Evaluator(conditions=[init_condition], test_points=points)
+    evaluator = Evaluator(conditions=[init_condition], points=points)
     return TestCase(handler=handler, evaluator=evaluator)
 
-def button_test_case(with_oled=False):
+def button_test_case():
     init_condition = Condition(ConditionType.After,
                                cause=is_start_msg)
     end_condition = Condition(ConditionType.After,
@@ -108,9 +99,8 @@ def button_test_case(with_oled=False):
                     inputs={(InputType.DigitalRead, 6): seq})
     handler = RequestHandler(end_condition=end_condition, frames=[frame])
 
-    points = []
+    points = {(OutputType.DigitalWrite, 13): [], (OutputType.Screen, None): []}
     for i in range(1, 5):
-        output_type, channel = OutputType.DigitalWrite, 13
         expected_value = 0
         if i%2==1:
             expected_value = 1
@@ -118,15 +108,10 @@ def button_test_case(with_oled=False):
         start = (i+0.1)*(10**3)
         end = (i+0.9)*(10**3)
 
-        points.append(TestPoint(
-            condition_id=0,
-            data_type=output_type,
-            channel=channel,
-            expected_value=expected_value,
-            check_interval=(start,end)))
+        points[(OutputType.DigitalWrite, 13)].append(
+            EvalPoint(condition_id=0, expected_value=expected_value, check_interval=(start,end))
+        )
 
-        if not with_oled:
-            continue
 
         output_type, channel = OutputType.Screen, None
         expected_value = Screen(width=128, height=64) # Blank
@@ -134,14 +119,11 @@ def button_test_case(with_oled=False):
             rect = np.ones((10,20))
             expected_value.paint(rect, x=20, y=10)
 
-        points.append(TestPoint(
-            condition_id=0,
-            data_type=output_type,
-            channel=channel,
-            expected_value=expected_value,
-            check_interval=(start,end)))
+        points[(OutputType.Screen, None)].append(
+            EvalPoint(condition_id=0, expected_value=expected_value, check_interval=(start,end))
+        )
 
-    evaluator = Evaluator(conditions=[init_condition], test_points=points)
+    evaluator = Evaluator(conditions=[init_condition], points=points)
     return TestCase(handler=handler, evaluator=evaluator)
 
 # Saves a bunch of hardcoded test_cases to files
@@ -153,11 +135,11 @@ def construct_hardcode(verbose=False):
     filepath = "resources/cases/blank.tc"
     utils.save(case, filepath)
 
-    case = blinky_test_case(with_oled=True)
+    case = blinky_test_case()
     filepath = "resources/cases/blinky_oled.tc"
     utils.save(case, filepath)
 
-    case = button_test_case(with_oled=True)
+    case = button_test_case()
     filepath = "resources/cases/button_oled.tc"
     utils.save(case, filepath)
 
