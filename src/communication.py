@@ -180,7 +180,7 @@ class SerialCommunication:
 
         elif msg_code == MessageCode.Print: # <uint8 * chars>
             text = str(msg_body, encoding='utf-8')
-            return EventRequest(timestamp=timestamp, data_type=EventType.Print, arg=text)
+            return EventRequest(timestamp=timestamp, data_type=EventType.Print, data=text)
 
         elif msg_code == MessageCode.DigitalRead: # Body format: <uint8 pin, digital_generic_input>
             if len(msg_body) < 1:
@@ -238,7 +238,7 @@ class SerialCommunication:
             tile_height = msg_body[1]
             self.last_screen = Screen(width=8*tile_width, height=8*tile_height)
             return EventRequest(timestamp=timestamp, data_type=EventType.ScreenInit,
-                                arg=ScreenShape(width=8*tile_width, height=8*tile_height))
+                                data=ScreenShape(width=8*tile_width, height=8*tile_height))
 
         elif msg_code == MessageCode.ScreenFull: # <uint8 * buffer>
             # buffer is seq of 8 byte tiles.  Tiles are 8x8 pixels.  Tiles are organized by row
@@ -282,10 +282,10 @@ class SerialCommunication:
             return EventRequest(timestamp=timestamp, data_type=EventType.Gps)
 
         elif msg_code == MessageCode.WifiReq: # Later: expand protocol
-            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, arg="request")
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, data="request")
 
         elif msg_code == MessageCode.WifiResp: # Later: expand protocol
-            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, arg="response")
+            return EventRequest(timestamp=timestamp, data_type=EventType.Wifi, data="response")
 
         else:  # Unsupported message code
             return InvalidRequest(timestamp=timestamp)

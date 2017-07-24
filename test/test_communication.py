@@ -134,11 +134,11 @@ class TestSerialCommunication(unittest.TestCase):
         self.assertEqual(self.sc.bytes_to_request(code, t, bytes()), expected)
 
         code = 0x60 # WifiReq
-        expected = EventRequest(t, EventType.Wifi, arg="request")
+        expected = EventRequest(t, EventType.Wifi, "request")
         self.assertEqual(self.sc.bytes_to_request(code, t, bytes()), expected)
 
         code = 0x61 # WifiResp
-        expected = EventRequest(t, EventType.Wifi, arg="response")
+        expected = EventRequest(t, EventType.Wifi, "response")
         self.assertEqual(self.sc.bytes_to_request(code, t, bytes()), expected)
 
     def test_bytes_to_request_screen(self):

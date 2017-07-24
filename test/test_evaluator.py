@@ -64,7 +64,7 @@ class TestEvaluator(unittest.TestCase):
         requests = [
             OutputRequest(timestamp=0, data_type=OutputType.DigitalWrite,
                           channels=[13,14], values=[1,1]),
-            EventRequest(timestamp=100, data_type=EventType.Print, arg="foo")
+            EventRequest(timestamp=100, data_type=EventType.Print, data="foo")
         ]
         log = RequestLog()
         for request in requests:

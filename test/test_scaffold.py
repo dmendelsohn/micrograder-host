@@ -23,7 +23,7 @@ import operator
 class ScaffoldTest(unittest.TestCase):
     def setUp(self):
         def is_start_request(request):
-            return (request.data_type == EventType.Print and request.arg == "Start")
+            return (request.data_type == EventType.Print and request.data == "Start")
         self.is_start_request = is_start_request
         start_cond = Condition(ConditionType.After, cause=is_start_request)
         end_cond = Condition(ConditionType.After, cause=5000, subconditions=[start_cond])
@@ -50,7 +50,7 @@ class ScaffoldTest(unittest.TestCase):
         # Now create a button-test log
         requests = []
         requests.append(EventRequest(timestamp=900, data_type=EventType.Init))
-        requests.append(EventRequest(timestamp=1000, data_type=EventType.Print, arg="Start"))
+        requests.append(EventRequest(timestamp=1000, data_type=EventType.Print, data="Start"))
 
         dread = [1]*20 + [0]*40 + [1]*10 + [0]*10 + [1]*40 # OFF,ON,OFF,ON,OFF
         for i in range(len(dread)):  # Add input/outputs for each loop

@@ -60,23 +60,23 @@ class OutputRequest(Request):
 
 # Subclass for requests that are reporting internal system events
 class EventRequest(Request):
-    def __init__(self, timestamp, data_type, arg=None):
+    def __init__(self, timestamp, data_type, data=None):
         super().__init__(timestamp)
         self.is_event = True # Override default
         self.data_type = data_type # Should be EventType
-        self.arg = arg # Any additional data
+        self.data = data # Any additional data
 
     def __str__(self):
-        s = "EventRequest: timestamp={}, data_type={}, arg={}"
-        return s.format(self.timestamp, self.data_type, repr(self.arg))
+        s = "EventRequest: timestamp={}, data_type={}, data={}"
+        return s.format(self.timestamp, self.data_type, self.data)
 
 
 # Subclass for invalid requests
 class InvalidRequest(Request):
-    def __init__(self, timestamp, arg=None):
+    def __init__(self, timestamp, data=None):
         super().__init__(timestamp)
         self.is_valid = False # Override default
-        self.arg = arg # Additional data
+        self.data = data # Additional data
 
     def __str__(self):
-        return "InvalidRequest: timestamp={}, arg={}".format(self.timestamp, repr(self.arg))
+        return "InvalidRequest: timestamp={}, data={}".format(self.timestamp, self.data)

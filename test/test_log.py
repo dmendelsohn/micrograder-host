@@ -32,7 +32,7 @@ class TestRequestLog(unittest.TestCase):
                             channels=[5,6], batch_params=b_params)
         req5 = InputRequest(timestamp=600, data_type=InputType.DigitalRead,
                             channels=[5,6], values=[0,1,0,1], batch_params=b_params)
-        req6 = EventRequest(timestamp=700, data_type=EventType.Print, arg="foo")
+        req6 = EventRequest(timestamp=700, data_type=EventType.Print, data="foo")
         for request in [req0, req1, req2, req3, req4, req5, req6]:
             self.log.update(request)
         self.requests = [req0, req1, req2, req3, req4, req5, req6]

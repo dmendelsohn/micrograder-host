@@ -28,7 +28,7 @@ def run_session(handler, *, verbose=False, timeout=None):
         if verbose:
             print("Request={}".format(request))
         elif request.data_type == EventType.Print:
-            print("Debug: {}".format(request.arg))
+            print("Debug: {}".format(request.data))
 
         response = handler.update(request)
         if verbose:

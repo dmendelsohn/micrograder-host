@@ -23,7 +23,7 @@ class RequestLog:
                 continue # Do nothing
             elif request.is_event:
                 channel = None
-                add_entry(request.data_type, channel, request.timestamp, request.arg)
+                add_entry(request.data_type, channel, request.timestamp, request.data)
             else: # inputs or outputs
                 data_type = request.data_type
                 channels = request.channels

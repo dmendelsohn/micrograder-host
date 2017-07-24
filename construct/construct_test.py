@@ -37,15 +37,15 @@ quirky_defaults={
 }
 
 def is_start_msg(request):
-    return request.data_type == EventType.Print and request.arg == "Start"
+    return request.data_type == EventType.Print and request.data == "Start"
 
 # TODO: update this once I've updated the embedded wifi lib
 def is_wifi_request(request):
-    return request.data_type == EventType.Wifi and request.arg == "request"
+    return request.data_type == EventType.Wifi and request.data == "request"
 
 # TODO: update this once I've updated the embedded wifi lib
 def is_wifi_response(request):
-    return request.data_type == EventType.Wifi and request.arg == "response"
+    return request.data_type == EventType.Wifi and request.data == "response"
 
  # Good for making recordings, or for basic tests
 def blank_case(duration=10**12, default_values=None):
@@ -152,7 +152,7 @@ def construct_dynamic(log, scaffold):
 # num_frames must be int >= 1
 def default_scaffold(num_frames=1):
     def is_start_request(request):
-        return request.data_type == EventType.Print and request.arg == "Start"
+        return request.data_type == EventType.Print and request.data == "Start"
     start_condition = Condition(ConditionType.After, cause=is_start_request)
     end_condition = Condition(ConditionType.After, cause=5*10**3, subconditions=[start_condition])
     frame_templates = [FrameTemplate(start_condition=start_condition,
