@@ -14,7 +14,6 @@ from .utils import OutputType
 
 import operator
 
-
 DEFAULT_CHECK_INTERVAL = ("0.2*T", "0.8*T")
 
 # Check_interval is relative to observed time of point, not any condition

@@ -18,7 +18,7 @@ def default_check_functions():
     # Because the object is each time this function is called, it will
     # always return the same object (won't be affected by prior calls)
     return Preferences({
-        tuple(): operator.__eq__
+        tuple(): operator.eq
     })
 
 def default_aggregators():
