@@ -3,8 +3,8 @@ from . import utils
 from .case import TestCase
 from .condition import Condition
 from .condition import ConditionType
+from .evaluator import EvaluationPoint
 from .evaluator import Evaluator
-from .evaluator import TestPoint
 from .frame import Frame
 from .handler import RequestHandler
 from .prefs import Preferences

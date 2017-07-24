@@ -13,16 +13,16 @@ from src.utils import EventType
 from src.utils import OutputType
 
 
-class TestEvaluationPoint(unittest.TestCase):
+class TestEvalPoint(unittest.TestCase):
     def test_evaluate(self):
         seq = Sequence(times=[100, 300], values=[1.00, 1.01])
-        point = EvaluationPoint(condition_id=0, expected_value=1.00, check_interval=(0,400))
+        point = EvalPoint(condition_id=0, expected_value=1.00, check_interval=(0,400))
 
         # Test bhavior when condition_met_at is None
-        expected = EvaluationPointResult(False, [])
+        expected = EvalPointResult(False, [])
         self.assertEqual(point.evaluate(None, seq), expected)
 
-        expected = EvaluationPointResult(False, [
+        expected = EvalPointResult(False, [
             EvaluatedValue(value=1.00, portion=0.50, passed=True),
             EvaluatedValue(value=1.01, portion=0.25, passed=False)    
         ])
@@ -30,13 +30,13 @@ class TestEvaluationPoint(unittest.TestCase):
 
         # Test if point will pass when portion requirement is lowered just enough
         point.portion = 0.50
-        expected = EvaluationPointResult(True, expected.observed)
+        expected = EvalPointResult(True, expected.observed)
         self.assertEqual(point.evaluate(0, seq), expected)
 
         # Test alternate check functions work
         point.portion = 0.75
         point.check_function = lambda x,y: abs(x-y) < 0.1
-        expected = EvaluationPointResult(True, [
+        expected = EvalPointResult(True, [
             EvaluatedValue(value=1.00, portion=0.50, passed=True),
             EvaluatedValue(value=1.01, portion=0.25, passed=True)    
         ])
@@ -49,12 +49,12 @@ class TestEvaluator(unittest.TestCase):
         points = {}
         # For basic tests of passing/failing point, and different aggregations
         points[(OutputType.DigitalWrite, 13)] = [
-            EvaluationPoint(condition_id=0, expected_value=1, check_interval=(0,100)),
-            EvaluationPoint(condition_id=0, expected_value=0, check_interval=(0,100)),
+            EvalPoint(condition_id=0, expected_value=1, check_interval=(0,100)),
+            EvalPoint(condition_id=0, expected_value=0, check_interval=(0,100)),
         ]
         # To test that we successfully identify points with unmet conditions
         points[(OutputType.DigitalWrite, 15)] = [
-            EvaluationPoint(condition_id=1, expected_value=1, check_interval=(0,100),
+            EvalPoint(condition_id=1, expected_value=1, check_interval=(0,100),
                             check_function=lambda x,y:True, portion=0.0)
         ]
 
@@ -72,11 +72,11 @@ class TestEvaluator(unittest.TestCase):
 
         expected = {}
         expected[(OutputType.DigitalWrite, 13)] = (False, [
-            EvaluationPointResult(True, [EvaluatedValue(value=1, portion=1.0, passed=True)]),
-            EvaluationPointResult(False, [EvaluatedValue(value=1, portion=1.0, passed=False)])
+            EvalPointResult(True, [EvaluatedValue(value=1, portion=1.0, passed=True)]),
+            EvalPointResult(False, [EvaluatedValue(value=1, portion=1.0, passed=False)])
         ])
         expected[(OutputType.DigitalWrite, 15)] = (False, [
-            EvaluationPointResult(False, [])
+            EvalPointResult(False, [])
         ])
 
 

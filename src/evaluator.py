@@ -7,9 +7,9 @@ import operator
 
 
 EvaluatedValue = namedtuple("EvaluatedValue", ["value", "portion", "passed"])
-EvaluationPointResult = namedtuple("EvaluationPointResult", ["passed", "observed"])
+EvalPointResult = namedtuple("EvalPointResult", ["passed", "observed"])
 
-class EvaluationPoint:
+class EvalPoint:
     def __init__(self, condition_id, expected_value, check_interval, *,
                  check_function=operator.eq, portion=1.0):
         self.condition_id = condition_id
@@ -28,7 +28,7 @@ class EvaluationPoint:
     #       sorted by portion_observed descending
     def evaluate(self, condition_met_at, sequence):
         if condition_met_at is None:
-            return EvaluationPointResult(False, [])
+            return EvalPointResult(False, [])
 
         (start, end) = self.check_interval
         start += condition_met_at
@@ -47,7 +47,7 @@ class EvaluationPoint:
                 values[i] = EvaluatedValue(value, portion, False)
 
         passed = (portion_correct >= self.portion)
-        return EvaluationPointResult(passed, values)
+        return EvalPointResult(passed, values)
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -56,28 +56,28 @@ class EvaluationPoint:
         return repr(self)
 
     def __repr__(self):
-        s = ("EvaluationPoint: condition_id={}, expected_value={}, "
+        s = ("EvalPoint: condition_id={}, expected_value={}, "
              "check_interval={}, check_function={}, portion={}")
         return s.format(self.condition_id, self.expected_value, self.check_interval,
                         self.check_function, self.portion)
 
 class Evaluator:
     # conditions: a list of relevant Conditions
-    # points: a list of EvaluationPoints
+    # points: a list of EvalPoints
     def __init__(self, conditions, points, *,
                  aggregators=None):
         if aggregators is None:
             aggregators = prefs.default_aggregators()
 
         self.conditions = conditions # List of relevant Conditions
-        self.points = points # Map from (data_type,channel)->list(EvaluationPoint)
+        self.points = points # Map from (data_type,channel)->list(EvalPoint)
         self.aggregators = aggregators # Preferences<Aggregator>
 
     # log: a RequestLog of the test that was run
     # Returns a map from (data_type,channel)->(bool, list)
     #   the boolean represents the overall result for this channel
-    #   each elt of list is of EvaluationPointResults corresponding to each
-    #   EvaluationPoint (in the same order seen in the values of self.points)
+    #   each elt of list is of EvalPointResults corresponding to each
+    #   EvalPoint (in the same order seen in the values of self.points)
     def evaluate(self, log):
         satisfied_times = [log.condition_satisfied_at(c) for c in self.conditions]
         sequences = log.extract_sequences()
