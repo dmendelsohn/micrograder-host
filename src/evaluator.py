@@ -8,6 +8,7 @@ import operator
 
 EvaluatedValue = namedtuple("EvaluatedValue", ["value", "portion", "passed"])
 EvalPointResult = namedtuple("EvalPointResult", ["passed", "observed"])
+ChannelResult = namedtuple("ChannelResult", ["passed", "points"])
 
 class EvalPoint:
     def __init__(self, condition_id, expected_value, check_interval, *,
@@ -92,7 +93,7 @@ class Evaluator:
 
             agg = self.aggregators.get_preference(key)
             overall_result = agg([res.passed for res in point_results])
-            results[key] = (overall_result, point_results)
+            results[key] = ChannelResult(overall_result, point_results)
 
         return results
 
