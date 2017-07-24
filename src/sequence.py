@@ -50,26 +50,59 @@ class Sequence:
                 index += 1  # Increment index as far as needed
         return samples
 
-    # Returns list of values in time range [start, end), or [] if no such values exist
-    def get_values(self, start_time, end_time):
-        index = bisect.bisect(self.times, start_time)
-        index -= 1
-        results = []
-        if index < 0:
-            results.append(None) # Initial value is undefiend
-            index = 0
-
-        while index < len(self.times) and self.times[index] < end_time:
-            results.append(self.values[index])
-            index += 1
-        return results
-
     # Returns a subsequence consisting of elements with time in [start, end)
-    def get_subsequence(self, start_time, end_time):
-        start_index = bisect.bisect(self.times, start_time-0.0001) # - to include exact start
-        end_index = bisect.bisect(self.times, end_time-0.0001) # - to exluce exact end
-        return Sequence(times=self.times[start_index:end_index],
-                        values=self.values[start_index:end_index])
+    # If include_start_sample, and there's a value at a time before start_time,
+    # the most recent value before start time will be prepended to the sequence
+    # with timestamp start_time
+    def get_subsequence(self, start_time, end_time, include_start_sample=False):
+        if start_time >= end_time: # To avoid weird edge cases
+            return Sequence()
+
+        start_index = bisect.bisect(self.times, start_time)
+        if start_index > 0:
+            if include_start_sample:
+                start_index -= 1 # include lead-in value
+            elif start_time==self.times[start_index-1]: # start_time is in self.times
+                start_index -= 1 # include exact start, even if not including a lead-in
+
+        end_index = bisect.bisect(self.times, end_time)
+        if end_index > 0 and end_time==self.times[end_index-1]: # end_time is in self.times
+            end_index -= 1 # exclude exact end
+
+        times = self.times[start_index:end_index]
+        if len(times) > 0:
+            times[0] = max(times[0], start_time) # Bound first t (useful if include_start_sample)
+        return Sequence(times=times, values=self.values[start_index:end_index])
+
+    # Finds all unique values in the interval, and the portion of the interval those values
+    # occurred
+    # Returns a list of tuples, where each tuple is of the form (value, portion), sorted
+    # by portion in descending order.  Portion will always be between 0 and 1
+    # Undefined time in the interval still count 
+    def profile_interval(self, interval):
+        (start, end) = interval
+        subseq = self.get_subsequence(start, end, include_start_sample=True)
+
+        profile = []
+        for i in range(len(subseq)):
+            (time, value) = subseq[i]
+            if (i+1) < len(subseq):
+                next_time = subseq[i+1].time
+            else:
+                next_time = end
+            portion = (next_time-time)/(end-start)
+
+            is_repeat = False
+            for j in range(len(profile)):
+                (other_value, other_portion) = profile[j]
+                if value == other_value: # Accumulate with already seen instance
+                    is_repeat = True
+                    profile[j] = (other_value, other_portion + portion)
+                    break
+
+            if not is_repeat: # Need to add a new element to profile
+                profile.append((value, portion))
+        return sorted(profile, key=lambda val: val[1], reverse=True)
 
     # Inserta a point into the sequence, returns self
     def insert(self, time, value):

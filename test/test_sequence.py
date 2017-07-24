@@ -49,30 +49,55 @@ class TestSequence(unittest.TestCase):
         self.assertEqual(self.seq.get_samples(0, num_samples=3, period=5), [10, 10, 8.5])
         self.assertEqual(self.seq.get_samples(25, num_samples=3, period=5), ["foo", [], []])
 
-    def test_get_values(self):
-        self.assertEqual(self.seq.get_values(-1, 0), [None])
-        self.assertEqual(self.seq.get_values(-1, 1), [None, 10])
-        self.assertEqual(self.seq.get_values(-1, 100), [None, 10, 8.5, "foo", []])
-
-        self.assertEqual(self.seq.get_values(9, 20), [10, 8.5])
-        self.assertEqual(self.seq.get_values(10,20), [8.5])
 
     def test_get_subsequence(self):
         original_seq = self.seq.copy()
 
         subseq = self.seq.get_subsequence(0,10)
         self.assertEqual(subseq, Sequence(times=[0], values=[10]))
+        subseq = self.seq.get_subsequence(0,10, True)
+        self.assertEqual(subseq, Sequence(times=[0], values=[10]))
 
         subseq = self.seq.get_subsequence(1,11)
         self.assertEqual(subseq, Sequence(times=[10], values=[8.5]))
+        subseq = self.seq.get_subsequence(1,11, True)
+        self.assertEqual(subseq, Sequence(times=[1, 10], values=[10, 8.5]))        
 
         subseq = self.seq.get_subsequence(-1, 1)
         self.assertEqual(subseq, Sequence(times=[0], values=[10]))
+        subseq = self.seq.get_subsequence(-1, 1, True)
+        self.assertEqual(subseq, Sequence(times=[0], values=[10]))
 
-        subseq = self.seq.get_subsequence(0,0)
+        subseq = self.seq.get_subsequence(5,5)
+        self.assertEqual(subseq, Sequence())
+        subseq = self.seq.get_subsequence(10,10)
+        self.assertEqual(subseq, Sequence())
+        subseq = self.seq.get_subsequence(5,5, True)
+        self.assertEqual(subseq, Sequence())
+        subseq = self.seq.get_subsequence(10,10, True)
         self.assertEqual(subseq, Sequence())
 
         self.assertEqual(self.seq, original_seq) # Ensure the original is unmodified
+        # -- proper accumulation of equivalent values with correct portion calculations
+        # -- okay with undefined at start
+        # -- returning sorted list by portion
+    def test_profile_interval(self):
+        seq = Sequence(times=[200, 300, 700, 900], values=[0, 1, 0, 2])
+
+        interval = (0, 800)
+        expected = [(1, 0.5), (0, 0.25)]
+        self.assertEqual(seq.profile_interval(interval), expected)
+
+        interval = (300, 700)
+        expected = [(1, 1.0)]
+        self.assertEqual(seq.profile_interval(interval), expected)
+
+        interval = (250, 450)
+        expected = [(1, 0.75), (0, 0.25)]
+        self.assertEqual(seq.profile_interval(interval), expected)
+
+        self.assertEqual(seq.profile_interval((250,250)), [])
+        self.assertEqual(seq.profile_interval((0,200)), [])
 
     def test_remove_duplicates(self):
         seq = Sequence(times=[0,1,2,3,4], values=[10,10,11,10,10])

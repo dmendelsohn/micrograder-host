@@ -2,202 +2,106 @@ from . import prefs
 from . import utils
 from .sequence import Sequence
 
+from collections import namedtuple
 import operator
 
-class TestPoint:
-    def __init__(self, condition_id, data_type, channel, expected_value, check_interval, *,
-                 check_function=None, aggregator=None):
+
+EvaluatedValue = namedtuple("EvaluatedValue", ["value", "portion", "passed"])
+EvaluationPointResult = namedtuple("EvaluationPointResult", ["passed", "observed"])
+
+class EvaluationPoint:
+    def __init__(self, condition_id, expected_value, check_interval, *,
+                 check_function=operator.eq, portion=1.0):
         self.condition_id = condition_id
-        self.data_type = data_type
-        self.channel = channel
         self.expected_value = expected_value
         self.check_interval = check_interval
         self.check_function = check_function
-        self.aggregator = aggregator
+        self.portion = portion # Required fraction of interval with correct value
 
-    def describe(self, condition_desc=None):
-        json = {}
-        json["Type"] = utils.get_description(data_type=self.data_type, 
-                                                    channel=self.channel)
+    # Evaluates whether or not this point is satisfied
+    # condition_met_at: time condition was met, or None if not met
+    # sequence: Sequence for relevant (data_type,channel)
+    # Returns a (bool, list of tuples) tuple:
+    #   bool represents whether or not the point is satisfied
+    #   each tuple in list is (value_observed, portion_observed, passed),
+    #       representing the values observed the assessment interval,
+    #       sorted by portion_observed descending
+    def evaluate(self, condition_met_at, sequence):
+        if condition_met_at is None:
+            return EvaluationPointResult(False, [])
 
-        interval_desc = str(self.check_interval) + " relative to "
-        if condition_desc is not None:
-            interval_desc += condition_desc
-        else:
-            interval_desc += "time at which condition {} was met".format(self.condition_id)
-        json["Time Interval"] = interval_desc
+        (start, end) = self.check_interval
+        start += condition_met_at
+        end += condition_met_at
 
-        json["Expected"] = str(self.expected_value)
+        values = sequence.profile_interval((start,end))
 
-        if hasattr(self.check_function, "description"):
-            json["Check Function"] = self.check_function.description
+        # Add pass/fail for each value tuple
+        portion_correct = 0.0
+        for i in range(len(values)):
+            value, portion = values[i]
+            if self.check_function(self.expected_value, value):
+                values[i] = EvaluatedValue(value, portion, True)
+                portion_correct += portion
+            else:
+                values[i] = EvaluatedValue(value, portion, False)
 
-        if hasattr(self.aggregator, "description"):
-            json["Aggregator Function"] = self.aggregator.description
-
-        return json
-
+        passed = (portion_correct >= self.portion)
+        return EvaluationPointResult(passed, values)
 
     def __eq__(self, other):
-        if type(self) is not type(other):
-            return False
-        return self.__dict__ == other.__dict__
+        return type(other) is type(self) and self.__dict__ == other.__dict__
 
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
-        s = "TestPoint: condition_id={}, data_type={}, channel={}, expected_value={}"
-        s += ", check_interval={}, check_function={}, aggregator={}"
-        return s.format(self.condition_id, self.data_type, self.channel, self.expected_value,
-                        self.check_interval, self.check_function, self.aggregator)
-
-    def __lt__(self, other): # Mostly used for test purposes
-        t1 = (self.condition_id, hash(type(self.data_type)), self.data_type.value, 
-              self.check_interval, hash(self.channel))
-        t2 = (other.condition_id, hash(type(other.data_type)), other.data_type.value,
-              other.check_interval, hash(other.channel))
-        return t1 < t2
+        s = ("EvaluationPoint: condition_id={}, expected_value={}, "
+             "check_interval={}, check_function={}, portion={}")
+        return s.format(self.condition_id, self.expected_value, self.check_interval,
+                        self.check_function, self.portion)
 
 class Evaluator:
     # conditions: a list of relevant Conditions
-    # test_points: a list of test points
-    def __init__(self, conditions, test_points, *,
-                 aggregators=None,
-                 default_intrapoint_aggregators=None,
-                 default_check_functions=None):
+    # points: a list of EvaluationPoints
+    def __init__(self, conditions, points, *,
+                 aggregators=None):
         if aggregators is None:
             aggregators = prefs.default_aggregators()
-        if default_intrapoint_aggregators is None:
-            default_intrapoint_aggregators = prefs.default_aggregators()
-        if default_check_functions is None:
-            default_check_functions = prefs.default_check_functions()
 
         self.conditions = conditions # List of relevant Conditions
-        self.test_points = test_points # List of test_points
+        self.points = points # Map from (data_type,channel)->list(EvaluationPoint)
         self.aggregators = aggregators # Preferences<Aggregator>
 
-        # Defaults for test_points if respective fields are None
-        self.default_intrapoint_aggregators = default_intrapoint_aggregators # Preferences<Aggregator>
-        self.default_check_functions = default_check_functions # Preferences<Check Function>
-
-        for point in test_points: # Populate missing fields with Evalutor's defaults
-            if point.aggregator is None:
-                point.aggregator = default_intrapoint_aggregators.get_preference(
-                                        (point.data_type, point.channel)
-                                   )
-
-            if point.check_function is None:
-                point.check_function = default_check_functions.get_preference(
-                                            (point.data_type, point.channel)
-                                       )
-
     # log: a RequestLog of the test that was run
-    # Returns map from (data_type,channel)->bool representing overall result
+    # Returns a map from (data_type,channel)->(bool, list)
+    #   the boolean represents the overall result for this channel
+    #   each elt of list is of EvaluationPointResults corresponding to each
+    #   EvaluationPoint (in the same order seen in the values of self.points)
     def evaluate(self, log):
         satisfied_times = [log.condition_satisfied_at(c) for c in self.conditions]
-        condition_descs = [c.description for c in self.conditions]
         sequences = log.extract_sequences()
-
-        results = {} # Map from (data_type,channel) to list of boolean results
-        descriptions = {} # Map from (data_type,channel) to list of description dicts
-        for test_point in self.test_points:
-            result, desc = self.evaluate_test_point(sequences, satisfied_times, test_point,
-                                                    condition_descriptions=condition_descs)
-
-            key = (test_point.data_type, test_point.channel)
-            if key not in results:
-                results[key] = []
-            results[key].append(result)
-
-            if key not in descriptions:
-                descriptions[key] = []
-            descriptions[key].append(desc)
-
-
-        # Now, for each (data_type, channel), aggregate results to a single bool
-        for key in results:
-            (data_type, channel) = key
-
-            # Do aggregation
-            try:
-                agg = self.aggregators.get_preference((data_type, channel))
-                results[key] = agg(results[key])
-            except ValueError:  # No aggregator found
-                agg = None
-                results[key] = False 
-
-
-            descriptions[key] = {"Points": descriptions[key]}
-
-            if results[key]:
-                descriptions[key]["Result"] = "PASS"
-            else:
-                descriptions[key]["Result"] = "FAIL"
-
-            if hasattr(agg, "description"):
-                descriptions[key]["Aggregator Function"] = agg.description
-
-        return results, descriptions
-
-
-    # sequences: Map from (data_type,channel) to Sequence
-    # satisfied_times: A list of satisfied times (or None) for all conditions
-    # condition_descriptions: A list of strings (or None) for describing conditions.
-    #    - optional...if provided, must be same length as conditions list
-    # test_point: the test_point to evaulate
-    # Returns: a bool representing the result for this point, or a (bool, description) tuple
-    #       description is a dict where keys are str and values are (str or list or dict)
-    def evaluate_test_point(self, sequences, satisfied_times, test_point, *,
-                            condition_descriptions=None):
-        if condition_descriptions is None:
-            condition_descriptions = [None]*len(satisfied_times)
-
-        if test_point.condition_id >= len(satisfied_times): # Condition out of bounds
-            raise ValueError("Condition id out of bounds")
         
-        zero_point = satisfied_times[test_point.condition_id]
-        if zero_point is None: # Condition never met, this point can't be evaluated
-            values = []
-            result = False
-        else:
-            (start, end) = test_point.check_interval
-            start += zero_point
-            end += zero_point
+        results = {} # Map to be returned
+        for key in self.points:
+            sequence = sequences.get(key, Sequence())
+            point_results = []
+            for point in self.points[key]:
+                condition_met_at = satisfied_times[point.condition_id]
+                point_results.append(point.evaluate(condition_met_at, sequence))
 
-            # Get relevant actual ouputs
-            key = (test_point.data_type, test_point.channel)
-            seq = sequences.get(key, Sequence())
-            values = seq.get_values(start, end)
+            agg = self.aggregators.get_preference(key)
+            overall_result = agg([res.passed for res in point_results])
+            results[key] = (overall_result, point_results)
 
-            def check(value):
-                return test_point.check_function(test_point.expected_value, value)
-
-            if type(test_point.aggregator) is tuple:
-                agg = test_point.aggregator[0]
-            else:
-                agg = test_point.aggregator
-            result = agg(map(check, values))
-
-        # Formulate output and return
-        condition_desc = condition_descriptions[test_point.condition_id]
-        point_desc = test_point.describe(condition_desc=condition_desc)
-        point_desc["Values"] = [str(value) for value in values]
-        if result:
-            point_desc["Result"] = "PASS"
-        else:
-            point_desc["Result"] = "FAIL"
-        return (result, point_desc)
+        return results
 
     def __eq__(self, other):
         if type(self) is not type(other):
             return False
-        if not (self.conditions == other.conditions
-                and self.aggregators == other.aggregators):
-            return False
-
-        # Now check that the test_points match
-        return sorted(self.test_points) == sorted(other.test_points)
+        return (self.conditions == other.conditions
+                and self.aggregators == other.aggregators
+                and self.test_points == other.test_points)
 
     def __str__(self):
         return repr(self)
