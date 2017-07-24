@@ -4,7 +4,7 @@ import unittest
 from src.case import TestCase
 from src.condition import Condition
 from src.condition import ConditionType
-from src.evaluator import TestPoint
+from src.evaluator import EvalPoint
 from src.log import RequestLog
 from src.prefs import Preferences
 from src.request import EventRequest
@@ -36,9 +36,7 @@ class ScaffoldTest(unittest.TestCase):
         interpolations = Preferences({(InputType.DigitalRead,): InterpolationType.Start})
         default_values = Preferences({(InputType.DigitalRead,): 1})
 
-        pt0 = TestPointTemplate(check_interval=("0.2*T", "0.8*T"),
-                                check_function=operator.__eq__,
-                                aggregator=all)
+        pt0 = EvalPointTemplate(check_interval=("0.2*T", "0.8*T"))
         point_templates = Preferences({tuple(): pt0})
         aggregators = Preferences({(OutputType.DigitalWrite, 13): all,
                                    (OutputType.Screen, None): all
@@ -104,7 +102,7 @@ class ScaffoldTest(unittest.TestCase):
         screen_values = [self.screen_off, self.screen_on, self.screen_off,
                          self.screen_on, self.screen_off]
         for (check_interval, value) in zip(check_intervals, digital_values):
-            test_points.append(TestPoint(condition_id=0,
+            test_points.append(EvalPoint(condition_id=0,
                                          data_type=OutputType.DigitalWrite,
                                          channel=13,
                                          expected_value=value,
@@ -113,7 +111,7 @@ class ScaffoldTest(unittest.TestCase):
                                          aggregator=all))
 
         for (check_interval, value) in zip(check_intervals, screen_values):
-            test_points.append(TestPoint(condition_id=0,
+            test_points.append(EvalPoint(condition_id=0,
                                          data_type=OutputType.Screen,
                                          channel=None,
                                          expected_value=value,
@@ -242,46 +240,32 @@ class ScaffoldTest(unittest.TestCase):
                                                end_time, init_to_default)
         self.assertEqual(actual, expected)       
 
-    def test_generate_test_points(self):
+    def test_generate_eval_points(self):
         overall_sequences = self.log.extract_sequences()
         start_time = 1000
         end_time = 3000
-        expected = []
+        expected = {(OutputType.DigitalWrite, 13): [], (OutputType.Screen, None): []}
 
         # OFF from (relative) t=2 to t=1002
-        expected.append(TestPoint(condition_id=-1,
-                                data_type=OutputType.DigitalWrite,
-                                channel=13,
-                                expected_value=0,
-                                check_interval=(202,802),
-                                check_function=operator.__eq__,
-                                aggregator=all))
-        expected.append(TestPoint(condition_id=-1,
-                                data_type=OutputType.Screen,
-                                channel=None,
-                                expected_value=Screen(width=128, height=64),
-                                check_interval=(202,802),
-                                check_function=operator.__eq__,
-                                aggregator=all))
+        expected[(OutputType.DigitalWrite, 13)].append(
+            EvalPoint(condition_id=-1, expected_value=0,
+                      check_interval=(202,802), check_function=operator.eq, portion=1.0)
+        )
+        expected[(OutputType.Screen, None)].append(
+            EvalPoint(condition_id=-1, expected_value=Screen(width=128, height=64),
+                      check_interval=(202,802), check_function=operator.eq, portion=1.0)
+        )
 
         # ON from relative t=1002 to t=2000
-        expected.append(TestPoint(condition_id=-1,
-                                data_type=OutputType.DigitalWrite,
-                                channel=13,
-                                expected_value=1,
-                                check_interval=(1201,1800),
-                                check_function=operator.__eq__,
-                                aggregator=all))
-        expected.append(TestPoint(condition_id=-1,
-                                data_type=OutputType.Screen,
-                                channel=None,
-                                expected_value=self.screen_on,
-                                check_interval=(1201,1800),
-                                check_function=operator.__eq__,
-                                aggregator=all))
+        expected[(OutputType.DigitalWrite, 13)].append(
+            EvalPoint(condition_id=-1, expected_value=1,
+                      check_interval=(1201,1800), check_function=operator.eq, portion=1.0)
+        )
+        expected[(OutputType.Screen, None)].append(
+            EvalPoint(condition_id=-1, expected_value=self.screen_on,
+                      check_interval=(1201,1800), check_function=operator.eq, portion=1.0)
+        )
 
-        expected.sort(key=lambda point:(point.check_interval, point.data_type.value))
-        actual = self.scaffold.generate_test_points(overall_sequences, start_time, end_time)
-        actual.sort(key=lambda point: (point.check_interval, point.data_type.value))
 
+        actual = self.scaffold.generate_eval_points(overall_sequences, start_time, end_time)
         self.assertEqual(actual, expected)

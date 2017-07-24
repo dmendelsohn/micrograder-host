@@ -3,7 +3,7 @@ from . import utils
 from .case import TestCase
 from .condition import Condition
 from .condition import ConditionType
-from .evaluator import EvaluationPoint
+from .evaluator import EvalPoint
 from .evaluator import Evaluator
 from .frame import Frame
 from .handler import RequestHandler
@@ -12,18 +12,20 @@ from .sequence import InterpolationType
 from .utils import InputType
 from .utils import OutputType
 
+import operator
+
 
 DEFAULT_CHECK_INTERVAL = ("0.2*T", "0.8*T")
 
 # Check_interval is relative to observed time of point, not any condition
 # Either elemnt of check_interval tuple can be string, it will be eval-ed
 # In string expression for check_interval elt, use "T" as length of this output
-class TestPointTemplate:
+class EvalPointTemplate:
     def __init__(self, check_interval=DEFAULT_CHECK_INTERVAL,
-                 check_function=None, aggregator=None):
+                 check_function=operator.eq, portion=1.0):
         self.check_interval = check_interval
         self.check_function = check_function
-        self.aggregator = aggregator
+        self.portion = portion
 
 class FrameTemplate:
     def __init__(self, start_condition, end_condition, *,
@@ -45,18 +47,18 @@ class Scaffold:
         if default_values is None:
             default_values = prefs.default_default_values()
         if point_templates is None:
-            point_templates = Preferences({tuple(): TestPointTemplate()})
+            point_templates = Preferences({tuple(): EvalPointTemplate()})
         if aggregators is None:
             aggregators = prefs.default_aggregators()
 
         self.frame_templates = frame_templates # List of FrameTemplates
         self.interpolations = interpolations # Preferences<InterpolationType>
         self.default_values = default_values # Preferences<value>
-        self.point_templates = point_templates # Preferences<TestPointTemplate>
+        self.point_templates = point_templates # Preferences<EvalPointTemplate>
         self.aggregators = aggregators # Preferences<f(list of bool)->bool>
 
     # Input: a RequestLog
-    # Retunrs a TestCase
+    # Returns a TestCase
     # TestCase includes "background" frame (always active, priority=-1, default input values)
     def generate_test_case(self, log):
         # First, filter out None-valued input requests (true requests)
@@ -67,7 +69,7 @@ class Scaffold:
         overall_sequences = log.extract_sequences()
 
         frames = []
-        test_points = []
+        points_by_frame = []
         for frame_template in self.frame_templates:
             bounds = self.generate_frame_bounds(log, frame_template)
             if bounds:
@@ -85,18 +87,24 @@ class Scaffold:
                                     inputs=inputs,
                                     priority=frame_template.priority))
 
-                # Generate test_points for all outputs that occurred during this frame
-                new_points = self.generate_test_points(overall_sequences, start_time, end_time)
-                for point in new_points:
+                # Generate points for all outputs that occurred during this frame
+                new_points = self.generate_eval_points(overall_sequences, start_time, end_time)
+                for point in new_points.values():
                     point.condition_id = len(frames)-1
-                test_points.extend(new_points)
+                points_by_frame.append(new_points)
 
+        points = {} # Combination of point dicts from all frames
+        for subpoint in points_by_frame:
+            for key in subpoint:
+                if key not in points:
+                    points[key] = []
+                points[key].extend(subpoint[key])
 
         handler_end_condition = Condition(ConditionType.And,
                                           subconditions=[frame.end_condition for frame in frames])
         handler = RequestHandler(end_condition=handler_end_condition, frames=frames, preempt=True)
         evaluator = Evaluator(conditions=[frame.start_condition for frame in frames],
-                              test_points=test_points,
+                              points=points,
                               aggregators=self.aggregators)
         return TestCase(handler=handler, evaluator=evaluator)
 
@@ -140,19 +148,20 @@ class Scaffold:
                 inputs[(data_type,channel)] = subsequence
         return inputs
 
-    # Generates test_points based on non-redundant outputs in the specified
+    # Generates EvalPoints based on non-redundant outputs in the specified
     # range in the overall sequence
     # For each non-redundant output, we use the relevant template point,
     # and fill in check_interval, condition_id (given to this function) and expeccted_value
     # Input: overall_sequences: map from (data_type,channel)->Sequence, in absolute time
     # Input: start_time, end_time: an interval with usual inclusiveness rules
-    # Returns: a list of test_points (condition_id field should be -1)
-    def generate_test_points(self, overall_sequences, start_time, end_time):
-        test_points = []
+    # Returns: dict mapping (data_type, channel)->(list of EvalPoints)
+    def generate_eval_points(self, overall_sequences, start_time, end_time):
+        points = {}
         for (data_type, channel) in overall_sequences:
             if type(data_type) is OutputType:
-                point_template = self.point_templates.get_preference((data_type, channel))
-                sequence = overall_sequences[(data_type,channel)]
+                key = (data_type, channel)
+                point_template = self.point_templates.get_preference(key)
+                sequence = overall_sequences[key]
                 sequence = sequence.get_subsequence(start_time, end_time)
                 sequence.shift(-start_time)
                 sequence.remove_duplicates()
@@ -167,12 +176,12 @@ class Scaffold:
                     start = int(eval(str(start))) + sequence[i].time
                     end = int(eval(str(end))) + sequence[i].time
 
-                    point = TestPoint(condition_id=-1, # Filled in later
-                                      data_type=data_type,
-                                      channel=channel,
+                    point = EvalPoint(condition_id=-1, # Filled in later
                                       expected_value=sequence[i].value,
                                       check_interval=(start,end),
                                       check_function=point_template.check_function,
-                                      aggregator=point_template.aggregator)
-                    test_points.append(point)
-        return test_points
+                                      portion=point_template.portion)
+                    if key not in points:
+                        points[key] = []
+                    points[key].append(point)
+        return points
