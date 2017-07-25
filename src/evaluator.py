@@ -165,7 +165,7 @@ class Evaluator:
 
             desc[key] = channel_desc
         return desc
-        
+
     def __eq__(self, other):
         return type(self) is type(other) and self.__dict__ == other.__dict__
 
@@ -175,8 +175,3 @@ class Evaluator:
     def __repr__(self):
         s = "Evaluator: conditions={}, test_points={}, aggregators={}"
         return s.format(self.conditions, self.test_points, self.aggregators)
-
-    #TODO: description
-    def describe_channel_result(self, channel_result):
-        #TODO: implement
-        pass

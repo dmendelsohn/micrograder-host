@@ -86,7 +86,7 @@ class TestEvalPoint(unittest.TestCase):
 
 class TestEvaluator(unittest.TestCase):
     def setUp(self):
-        conditions = [Condition(ConditionType.After, cause=50),
+        conditions = [Condition(ConditionType.After, cause=50, description="50ms"),
                       Condition(ConditionType.After, cause=5000)] # Never met
 
         points = {}
@@ -103,7 +103,6 @@ class TestEvaluator(unittest.TestCase):
 
         self.evaluator = Evaluator(conditions, points)
 
-    def test_evaluate(self):
         requests = [
             OutputRequest(timestamp=0, data_type=OutputType.DigitalWrite,
                           channels=[13,14], values=[1,1]),
@@ -113,6 +112,9 @@ class TestEvaluator(unittest.TestCase):
         for request in requests:
             log.update(request)
 
+        self.log = log
+
+    def test_evaluate(self):
         expected = {}
         expected[(OutputType.DigitalWrite, 13)] = (False, [
             EvalPointResult(True, [EvaluatedValue(value=1, portion=1.0, passed=True)]),
@@ -123,10 +125,9 @@ class TestEvaluator(unittest.TestCase):
         ])
 
 
-        actual = self.evaluator.evaluate(log)
+        actual = self.evaluator.evaluate(self.log)
         self.assertEqual(actual, expected)
 
-        return
         # This should make (DigitalWrite,13) pass
         self.evaluator.aggregators = Preferences({
             tuple(): all,
@@ -136,9 +137,48 @@ class TestEvaluator(unittest.TestCase):
         overall_result, point_results = expected[(OutputType.DigitalWrite, 13)]
         expected[(OutputType.DigitalWrite, 13)] = (True, point_results) # 1 out 2 points => PASS
 
-        actual = self.evaluator.evaluate(log)
+        actual = self.evaluator.evaluate(self.log)
         self.assertEqual(actual, expected)
 
     def test_describe(self):
-        #TODO: implement
-        pass
+        self.evaluator.points = {(OutputType.DigitalWrite, 13): [
+            EvalPoint(condition_id=0, expected_value=1, check_interval=(0,100))
+        ]}
+
+        expected = {(OutputType.DigitalWrite, 13): {
+            "Result": "PASS",
+            "Points": [{
+                "Time Interval": "(0, 100) relative to 50ms",
+                "Pass Criterion": "Correct for 100.00% of interval",
+                "Expected Value": 1,
+                "Result": "PASS",
+                "Observed Values": [
+                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":True}
+                ]
+            }]
+        }}
+        actual = self.evaluator.describe(self.evaluator.evaluate(self.log))
+        self.assertEqual(actual, expected)
+
+        self.evaluator.conditions[0].description = None
+        my_agg = lambda values: False
+        my_agg.description = "my aggregator"
+        self.evaluator.aggregators = Preferences({
+            tuple(): my_agg
+        })
+
+        expected = {(OutputType.DigitalWrite, 13): {
+            "Result": "FAIL",
+            "Aggregator Description": "my aggregator",
+            "Points": [{
+                "Time Interval": "(0, 100) relative to condition 0",
+                "Pass Criterion": "Correct for 100.00% of interval",
+                "Expected Value": 1,
+                "Result": "PASS",
+                "Observed Values": [
+                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":True}
+                ]
+            }]
+        }}
+        actual = self.evaluator.describe(self.evaluator.evaluate(self.log))
+        self.assertEqual(actual, expected)
