@@ -41,6 +41,50 @@ class TestEvalPoint(unittest.TestCase):
             EvaluatedValue(value=1.01, portion=0.25, passed=True)    
         ])
 
+    # TODO: debug
+    def test_describe(self):
+        check_func = lambda x,y: True
+        point = EvalPoint(condition_id=0, expected_value=1, check_interval=(0,100),
+                          check_function=check_func, portion=0.5)
+
+        point_result = EvalPointResult(True, [
+            EvaluatedValue(1, 0.5, True)
+        ])
+        actual = point.describe("some condition", point_result)
+        expected = {
+            "Time Interval":"(0, 100) relative to some condition",
+            "Pass Criterion":"Correct for 50.00% of interval",
+            "Expected Value":1,
+            "Result":"PASS",
+            "Observed Values":[{
+                "Value": 1, "Percentage of Interval": "50.00%", "Correct": True
+                }]
+        }
+        self.assertEqual(actual, expected)
+
+        point_result = EvalPointResult(False, [])
+        actual = point.describe("some condition", point_result)
+        expected = {
+            "Time Interval":"(0, 100) relative to some condition",
+            "Pass Criterion":"Correct for 50.00% of interval",
+            "Expected Value":1,
+            "Result":"FAIL",
+            "Observed Values":[]
+        }
+        self.assertEqual(actual, expected)
+
+        point.check_function.description = "some check function"
+        actual = point.describe()
+        expected = {
+            "Time Interval":"(0, 100) relative to condition 0",
+            "Pass Criterion":"Correct for 50.00% of interval with check function (some check function)",
+            "Expected Value":1,
+            "Result":"NOT EVALUATED",
+            "Observed Values":[]
+        }
+        self.assertEqual(actual, expected)
+
+
 class TestEvaluator(unittest.TestCase):
     def setUp(self):
         conditions = [Condition(ConditionType.After, cause=50),
@@ -95,3 +139,7 @@ class TestEvaluator(unittest.TestCase):
 
         actual = self.evaluator.evaluate(log)
         self.assertEqual(actual, expected)
+
+    def test_describe_channel_result(self):
+        #TODO: implement
+        pass

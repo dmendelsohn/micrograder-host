@@ -28,9 +28,9 @@ class EventType(Enum):
 
 
 # Returns a string description of the data_type/channel
-# TODO: add more stuff
+# TODO: think about refactoring
 # Later: make names configurable (i.e. analog pin 14 becomes analog A0, screen becomes OLED, etc)
-def get_description(data_type, channel=None):
+def describe_data_type(data_type, channel=None):
     if data_type == OutputType.DigitalWrite:
         if channel is None:
             raise ValueError("DigitalWrite must have a channel (pin number)")
@@ -48,6 +48,19 @@ def get_description(data_type, channel=None):
         if channel is not None:
             desc += " {}".format(channel)
         return desc
+
+# Used to get reduced descriptions (not necessarily str) of an object
+# e.g. especially useful for Screens and stuff
+# By default, object itself is returned
+# This function looks for an attribute called "description", then
+# a method called "describe()", and then default
+def get_description(obj, default=None):
+    if hasattr(obj, "description"):
+        return obj.description
+    elif callable(getattr(obj, "describe", None)):
+        return obj.describe()
+    else:
+        return default
 
 # value: a numeric
 # params: of type AnalogParams

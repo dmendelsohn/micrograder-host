@@ -6,17 +6,32 @@ from src.utils import *
 
 class TestUtils(unittest.TestCase):
 
+    def test_describe_data_type(self):
+        self.assertEqual(describe_data_type(OutputType.DigitalWrite, 2), "Digital pin 2 output")
+        self.assertEqual(describe_data_type(OutputType.AnalogWrite, 2), "Analog pin 2 output")
+        self.assertEqual(describe_data_type(OutputType.Screen),"Screen")
+        self.assertEqual(describe_data_type(EventType.Print), "Print")
+
+        with self.assertRaises(ValueError):
+            describe_data_type(OutputType.DigitalWrite) # No pin num
+
+        with self.assertRaises(ValueError):
+            describe_data_type(OutputType.AnalogWrite) # No pin num
+
     def test_get_description(self):
-        self.assertEqual(get_description(OutputType.DigitalWrite, 2), "Digital pin 2 output")
-        self.assertEqual(get_description(OutputType.AnalogWrite, 2), "Analog pin 2 output")
-        self.assertEqual(get_description(OutputType.Screen),"Screen")
-        self.assertEqual(get_description(EventType.Print), "Print")
+        class Foo:
+            def describe(self):
+                return "describe()"
+        foo = Foo()
+        self.assertEqual(get_description(foo), "describe()")
 
-        with self.assertRaises(ValueError):
-            get_description(OutputType.DigitalWrite) # No pin num
+        foo.description = "description"
+        self.assertEqual(get_description(foo), "description")
 
-        with self.assertRaises(ValueError):
-            get_description(OutputType.AnalogWrite) # No pin num
+        foo = 0
+        self.assertIsNone(get_description(foo))
+        self.assertEqual(get_description(foo, default=1), 1)
+
 
     def test_decode_int(self):
         # 1 byte

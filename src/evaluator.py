@@ -7,7 +7,11 @@ import operator
 
 
 EvaluatedValue = namedtuple("EvaluatedValue", ["value", "portion", "passed"])
+
+# Augments with point: condition, expected_value, check_function, check_interval, portion
 EvalPointResult = namedtuple("EvalPointResult", ["passed", "observed"])
+
+# Augments with channel aggregator when describing
 ChannelResult = namedtuple("ChannelResult", ["passed", "points"])
 
 class EvalPoint:
@@ -49,6 +53,44 @@ class EvalPoint:
 
         passed = (portion_correct >= self.portion)
         return EvalPointResult(passed, values)
+
+    def describe(self, condition_description=None, point_result=None):
+        desc = {}
+
+        if condition_description is None:
+            condition_description = "condition {}".format(self.condition_id)
+        interval_desc = str(self.check_interval) + " relative to " + condition_description
+        desc["Time Interval"] = interval_desc
+
+        criterion_desc = "Correct for {0:.2f}% of interval".format(100*self.portion)
+        check_function_desc = utils.get_description(self.check_function)
+        if check_function_desc is not None:
+            criterion_desc += " with check function ({})".format(check_function_desc)
+        desc["Pass Criterion"] = criterion_desc
+
+        desc["Expected Value"] = utils.get_description(self.expected_value,
+                                                       default=self.expected_value)
+
+        if point_result is None:
+            desc["Result"] = "NOT EVALUATED"
+            desc["Observed Values"] = []
+        else:
+            if point_result.passed:
+                desc["Result"] = "PASS"
+            else:
+                desc["Result"] = "FAIL"
+
+            desc["Observed Values"] = []
+            for eval_value in point_result.observed:
+                value_description = {
+                    "Value": utils.get_description(eval_value.value, default=eval_value.value),
+                    "Percentage of Interval": "{0:.2f}%".format(100*eval_value.portion),
+                    "Correct": eval_value.passed
+                }
+
+                desc["Observed Values"].append(value_description)
+
+        return desc
 
     def __eq__(self, other):
         return type(other) is type(self) and self.__dict__ == other.__dict__
@@ -106,3 +148,8 @@ class Evaluator:
     def __repr__(self):
         s = "Evaluator: conditions={}, test_points={}, aggregators={}"
         return s.format(self.conditions, self.test_points, self.aggregators)
+
+    #TODO: description
+    def describe_channel_result(self, channel_result):
+        #TODO: implement
+        pass
