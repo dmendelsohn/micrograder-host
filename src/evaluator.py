@@ -8,10 +8,8 @@ import operator
 
 EvaluatedValue = namedtuple("EvaluatedValue", ["value", "portion", "passed"])
 
-# Augments with point: condition, expected_value, check_function, check_interval, portion
 EvalPointResult = namedtuple("EvalPointResult", ["passed", "observed"])
 
-# Augments with channel aggregator when describing
 ChannelResult = namedtuple("ChannelResult", ["passed", "points"])
 
 class EvalPoint:
@@ -139,6 +137,35 @@ class Evaluator:
 
         return results
 
+    # Returns a JSON-style dictionary detailing the results
+    # channel_results: a map from (data_type,channel)->ChannelResult
+    # Return dict maps (data_type,channel)->ChannelDescription
+    # ChannelDescription has keys "Result", "Points", and maybe "Aggregation Function"
+    def describe(self,  channel_results):
+        desc = {}
+        for key in channel_results:
+            channel_desc = {}
+            (passed, point_results) = channel_results[key]
+
+            if passed:
+                channel_desc["Result"] = "PASS"
+            else:
+                channel_desc["Result"] = "FAIL"
+
+            agg = self.aggregators.get_preference(key)
+            agg_desc = utils.get_description(agg)
+            if agg_desc is not None:
+                channel_desc["Aggregator Description"] = agg_desc
+
+            channel_desc["Points"] = []
+            for (point, point_result) in zip(self.points[key], point_results):
+                condition = self.conditions[point.condition_id]
+                condition_desc = utils.get_description(condition)
+                channel_desc["Points"].append(point.describe(condition_desc, point_result))
+
+            desc[key] = channel_desc
+        return desc
+        
     def __eq__(self, other):
         return type(self) is type(other) and self.__dict__ == other.__dict__
 

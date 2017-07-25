@@ -41,7 +41,6 @@ class TestEvalPoint(unittest.TestCase):
             EvaluatedValue(value=1.01, portion=0.25, passed=True)    
         ])
 
-    # TODO: debug
     def test_describe(self):
         check_func = lambda x,y: True
         point = EvalPoint(condition_id=0, expected_value=1, check_interval=(0,100),
@@ -140,6 +139,6 @@ class TestEvaluator(unittest.TestCase):
         actual = self.evaluator.evaluate(log)
         self.assertEqual(actual, expected)
 
-    def test_describe_channel_result(self):
+    def test_describe(self):
         #TODO: implement
         pass
