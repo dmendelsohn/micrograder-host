@@ -56,7 +56,7 @@ class TestEvalPoint(unittest.TestCase):
             "Expected Value":1,
             "Result":"PASS",
             "Observed Values":[{
-                "Value": 1, "Percentage of Interval": "50.00%", "Correct": True
+                "Value": 1, "Percentage of Interval": "50.00%", "Correct": "Yes"
                 }]
         }
         self.assertEqual(actual, expected)
@@ -153,7 +153,7 @@ class TestEvaluator(unittest.TestCase):
                 "Expected Value": 1,
                 "Result": "PASS",
                 "Observed Values": [
-                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":True}
+                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":"Yes"}
                 ]
             }]
         }}
@@ -176,7 +176,7 @@ class TestEvaluator(unittest.TestCase):
                 "Expected Value": 1,
                 "Result": "PASS",
                 "Observed Values": [
-                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":True}
+                    {"Value":1, "Percentage of Interval":"100.00%", "Correct":"Yes"}
                 ]
             }]
         }}

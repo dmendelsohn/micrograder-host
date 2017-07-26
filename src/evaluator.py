@@ -83,7 +83,7 @@ class EvalPoint:
                 value_description = {
                     "Value": utils.get_description(eval_value.value, default=eval_value.value),
                     "Percentage of Interval": "{0:.2f}%".format(100*eval_value.portion),
-                    "Correct": eval_value.passed
+                    "Correct": "Yes" if eval_value.passed else "No"
                 }
 
                 desc["Observed Values"].append(value_description)
