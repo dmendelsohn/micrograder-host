@@ -15,10 +15,10 @@ from src.utils import InputType
 import unittest
 
 def request_is_init(request):
-    return request.is_event and request.data_type == EventType.Init
+    return request.data_type == EventType.Init
 
 def request_is_print(request):
-    return request.is_event and request.data_type == EventType.Print
+    return request.data_type == EventType.Print
 
 class TestFrame(unittest.TestCase):
     def setUp(self):
