@@ -10,6 +10,7 @@ from .request import InvalidRequest
 from .request import OutputRequest
 from .response import AckResponse
 from .response import ErrorResponse
+from .response import NoResponse
 from .response import ValuesResponse
 from .screen import Screen
 from .screen import ScreenShape
@@ -90,6 +91,11 @@ class SerialCommunication:
             if len(header) < CODE_BYTES + TIMESTAMP_BYTES + MSG_SIZE_BYTES:
                 return None # read timed out
             msg_code = utils.decode_int(header[:CODE_BYTES], signed=False)
+            if msg_code >= 0x80: # If top bit is 1
+                response_expected = False
+            else:
+                response_expected = True
+            msg_code %= 0x80 # Mask top bit
             timestamp = utils.decode_int(header[CODE_BYTES:CODE_BYTES+TIMESTAMP_BYTES], signed=False)
             timestamp *= utils.MILLISECOND # Convert to interal time resolution
             msg_size = utils.decode_int(header[CODE_BYTES+TIMESTAMP_BYTES:], signed=False)
@@ -101,9 +107,13 @@ class SerialCommunication:
                 msg_body = bytes()
         except SerialException:
             return None # port was closed
-        return self.bytes_to_request(msg_code, timestamp, msg_body)
+
+        request = self.bytes_to_request(msg_code, timestamp, msg_body)
+        request.response_expected = response_expected
 
     def send_response(self, response):
+        if type(response) is NoResponse:
+            return # Don't do anything
         msg_code, msg_body = self.response_to_bytes(response)
         to_send = utils.encode_int(msg_code, CODE_BYTES, signed=False)
         to_send += utils.encode_int(len(msg_body), MSG_SIZE_BYTES, signed=False)

@@ -6,6 +6,7 @@ from .condition import Condition
 from .condition import ConditionType
 from .response import AckResponse
 from .response import ErrorResponse
+from .response import NoResponse
 from .response import ValuesResponse
 
 class RequestHandler:
@@ -32,12 +33,14 @@ class RequestHandler:
             frame.clear()
 
     # Input: Request
-    # Return: Response
+    # Return: Response, or None if there should be no response at all
     def update(self, request):
         for frame in self.frames:
             frame.update(request)
 
-        if not request.is_valid:
+        if not request.response_expected:
+            response = NoResponse()
+        elif not request.is_valid:
             response = ErrorResponse() # InvalidRequest
         elif request.is_input and request.values is None: # Get values from a frame
             frame_id = self.get_current_frame_id()

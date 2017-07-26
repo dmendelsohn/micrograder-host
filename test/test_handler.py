@@ -43,6 +43,10 @@ class TestRequestHandler(unittest.TestCase):
         expected = AckResponse(complete=False)
         self.assertEqual(self.handler.update(request), expected)
 
+        request = OutputRequest(0, OutputType.DigitalWrite, [13], [1], response_expected=False)
+        expected = NoResponse(complete=False)
+        self.assertEqual(self.handler.update(request), expected)
+
         request = InputRequest(50, InputType.AnalogRead, [0], analog_params=self.a_params)
         expected = ValuesResponse(values=[-128], analog=True, complete=False) # Handler default
         self.assertEqual(self.handler.update(request), expected)
@@ -63,6 +67,10 @@ class TestRequestHandler(unittest.TestCase):
 
         request = InputRequest(2150, InputType.AnalogRead, [0], analog_params=self.a_params)
         expected = ValuesResponse(values=[-128], analog=True, complete=True) # Handler complete
+        self.assertEqual(self.handler.update(request), expected)
+
+        request = OutputRequest(2150, OutputType.DigitalWrite, [13], [1], response_expected=False)
+        expected = NoResponse(complete=True)
         self.assertEqual(self.handler.update(request), expected)
 
     def test_get_current_frame_id(self):

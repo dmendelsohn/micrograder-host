@@ -30,3 +30,14 @@ class ValuesResponse(AckResponse):
     def __str__(self):
         string = "ValuesResponse: values={}, analog={}, complete={}"
         return string.format(self.values, self.analog, self.complete)
+
+class NoResponse:
+    def __init__(self, complete=False):
+        self.is_error = False
+        self.complete = complete
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __str__(self):
+        return "NoResponse: complete={}".format(self.complete)

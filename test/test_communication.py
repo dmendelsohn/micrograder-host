@@ -175,7 +175,6 @@ class TestSerialCommunication(unittest.TestCase):
         expected = OutputRequest(t, OutputType.Screen, [None], [Screen(buff=buff)])
         self.assertEqual(self.sc.bytes_to_request(code, t, body), expected)
 
-
     def test_response_to_bytes(self):
         resp = AckResponse(complete=False)
         expected = 0x80, bytes()
