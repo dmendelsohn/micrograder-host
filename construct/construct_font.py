@@ -17,7 +17,7 @@ def construct_font(log):
     for request in log.requests:
         if request.is_output and request.data_type == OutputType.Screen:
             last_screen = request.values[0]
-        elif request.is_event and request.data_type == EventType.Print:
+        elif request.data_type == EventType.Print:
             args = parse_print_message(request.data)
             if args: # Rules out invalid or irrelevant print messages
                 if last_screen: # Make sure we have a screen

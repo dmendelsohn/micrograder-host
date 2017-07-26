@@ -17,6 +17,7 @@ class Request:
         self.is_event = False # Default for base class
         self.is_measure = False # Default for base class
         self.is_valid = True  # Default for base class
+        self.data_type = None
 
     def __eq__(self, other):
         return type(self) is type(other) and self.__dict__ == other.__dict__
@@ -76,7 +77,6 @@ class InvalidRequest(Request):
     def __init__(self, timestamp, data=None):
         super().__init__(timestamp)
         self.is_valid = False # Override default
-        self.data_type = None
         self.data = data # Additional data
 
     def __str__(self):
