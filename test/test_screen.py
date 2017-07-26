@@ -41,8 +41,8 @@ class TestScreen(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_extract_text(self):
-        screen = utils.load('resources/screens/multiline_text')
-        font = utils.load('fonts/u8g2_5x7')
+        screen = utils.load('test/resources/screens/multiline_text')
+        font = utils.load('test/resources/fonts/u8g2_5x7')
         actual = screen.extract_text(font)
         expected = "This is a multiline stri\nng"
         self.assertEqual(actual, expected)
