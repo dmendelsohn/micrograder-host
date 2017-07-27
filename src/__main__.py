@@ -49,9 +49,12 @@ elif args.mode == "assess_log":
     results = testcase.evaluator.evaluate(log)
     description = testcase.evaluator.describe(results)
     images = testcase.evaluator.replace_images(description)
+    brief_desc = testcase.evaluator.brief_description(description)
 
     print("Description:")
     pprint(description)
+    print("Brief")
+    pprint(brief_desc)
     #TODO: save images
 
 elif args.mode == "record":
@@ -67,4 +70,4 @@ elif args.mode == "record":
     utils.save(log, path)
 
 else:
-    print("Invalid mode: use 'assess' or 'record'")
+    print("Invalid mode: use 'assess' or 'record' or 'assess_log'")
