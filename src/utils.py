@@ -6,6 +6,7 @@ import operator
 import struct
 
 MILLISECOND = 1 # time unit(s) per millisecond
+RESULTS_DIR = "results"
 
 class InputType(Enum):
     Accelerometer = 1
