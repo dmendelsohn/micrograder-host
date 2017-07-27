@@ -40,7 +40,6 @@ class Scaffold:
                  interpolations=None, default_values=None,
                  point_templates=None, aggregators=None):
 
-        # TODO: use Preferences class for these
         if interpolations is None:
             interpolations = Preferences({tuple(): InterpolationType.Mid})
         if default_values is None:
