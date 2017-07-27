@@ -28,19 +28,19 @@ class EventType(Enum):
 
 
 # Returns a string description of the data_type/channel
-# TODO: think about refactoring
-# Later: make names configurable (i.e. analog pin 14 becomes analog A0, screen becomes OLED, etc)
-def describe_data_type(data_type, channel=None):
+# TODO: add config dict {(data_type, channel)->str}
+def describe_channel(data_type, channel=None):
+    # Defaults
     if data_type == OutputType.DigitalWrite:
         if channel is None:
             raise ValueError("DigitalWrite must have a channel (pin number)")
-        return "Digital pin {} output".format(channel)
+        return "Digital pin {}".format(channel)
     elif data_type == OutputType.AnalogWrite:
         if channel is None:
             raise ValueError("AnalogWrite must have a channel (pin number)")
-        return "Analog pin {} output".format(channel)
+        return "Analog pin {}".format(channel)
     elif data_type == OutputType.Screen: # Ignore channel
-        return "Screen" 
+        return "Screen"
     elif data_type == EventType.Print: # Ignore channel
         return "Print"
     else:

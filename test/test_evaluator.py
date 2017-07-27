@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 import operator
 
+from src import utils
 from src.condition import Condition
 from src.condition import ConditionType
 from src.log import RequestLog
@@ -147,7 +148,8 @@ class TestEvaluator(unittest.TestCase):
             EvalPoint(condition_id=0, expected_value=1, check_interval=(0,100))
         ]}
 
-        expected = {(OutputType.DigitalWrite, 13): {
+        key_desc = utils.describe_channel(OutputType.DigitalWrite, 13)
+        expected = {key_desc: {
             "Result": "PASS",
             "Points": [{
                 "Time Interval": "(0, 100) relative to 50ms",
@@ -169,7 +171,7 @@ class TestEvaluator(unittest.TestCase):
             tuple(): my_agg
         })
 
-        expected = {(OutputType.DigitalWrite, 13): {
+        expected = {key_desc: {
             "Result": "FAIL",
             "Aggregator Description": "my aggregator",
             "Points": [{
@@ -205,3 +207,42 @@ class TestEvaluator(unittest.TestCase):
         self.assertEqual(desc, expected_desc)
         self.assertEqual(actual_images, expected_images)
         self.assertEqual(len(actual_images), len(expected_images))
+
+    def test_brief_description(self):
+        desc = {
+            "Channel 0": {"Result": "PASS","Points": []},
+            "Channel 1": {
+                "Result": "FAIL",
+                "Aggregator Function": "agg",
+                "Points": [
+                    {"Result": "PASS", "Expected Value": 0},
+                    {"Result": "FAIL", "Expected Value": 0}
+                ]
+            }
+        }
+
+        expected = {
+            "Channel 0": {"Result": "PASS"},
+            "Channel 1": {
+                "Result": "FAIL",
+                "Aggregator Function": "agg",
+                "Points": [
+                    {"Result": "PASS"},
+                    {"Result": "FAIL", "Expected Value": 0}
+                ]
+            }
+        }
+
+        original_desc = {
+            "Channel 0": {"Result": "PASS","Points": []},
+            "Channel 1": {
+                "Result": "FAIL",
+                "Aggregator Function": "agg",
+                "Points": [
+                    {"Result": "PASS", "Expected Value": 0},
+                    {"Result": "FAIL", "Expected Value": 0}
+                ]
+            }
+        }
+        self.assertEqual(self.evaluator.brief_description(desc), expected)
+        self.assertEqual(desc, original_desc)

@@ -16,7 +16,6 @@ parser.add_argument("-v", "--verbose", help="Verbose printing", action="store_tr
 args = parser.parse_args()
 
 
-
 if args.mode == "assess":
     if args.testcase is None:
         print("Error: Please provide path to the .tc file with --testcase option")
@@ -30,9 +29,11 @@ if args.mode == "assess":
 
     results = testcase.evaluator.evaluate(log)
     description = testcase.evaluator.describe(results)
-    print("Results: {}".format(results))
-    print("Description: ")
-    pprint(description) # Main issue
+    images = testcase.evaluator.replace_images(description)
+    
+    print("Description:")
+    pprint(description)
+    #TODO: save images
 
 elif args.mode == "assess_log":
     if args.testcase is None:
@@ -47,9 +48,11 @@ elif args.mode == "assess_log":
 
     results = testcase.evaluator.evaluate(log)
     description = testcase.evaluator.describe(results)
-    print("Results: {}".format(results))
-    print("Description: ")
-    pprint(description) # TODO: need to save images separately and replace value with filename
+    images = testcase.evaluator.replace_images(description)
+
+    print("Description:")
+    pprint(description)
+    #TODO: save images
 
 elif args.mode == "record":
     handler = RequestHandler() # Blank, endless handler

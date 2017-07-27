@@ -6,17 +6,17 @@ from src.utils import *
 
 class TestUtils(unittest.TestCase):
 
-    def test_describe_data_type(self):
-        self.assertEqual(describe_data_type(OutputType.DigitalWrite, 2), "Digital pin 2 output")
-        self.assertEqual(describe_data_type(OutputType.AnalogWrite, 2), "Analog pin 2 output")
-        self.assertEqual(describe_data_type(OutputType.Screen),"Screen")
-        self.assertEqual(describe_data_type(EventType.Print), "Print")
+    def test_describe_channel(self):
+        self.assertEqual(describe_channel(OutputType.DigitalWrite, 2), "Digital pin 2")
+        self.assertEqual(describe_channel(OutputType.AnalogWrite, 2), "Analog pin 2")
+        self.assertEqual(describe_channel(OutputType.Screen),"Screen")
+        self.assertEqual(describe_channel(EventType.Print), "Print")
 
         with self.assertRaises(ValueError):
-            describe_data_type(OutputType.DigitalWrite) # No pin num
+            describe_channel(OutputType.DigitalWrite) # No pin num
 
         with self.assertRaises(ValueError):
-            describe_data_type(OutputType.AnalogWrite) # No pin num
+            describe_channel(OutputType.AnalogWrite) # No pin num
 
     def test_get_description(self):
         class Foo:

@@ -142,6 +142,8 @@ class Evaluator:
     # channel_results: a map from (data_type,channel)->ChannelResult
     # Return dict maps (data_type,channel)->ChannelDescription
     # ChannelDescription has keys "Result", "Points", and maybe "Aggregation Function"
+    # TODO: add verbosity control
+    #   -- namely, replace passing points with just "PASS"
     def describe(self,  channel_results):
         desc = {}
         for key in channel_results:
@@ -164,7 +166,8 @@ class Evaluator:
                 condition_desc = utils.get_description(condition)
                 channel_desc["Points"].append(point.describe(condition_desc, point_result))
 
-            desc[key] = channel_desc
+            key_desc = utils.describe_channel(key[0], key[1])
+            desc[key_desc] = channel_desc #TODO: pretty name for key
         return desc
 
     # Takes the output of descibe(), and replaces all the images
@@ -198,6 +201,25 @@ class Evaluator:
 
         helper(description, omit_blanks)
         return images
+
+    # Any dictionary with "Result":"PASSED" gets reduced to that one item
+    # This shouldn't change the input, but some of the subelements will be the same objects
+    def brief_description(self, description):
+        brief = {}
+        for key in description:
+            if description[key].get("Result") == "PASS":
+                channel_desc = {"Result": "PASS"}
+            else:
+                channel_desc = description[key].copy()
+                point_descs = []
+                for point_desc in channel_desc["Points"]:
+                    if point_desc.get("Result") == "PASS":
+                        point_descs.append({"Result": "PASS"})
+                    else:
+                        point_descs.append(point_desc)
+                channel_desc["Points"] = point_descs
+            brief[key] = channel_desc
+        return brief
 
     def __eq__(self, other):
         return type(self) is type(other) and self.__dict__ == other.__dict__
