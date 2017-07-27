@@ -1,5 +1,6 @@
 from . import prefs
 from . import utils
+from .screen import Screen
 from .sequence import Sequence
 
 from collections import namedtuple
@@ -165,6 +166,38 @@ class Evaluator:
 
             desc[key] = channel_desc
         return desc
+
+    # Takes the output of descibe(), and replaces all the images
+    # with descriptive text.  Images are returned as a separate list (order matters)
+    # Returns list of Images, alters input description
+    def replace_images(self, description, omit_blanks=True):
+        images = []
+
+        # adds image to images (if necessary) and returns replacement text
+        def replace_image(screen, omit_blanks):
+            if omit_blanks and screen.get_num_pixels_lit() == 0:
+                return "Blank image"
+            else:
+                images.append(screen.to_image())
+                return "Image {}".format(len(images)-1)
+
+        # obj must be dict or list
+        def helper(obj, omit_blanks):
+            if type(obj) is list:
+                for i in range(len(obj)):
+                    if type(obj[i]) is Screen:
+                        obj[i] = replace_image(obj[i], omit_blanks)
+                    else:
+                        helper(obj[i], omit_blanks)
+            elif type(obj) is dict:
+                for (key, value) in obj.items():
+                    if type(value) is Screen:
+                        obj[key] = replace_image(value, omit_blanks)
+                    else:
+                        helper(value, omit_blanks)
+
+        helper(description, omit_blanks)
+        return images
 
     def __eq__(self, other):
         return type(self) is type(other) and self.__dict__ == other.__dict__

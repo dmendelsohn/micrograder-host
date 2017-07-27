@@ -45,16 +45,20 @@ class Screen:
     def __eq__(self, other):
         return type(other) is Screen and np.array_equal(self.buffer, other.buffer)
 
-    def copy(self):
-        return Screen(buff=self.buffer)
-
     def __repr__(self):
         return repr(self.buffer)
 
-    def describe2(self):
-        #TODO: implement
-        pass
+    def copy(self):
+        return Screen(buff=self.buffer)
 
+    # Creates a PIL Image from the buffer.  If save is specified, calles Image.save()
+    # with that argument.
+    # Returns an Image
+    def to_image(self, save=None):
+        im = Image.fromarray(self.buffer*255, "L")
+        if save:
+            im.save(save)
+        return im
 
     # Extracts text out of the buffer, using a given monospace font (basically, a set of bitmaps)
     # font: namedtuple Font (see above)

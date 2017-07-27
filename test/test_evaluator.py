@@ -1,6 +1,7 @@
 from src.evaluator import *
 import unittest
 
+import numpy as np
 import operator
 
 from src.condition import Condition
@@ -9,6 +10,7 @@ from src.log import RequestLog
 from src.prefs import Preferences
 from src.request import EventRequest
 from src.request import OutputRequest
+from src.screen import Screen
 from src.utils import EventType
 from src.utils import OutputType
 
@@ -182,3 +184,24 @@ class TestEvaluator(unittest.TestCase):
         }}
         actual = self.evaluator.describe(self.evaluator.evaluate(self.log))
         self.assertEqual(actual, expected)
+
+    def test_replace_images(self):
+        s0 = Screen(width=128, height=64)
+        s1 = Screen(buff=np.ones((64, 128), dtype=np.uint8))
+
+        desc = {0: [s0, {0: s1, 1: None}, {}, []], 1: {}}
+        expected_images = [s0.to_image(), s1.to_image()]
+        expected_desc = {0: ["Image 0", {0: "Image 1", 1: None}, {}, []], 1: {}}
+
+        actual_images = self.evaluator.replace_images(desc, False)
+        self.assertEqual(desc, expected_desc)
+        self.assertEqual(actual_images, expected_images)
+
+        desc = {0: [s0, {0: s1, 1: None}, {}, []], 1: {}} # Reset
+        expected_images = [s1.to_image()]
+        expected_desc = {0: ["Blank image", {0: "Image 0", 1: None}, {}, []], 1: {}}
+
+        actual_images = self.evaluator.replace_images(desc, True)
+        self.assertEqual(desc, expected_desc)
+        self.assertEqual(actual_images, expected_images)
+        self.assertEqual(len(actual_images), len(expected_images))

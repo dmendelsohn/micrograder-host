@@ -1,6 +1,7 @@
 from src.screen import *
 import unittest
 import numpy as np
+from PIL import Image
 
 from src import utils
 
