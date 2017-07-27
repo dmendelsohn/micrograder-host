@@ -110,6 +110,7 @@ class SerialCommunication:
 
         request = self.bytes_to_request(msg_code, timestamp, msg_body)
         request.response_expected = response_expected
+        return request
 
     def send_response(self, response):
         if type(response) is NoResponse:

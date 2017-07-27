@@ -1,4 +1,5 @@
 import argparse
+from pprint import pprint
 import sys
 
 from . import run
@@ -28,7 +29,27 @@ if args.mode == "assess":
         utils.save(log, args.log)
 
     results = testcase.evaluator.evaluate(log)
+    description = testcase.evaluator.describe(results)
     print("Results: {}".format(results))
+    print("Description: ")
+    pprint(description) # Main issue
+
+elif args.mode == "assess_log":
+    if args.testcase is None:
+        print("Error: Please provide path to the .tc file with --testcase option")
+        sys.exit(1)
+    testcase = utils.load(args.testcase)
+
+    if args.log is None:
+        print("Error: Please provide path to log file with --log option")
+        sys.exit(1)
+    log = utils.load(args.log)
+
+    results = testcase.evaluator.evaluate(log)
+    description = testcase.evaluator.describe(results)
+    print("Results: {}".format(results))
+    print("Description: ")
+    pprint(description) # TODO: need to save images separately and replace value with filename
 
 elif args.mode == "record":
     handler = RequestHandler() # Blank, endless handler

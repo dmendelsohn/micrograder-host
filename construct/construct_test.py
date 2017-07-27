@@ -8,9 +8,10 @@ from src.evaluator import EvalPoint
 from src.evaluator import Evaluator
 from src.frame import Frame
 from src.handler import RequestHandler
+from src.prefs import Preferences
 from src.scaffold import FrameTemplate
 from src.scaffold import Scaffold
-from src.scaffold import TestPointTemplate
+from src.scaffold import EvalPointTemplate
 from src.sequence import InterpolationType
 from src.sequence import Sequence
 from src.screen import Screen
@@ -170,5 +171,7 @@ def default_scaffold(num_frames=1):
 
     default_values = prefs.default_default_values()
     default_values.set_preference(InputType.DigitalRead, 1)
+    point_templates = Preferences({tuple(): EvalPointTemplate(portion=0.5)})
     return Scaffold(frame_templates=frame_templates,
-                    default_values=default_values)
+                    default_values=default_values,
+                    point_templates=point_templates)

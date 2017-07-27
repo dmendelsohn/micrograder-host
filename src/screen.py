@@ -51,6 +51,10 @@ class Screen:
     def __repr__(self):
         return repr(self.buffer)
 
+    def describe2(self):
+        #TODO: implement
+        pass
+
 
     # Extracts text out of the buffer, using a given monospace font (basically, a set of bitmaps)
     # font: namedtuple Font (see above)

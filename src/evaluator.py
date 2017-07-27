@@ -49,7 +49,7 @@ class EvalPoint:
             else:
                 values[i] = EvaluatedValue(value, portion, False)
 
-        passed = (portion_correct >= self.portion)
+        passed = (portion_correct >= self.portion * 0.9999) # Tiny bit of lenience, due to floating point issues
         return EvalPointResult(passed, values)
 
     def describe(self, condition_description=None, point_result=None):

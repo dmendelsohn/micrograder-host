@@ -36,7 +36,7 @@ class ScaffoldTest(unittest.TestCase):
         interpolations = Preferences({(InputType.DigitalRead,): InterpolationType.Start})
         default_values = Preferences({(InputType.DigitalRead,): 1})
 
-        pt0 = EvalPointTemplate(check_interval=("0.2*T", "0.8*T"))
+        pt0 = EvalPointTemplate(check_interval=("0.2*T", "0.8*T"), portion=1.0)
         point_templates = Preferences({tuple(): pt0})
         aggregators = Preferences({(OutputType.DigitalWrite, 13): all,
                                    (OutputType.Screen, None): all
