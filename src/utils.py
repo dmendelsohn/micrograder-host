@@ -29,9 +29,15 @@ class EventType(Enum):
 
 
 # Returns a string description of the data_type/channel
-# TODO: add config dict {(data_type, channel)->str}
 def describe_channel(data_type, channel=None):
-    # Defaults
+    try:
+        config = load("config/channels")
+    except FileNotFoundError:
+        config = {}
+    if (data_type, channel) in config:
+        return config[(data_type, channel)]
+
+    # Defaults, in case config didn't have the info
     if data_type == OutputType.DigitalWrite:
         if channel is None:
             raise ValueError("DigitalWrite must have a channel (pin number)")
