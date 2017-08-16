@@ -228,5 +228,5 @@ class Evaluator:
         return repr(self)
 
     def __repr__(self):
-        s = "Evaluator: conditions={}, test_points={}, aggregators={}"
-        return s.format(self.conditions, self.test_points, self.aggregators)
+        s = "Evaluator: conditions={}, points={}, aggregators={}"
+        return s.format(self.conditions, self.points, self.aggregators)
